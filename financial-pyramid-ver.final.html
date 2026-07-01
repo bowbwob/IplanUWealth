@@ -1,0 +1,3534 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iPlanUWealth — Personal Wealth Blueprint</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+  var _fbReady = false;
+  var _fbUser  = null;
+
+  var _fbCfg = {
+    apiKey:            "AIzaSyAsu-6nyHeCKtMM1lVoLyhs1uKWDje-9tg",
+    authDomain:        "iplanuwealth.firebaseapp.com",
+    projectId:         "iplanuwealth",
+    storageBucket:     "iplanuwealth.firebasestorage.app",
+    messagingSenderId: "401248450890",
+    appId:             "1:401248450890:web:adfbee365fcf6e57ae69b3"
+  };
+
+  function _initFirebase(){
+    try {
+      firebase.initializeApp(_fbCfg);
+      window._fb = {
+        auth:       firebase.auth(),
+        db:         firebase.firestore(),
+        provider:   new firebase.auth.GoogleAuthProvider(),
+        FieldValue: firebase.firestore.FieldValue,
+      };
+      _fbReady = true;
+      firebase.auth().onAuthStateChanged(function(user){
+        _fbUser = user;
+        if(typeof updateAuthUI === 'function') updateAuthUI();
+      });
+    } catch(e){
+      console.error('Firebase init failed:', e);
+    }
+  }
+  window.addEventListener('load', _initFirebase);
+</script>
+<style>
+:root {
+  --black:#0D0D0D; --white:#FAFAF8; --sand:#F0EDE6;
+  --gold:#C9A84C; --gold-lt:#E8D5A0;
+  --blue:#4A7B9D; --blue-lt:#D0E4F0;
+  --green:#7B9E87; --green-lt:#D4EBD9;
+  --red:#C0392B; --red-lt:#FADBD8;
+  --ink:#2A2A2A; --muted:#8A8A8A; --border:#DDDBD5;
+  --radius:10px;
+  --font:'FC Minimal','Plus Jakarta Sans','Noto Sans Thai',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--sand);color:var(--ink);min-height:100vh;font-size:15px;line-height:1.6}
+.shell{max-width:980px;margin:0 auto;padding:0 20px 80px}
+
+/* HEADER */
+header{background:var(--black);color:var(--white);padding:24px 36px;display:flex;justify-content:space-between;align-items:center;margin-bottom:32px}
+.brand{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:600}
+.page-title{font-size:20px;font-weight:700;letter-spacing:.01em}
+.page-sub{font-size:12px;color:#666;margin-top:2px}
+
+/* STEP NAV */
+.step-nav{display:flex;gap:6px;margin-bottom:28px;overflow-x:auto;padding-bottom:4px}
+.step-pill{flex:1;min-width:100px;padding:9px 12px;background:var(--white);border:1.5px solid var(--border);border-radius:40px;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;text-align:center;transition:all .2s;white-space:nowrap}
+.step-pill.active{background:var(--black);border-color:var(--black);color:var(--white)}
+.step-pill.done{background:var(--gold-lt);border-color:var(--gold);color:var(--black)}
+
+/* CARD */
+.card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius);padding:24px 28px;margin-bottom:18px}
+.card-label{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:3px}
+.card-title{font-size:17px;font-weight:700;color:var(--ink);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;flex-shrink:0}
+
+/* FORM */
+.form-row{display:flex;gap:14px;margin-bottom:12px;flex-wrap:wrap}
+.form-group{flex:1;min-width:140px}
+.form-group.full{flex:0 0 100%}
+label{display:block;font-size:12px;font-weight:600;margin-bottom:4px;color:var(--ink)}
+input[type=text],input[type=number],input[type=date],input.num-field,select,textarea{
+  width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:7px;
+  font-family:var(--font);font-size:13px;background:var(--sand);color:var(--ink);
+  outline:none;transition:border-color .2s;-webkit-appearance:none}
+input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(--white)}
+
+/* CUSTOM ROWS */
+.custom-row{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.custom-row input{flex:1}
+.row-label{display:block;font-size:11.5px;font-weight:600;color:var(--ink);opacity:.75;margin-bottom:3px}
+.btn-remove{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:0 4px;line-height:1;transition:color .2s}
+.btn-remove:hover{color:var(--red)}
+.btn-add{display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:6px 14px;background:none;border:1.5px dashed var(--border);border-radius:20px;font-family:var(--font);font-size:12px;color:var(--muted);cursor:pointer;transition:all .2s}
+.btn-add:hover{border-color:var(--gold);color:var(--gold)}
+
+/* SEC DIV */
+.sec-div{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border);padding-bottom:5px;margin:18px 0 12px;display:flex;align-items:center;gap:6px}
+
+/* CALC BOX */
+.calc-box{background:var(--sand);border:1.5px dashed var(--gold);border-radius:7px;padding:9px 14px;font-size:13px;font-weight:700;min-height:40px;display:flex;align-items:center;flex-wrap:wrap;gap:4px}
+.calc-box .lbl{font-size:11px;font-weight:400;color:var(--muted);margin-right:6px}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:7px 10px;text-align:left;border-bottom:2px solid var(--border)}
+.tbl td{padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl input{background:transparent;border:none;border-bottom:1.5px solid var(--border);border-radius:0;padding:3px 2px;font-family:var(--font);font-size:13px;width:100%}
+.tbl input:focus{outline:none;border-bottom-color:var(--gold);background:transparent}
+.tbl td.total-row{font-weight:700;background:var(--sand)}
+.tbl td.in{color:#2a7a2a} .tbl td.out{color:var(--red)}
+
+/* CHART */
+.chart-wrap{position:relative;margin:16px 0;height:220px;overflow:hidden;border-radius:10px}
+.chart-wrap canvas{max-height:220px !important}
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+@media(max-width:580px){.chart-row{grid-template-columns:1fr}}
+
+/* PROTECT GRID */
+.protect-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:520px){.protect-grid{grid-template-columns:1fr}}
+
+/* SUMMARY */
+.sum-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.sum-block{flex:1;min-width:150px;background:var(--sand);border-radius:var(--radius);padding:14px 16px}
+.sum-block .sl{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:600}
+.sum-block .sv{font-size:18px;font-weight:800;color:var(--ink);margin-top:2px}
+.sum-block .ss{font-size:11px;color:var(--muted)}
+
+/* PYRAMID SVG */
+.pyramid-wrap{display:flex;justify-content:center;margin:12px 0 24px}
+.pyramid-svg{width:100%;max-width:460px}
+
+/* BADGE */
+.badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.04em}
+.badge-ok{background:var(--green-lt);color:#2a6a3a}
+.badge-warn{background:#FFF3CD;color:#856404}
+.badge-bad{background:var(--red-lt);color:var(--red)}
+
+/* BUTTONS */
+.btn-row{display:flex;gap:10px;justify-content:flex-end;margin-top:22px}
+.btn{padding:11px 26px;border-radius:40px;border:1.5px solid var(--border);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;letter-spacing:.03em}
+.btn-ghost{background:transparent;color:var(--ink)}
+.btn-ghost:hover{background:var(--sand)}
+.btn-primary{background:var(--black);color:var(--white);border-color:var(--black)}
+.btn-primary:hover{background:#333}
+.btn-gold{background:var(--gold);color:var(--black);border-color:var(--gold)}
+.btn-gold:hover{background:#b8953f}
+
+/* STEP PANELS */
+.step-panel{display:none}
+.step-panel.active{display:block}
+
+/* ICON LABEL */
+.ico-lbl{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;margin-bottom:10px}
+.ico-lbl .ico{font-size:18px}
+
+/* BALANCE SHEET */
+.bs-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:560px){.bs-grid{grid-template-columns:1fr}}
+.bs-col h4{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding-bottom:6px;border-bottom:2px solid var(--border);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+
+
+/* COMMA NUMBER INPUTS */
+
+/* COMMA INPUT */
+.num-field { font-variant-numeric: tabular-nums; letter-spacing:.02em; }
+.num-field::placeholder { letter-spacing:0; }
+
+.num-input { font-variant-numeric: tabular-nums; }
+.period-row { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+.period-row .period-input { flex:1; }
+
+/* PRINT */
+@media print{
+  header{background:var(--black)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .step-nav,.btn-row{display:none}
+  .step-panel{display:block!important}
+  .card{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="brand" style="font-size:11px;letter-spacing:.22em">iPlanUWealth</div>
+    <div class="page-title" style="font-size:22px;letter-spacing:.01em">Personal Wealth Blueprint</div>
+    <div class="page-sub">Sunita · MDRT · AIA</div>
+  </div>
+  <div style="text-align:right;line-height:2">
+    <div id="hdr-name" style="color:#fff;font-size:15px;font-weight:700">—</div>
+    <div id="hdr-date" style="font-size:11px;color:#666"></div>
+  </div>
+</header>
+
+<div class="shell">
+
+<!-- SAVE BAR -->
+<div id="save-bar" style="background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius);padding:10px 16px;margin-bottom:14px">
+  <!-- Row 1: status + buttons -->
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span id="cloud-dot" style="font-size:10px" title="สถานะ Cloud Sync">⚪</span>
+    <span id="storage-mode" style="font-size:10px;color:var(--muted)"></span>
+      <span style="font-size:13px;color:var(--muted)">📋</span>
+      <span id="save-client-name" style="font-size:14px;font-weight:700;color:var(--ink)">— ลูกค้าใหม่ —</span>
+      <span id="save-status" style="font-size:11px;color:var(--green);font-weight:600"></span>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn btn-gold" style="padding:7px 16px;font-size:12px" onclick="saveClient()">💾 บันทึก</button>
+      <button class="btn btn-ghost" style="padding:7px 16px;font-size:12px" onclick="newClient()">➕ ใหม่</button>
+      <button class="btn btn-gold" id="btn-login" style="padding:7px 16px;font-size:12px;display:none" onclick="firebaseLogin()">🔐 Login</button>
+      <button class="btn btn-ghost" id="btn-logout" style="padding:7px 16px;font-size:12px;display:none" onclick="firebaseLogout()">ออกจากระบบ</button>
+    </div>
+  </div>
+</div>
+<span id="auth-status" style="display:block;font-size:11px;color:var(--muted);padding:4px 16px 8px">💾 บันทึกในเครื่องนี้</span>
+
+<!-- CLIENT LIST MODAL -->
+<div id="client-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;overflow-y:auto">
+  <div style="background:var(--white);max-width:680px;margin:40px auto;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+    <div style="background:var(--black);padding:20px 24px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);font-weight:600">ระบบจัดการข้อมูล</div>
+        <div style="font-size:18px;font-weight:800;color:#fff;margin-top:2px">🗂️ รายชื่อลูกค้าทั้งหมด</div>
+      </div>
+      <button onclick="closeClientList()" style="background:none;border:none;color:#aaa;font-size:24px;cursor:pointer;line-height:1">✕</button>
+    </div>
+    <div style="padding:20px 24px">
+      <div style="display:flex;gap:10px;margin-bottom:16px">
+        <input type="text" id="search-client" placeholder="🔍 ค้นหาชื่อลูกค้า..." oninput="renderClientList()" style="flex:1;padding:9px 14px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font);font-size:13px;background:var(--sand);outline:none">
+        <button class="btn btn-primary" style="padding:9px 18px;font-size:12px" onclick="newClient();closeClientList()">➕ ลูกค้าใหม่</button>
+      </div>
+      <div id="client-list-body" style="display:flex;flex-direction:column;gap:8px;max-height:420px;overflow-y:auto"></div>
+      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-ghost" style="padding:8px 16px;font-size:12px;color:var(--red)" onclick="clearAllClients()">🗑️ ลบทั้งหมด</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="step-nav">
+  <div class="step-pill" data-step="-1" id="pill-clients" onclick="showClientList()" style="background:var(--gold-lt);border-color:var(--gold);color:var(--black)">🗂️ ลูกค้าทั้งหมด</div>
+  <div class="step-pill active" data-step="0">👤 ข้อมูลพื้นฐาน</div>
+  <div class="step-pill" data-step="1">🎯 เป้าหมาย</div>
+  <div class="step-pill" data-step="2">📊 งบดุล</div>
+  <div class="step-pill" data-step="3">🔺 ปิรามิด</div>
+  <div class="step-pill" data-step="4">🛡️ Protection</div>
+  <div class="step-pill" data-step="5">🌅 Retirement</div>
+  <div class="step-pill" data-step="6">🎓 Education Plan</div>
+  <div class="step-pill" data-step="7">⭐ สรุปภาพรวม</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PANEL 0 · ข้อมูลพื้นฐาน
+══════════════════════════════════════════ -->
+<div class="step-panel active" id="panel-0">
+
+  <div class="card">
+    <div class="card-label">เป้าหมายการเงิน</div>
+    <div class="card-title">👤 ข้อมูลลูกค้า</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>ชื่อ-นามสกุล</label>
+        <input type="text" id="client-name" placeholder="ระบุชื่อลูกค้า" oninput="updateHeader()">
+      </div>
+      <div class="form-group">
+        <label>ชื่อเล่น</label>
+        <input type="text" id="client-nickname" placeholder="เช่น น้องแนน">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>วันเกิด</label>
+        <input type="date" id="client-dob" oninput="calcAge()">
+      </div>
+      <div class="form-group">
+        <label>อายุ</label>
+        <div class="calc-box" id="age-display" style="font-size:14px"><span class="lbl">อายุ</span><span id="client-age-display">—</span> ปี</div>
+        <input type="hidden" id="client-age" value="">
+      </div>
+      <div class="form-group">
+        <label>อาชีพ</label>
+        <input type="text" id="client-job" placeholder="พนักงานบริษัท / ธุรกิจส่วนตัว">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>สถานภาพ</label>
+        <select id="client-status">
+          <option value="">— เลือก —</option>
+          <option>โสด</option><option>แต่งงาน</option><option>หย่าร้าง</option>
+        </select>
+      </div>
+      <div class="form-group"><label>จำนวนบุตร</label><input type="number" id="client-kids" min="0" placeholder="0"></div>
+      <div class="form-group"><label>ผู้ที่ต้องดูแล (คน)</label><input type="number" id="client-depend" min="0" placeholder="0"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>เบอร์โทรศัพท์</label><input type="text" id="client-tel" placeholder="08x-xxx-xxxx"></div>
+      <div class="form-group full"><label>หมายเหตุ / ข้อมูลเพิ่มเติม</label>
+        <textarea id="client-note" rows="2" placeholder="บันทึกข้อมูลที่ต้องการเพิ่มเติม..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- end panel-0 --><!-- end panel-0 -->
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="goStep(1)">ถัดไป → เป้าหมายทางการเงิน 🎯</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PANEL 1 · เป้าหมายทางการเงิน
+══════════════════════════════════════════ -->
+<div class="step-panel" id="panel-1">
+
+  <!-- WHY TODAY -->
+  <div class="card">
+    <div class="card-label">ค้นหาแรงจูงใจ</div>
+    <div class="card-title">🎯 เป้าหมายทางการเงิน</div>
+
+    <!-- TRIGGER / WHY NOW -->
+    <div class="sec-div">💬 วันนี้ให้ความสำคัญกับการวางแผนการเงินเพราะอะไร?</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px" id="why-grid">
+      <label style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--sand);font-size:13px;font-weight:500;transition:all .2s" class="why-card">
+        <input type="checkbox" value="family" style="width:16px;height:16px;margin-top:1px;accent-color:var(--gold);flex-shrink:0" onchange="highlightWhy(this)">
+        <span>👨‍👩‍👧 <strong>ครอบครัวขยาย</strong><br><span style="font-size:11px;color:var(--muted);font-weight:400">มีบุตร / แต่งงาน / ดูแลพ่อแม่</span></span>
+      </label>
+      <label style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--sand);font-size:13px;font-weight:500;transition:all .2s" class="why-card">
+        <input type="checkbox" value="career" style="width:16px;height:16px;margin-top:1px;accent-color:var(--gold);flex-shrink:0" onchange="highlightWhy(this)">
+        <span>💼 <strong>เปลี่ยนงาน/เลิกกิจการ</strong><br><span style="font-size:11px;color:var(--muted);font-weight:400">ลาออก / ธุรกิจใหม่ / เกษียณเร็ว</span></span>
+      </label>
+      <label style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--sand);font-size:13px;font-weight:500;transition:all .2s" class="why-card">
+        <input type="checkbox" value="debt" style="width:16px;height:16px;margin-top:1px;accent-color:var(--gold);flex-shrink:0" onchange="highlightWhy(this)">
+        <span>💳 <strong>จัดการหนี้สิน</strong><br><span style="font-size:11px;color:var(--muted);font-weight:400">ผ่อนบ้าน / รถ / บัตรเครดิต</span></span>
+      </label>
+      <label style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--sand);font-size:13px;font-weight:500;transition:all .2s" class="why-card">
+        <input type="checkbox" value="retire" style="width:16px;height:16px;margin-top:1px;accent-color:var(--gold);flex-shrink:0" onchange="highlightWhy(this)">
+        <span>🌅 <strong>เตรียมเกษียณ</strong><br><span style="font-size:11px;color:var(--muted);font-weight:400">อยากมีอิสรภาพทางการเงิน</span></span>
+      </label>
+      <label style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--sand);font-size:13px;font-weight:500;transition:all .2s" class="why-card">
+        <input type="checkbox" value="health" style="width:16px;height:16px;margin-top:1px;accent-color:var(--gold);flex-shrink:0" onchange="highlightWhy(this)">
+        <span>🏥 <strong>ปัญหาสุขภาพ</strong><br><span style="font-size:11px;color:var(--muted);font-weight:400">เจ็บป่วย / คนใกล้ชิดป่วย / กังวลโรค</span></span>
+      </label>
+      <label style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--sand);font-size:13px;font-weight:500;transition:all .2s" class="why-card">
+        <input type="checkbox" value="invest" style="width:16px;height:16px;margin-top:1px;accent-color:var(--gold);flex-shrink:0" onchange="highlightWhy(this)">
+        <span>📈 <strong>ต้องการลงทุน</strong><br><span style="font-size:11px;color:var(--muted);font-weight:400">เงินออมไม่โต / อยากเพิ่มพูนทรัพย์</span></span>
+      </label>
+      <label style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--sand);font-size:13px;font-weight:500;transition:all .2s" class="why-card">
+        <input type="checkbox" value="tax" style="width:16px;height:16px;margin-top:1px;accent-color:var(--gold);flex-shrink:0" onchange="highlightWhy(this)">
+        <span>🧾 <strong>วางแผนภาษี</strong><br><span style="font-size:11px;color:var(--muted);font-weight:400">ภาษีสูง / ต้องการลดหย่อน</span></span>
+      </label>
+      <label style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--sand);font-size:13px;font-weight:500;transition:all .2s" class="why-card">
+        <input type="checkbox" value="legacy" style="width:16px;height:16px;margin-top:1px;accent-color:var(--gold);flex-shrink:0" onchange="highlightWhy(this)">
+        <span>👑 <strong>ส่งต่อมรดก</strong><br><span style="font-size:11px;color:var(--muted);font-weight:400">อยากส่งต่อความมั่งคั่งให้คนรัก</span></span>
+      </label>
+    </div>
+    <div class="form-group full">
+      <label>✏️ เหตุผลอื่นๆ (ระบุเพิ่มเติม)</label>
+      <textarea id="goal-why-other" rows="2" placeholder="เช่น เพิ่งได้รับมรดก / เพิ่งสูญเสียคนรัก / อยากเริ่มต้นใหม่..."></textarea>
+    </div>
+  </div>
+
+  <!-- WORRY / CONCERN -->
+  <!-- WORRY / CONCERN -->
+  <div class="card">
+    <div class="card-label">ความกังวล</div>
+    <div class="card-title">😟 มีความกังวลใจเรื่องอะไรบ้าง?</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <label style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--sand);font-size:13px;font-weight:500;transition:all .2s" class="worry-card">
+        <input type="checkbox" style="width:16px;height:16px;margin-top:1px;accent-color:var(--red);flex-shrink:0" onchange="highlightWorry(this)">
+        <span>😰 <strong>เงินไม่พอใช้ตอนแก่</strong><br><span style="font-size:11px;color:var(--muted);font-weight:400">กลัวว่าเงินออมจะหมดก่อนอายุขัย</span></span>
+      </label>
+      <label style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--sand);font-size:13px;font-weight:500;transition:all .2s" class="worry-card">
+        <input type="checkbox" style="width:16px;height:16px;margin-top:1px;accent-color:var(--red);flex-shrink:0" onchange="highlightWorry(this)">
+        <span>🏥 <strong>ค่ารักษาพยาบาลแพง</strong><br><span style="font-size:11px;color:var(--muted);font-weight:400">กลัวเจ็บป่วยหนักแล้วไม่มีเงิน</span></span>
+      </label>
+      <label style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--sand);font-size:13px;font-weight:500;transition:all .2s" class="worry-card">
+        <input type="checkbox" style="width:16px;height:16px;margin-top:1px;accent-color:var(--red);flex-shrink:0" onchange="highlightWorry(this)">
+        <span>👨‍👩‍👧 <strong>ครอบครัวขาดรายได้</strong><br><span style="font-size:11px;color:var(--muted);font-weight:400">ถ้าตัวเองเกิดอะไรขึ้น คนที่รักจะเป็นอย่างไร</span></span>
+      </label>
+      <label style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--sand);font-size:13px;font-weight:500;transition:all .2s" class="worry-card">
+        <input type="checkbox" style="width:16px;height:16px;margin-top:1px;accent-color:var(--red);flex-shrink:0" onchange="highlightWorry(this)">
+        <span>💸 <strong>รายจ่ายมากกว่ารายได้</strong><br><span style="font-size:11px;color:var(--muted);font-weight:400">ควบคุมค่าใช้จ่ายไม่ได้ เงินไม่เหลือออม</span></span>
+      </label>
+      <label style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--sand);font-size:13px;font-weight:500;transition:all .2s" class="worry-card">
+        <input type="checkbox" style="width:16px;height:16px;margin-top:1px;accent-color:var(--red);flex-shrink:0" onchange="highlightWorry(this)">
+        <span>📉 <strong>ลงทุนแล้วขาดทุน</strong><br><span style="font-size:11px;color:var(--muted);font-weight:400">กลัวเสียเงิน / ไม่รู้จะลงทุนอะไรดี</span></span>
+      </label>
+      <label style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--sand);font-size:13px;font-weight:500;transition:all .2s" class="worry-card">
+        <input type="checkbox" style="width:16px;height:16px;margin-top:1px;accent-color:var(--red);flex-shrink:0" onchange="highlightWorry(this)">
+        <span>🎓 <strong>ทุนการศึกษาบุตร</strong><br><span style="font-size:11px;color:var(--muted);font-weight:400">กังวลว่าจะมีเงินพอส่งลูกเรียน</span></span>
+      </label>
+      <label style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--sand);font-size:13px;font-weight:500;transition:all .2s" class="worry-card">
+        <input type="checkbox" style="width:16px;height:16px;margin-top:1px;accent-color:var(--red);flex-shrink:0" onchange="highlightWorry(this)">
+        <span>🏠 <strong>ภาระหนี้สิน</strong><br><span style="font-size:11px;color:var(--muted);font-weight:400">หนี้บ้าน รถ บัตรเครดิต กดดัน</span></span>
+      </label>
+      <label style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--sand);font-size:13px;font-weight:500;transition:all .2s" class="worry-card">
+        <input type="checkbox" style="width:16px;height:16px;margin-top:1px;accent-color:var(--red);flex-shrink:0" onchange="highlightWorry(this)">
+        <span>🌪️ <strong>ความไม่แน่นอนของเศรษฐกิจ</strong><br><span style="font-size:11px;color:var(--muted);font-weight:400">กังวลเรื่องเงินเฟ้อ / ตกงาน</span></span>
+      </label>
+    </div>
+    <div class="form-group full">
+      <label>✏️ ความกังวลอื่นๆ (ระบุเพิ่มเติม)</label>
+      <textarea id="goal-worry-other" rows="2" placeholder="บันทึกความกังวลเพิ่มเติม..."></textarea>
+    </div>
+  </div>
+
+  <!-- DREAM / VISION -->
+  <div class="card">
+    <div class="card-label">ความฝันและเป้าหมาย</div>
+    <div class="card-title">✨ ถ้าเงินไม่ใช่ปัญหา คุณอยากทำอะไร?</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px">กรอกเป้าหมายและเลือกระดับความเร่งด่วนของแต่ละข้อ</p>
+
+    <div id="goal-items" style="display:flex;flex-direction:column;gap:14px">
+      <!-- Goal 1 -->
+      <div style="background:var(--sand);border-radius:10px;padding:14px 16px;border:1.5px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <span style="font-size:20px;font-weight:900;color:var(--gold);width:28px;flex-shrink:0">1</span>
+          <input type="text" id="goal-1" placeholder="เช่น มีบ้านก่อนอายุ 35 ปี" style="flex:1">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">
+          <label style="cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border:1.5px solid var(--border);border-radius:7px;background:var(--white);text-align:center;transition:all .2s;font-size:11px" class="urg-opt">
+            <input type="radio" name="urg-1" value="now" style="accent-color:var(--red);margin-bottom:2px">
+            <span style="font-size:16px">🔥</span>
+            <span style="font-weight:700;color:var(--red)">เร่งด่วน</span>
+            <span style="color:var(--muted);font-size:10px">ทำทันที</span>
+          </label>
+          <label style="cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border:1.5px solid var(--border);border-radius:7px;background:var(--white);text-align:center;transition:all .2s;font-size:11px" class="urg-opt">
+            <input type="radio" name="urg-1" value="1y" style="accent-color:var(--gold);margin-bottom:2px">
+            <span style="font-size:16px">⚡</span>
+            <span style="font-weight:700;color:var(--gold)">ภายใน 1 ปี</span>
+            <span style="color:var(--muted);font-size:10px">วางแผนได้เลย</span>
+          </label>
+          <label style="cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border:1.5px solid var(--border);border-radius:7px;background:var(--white);text-align:center;transition:all .2s;font-size:11px" class="urg-opt">
+            <input type="radio" name="urg-1" value="3y" style="accent-color:var(--green);margin-bottom:2px">
+            <span style="font-size:16px">🎯</span>
+            <span style="font-weight:700;color:var(--green)">1–3 ปี</span>
+            <span style="color:var(--muted);font-size:10px">ระยะกลาง</span>
+          </label>
+          <label style="cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border:1.5px solid var(--border);border-radius:7px;background:var(--white);text-align:center;transition:all .2s;font-size:11px" class="urg-opt">
+            <input type="radio" name="urg-1" value="long" style="accent-color:var(--blue);margin-bottom:2px">
+            <span style="font-size:16px">🗓️</span>
+            <span style="font-weight:700;color:var(--blue)">3 ปีขึ้นไป</span>
+            <span style="color:var(--muted);font-size:10px">ระยะยาว</span>
+          </label>
+        </div>
+      </div>
+      <!-- Goal 2 -->
+      <div style="background:var(--sand);border-radius:10px;padding:14px 16px;border:1.5px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <span style="font-size:20px;font-weight:900;color:var(--muted);width:28px;flex-shrink:0">2</span>
+          <input type="text" id="goal-2" placeholder="เช่น เกษียณก่อนอายุ 55 ปี" style="flex:1">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">
+          <label style="cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border:1.5px solid var(--border);border-radius:7px;background:var(--white);text-align:center;transition:all .2s;font-size:11px" class="urg-opt">
+            <input type="radio" name="urg-2" value="now" style="accent-color:var(--red);margin-bottom:2px">
+            <span style="font-size:16px">🔥</span>
+            <span style="font-weight:700;color:var(--red)">เร่งด่วน</span>
+            <span style="color:var(--muted);font-size:10px">ทำทันที</span>
+          </label>
+          <label style="cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border:1.5px solid var(--border);border-radius:7px;background:var(--white);text-align:center;transition:all .2s;font-size:11px" class="urg-opt">
+            <input type="radio" name="urg-2" value="1y" style="accent-color:var(--gold);margin-bottom:2px">
+            <span style="font-size:16px">⚡</span>
+            <span style="font-weight:700;color:var(--gold)">ภายใน 1 ปี</span>
+            <span style="color:var(--muted);font-size:10px">วางแผนได้เลย</span>
+          </label>
+          <label style="cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border:1.5px solid var(--border);border-radius:7px;background:var(--white);text-align:center;transition:all .2s;font-size:11px" class="urg-opt">
+            <input type="radio" name="urg-2" value="3y" style="accent-color:var(--green);margin-bottom:2px">
+            <span style="font-size:16px">🎯</span>
+            <span style="font-weight:700;color:var(--green)">1–3 ปี</span>
+            <span style="color:var(--muted);font-size:10px">ระยะกลาง</span>
+          </label>
+          <label style="cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border:1.5px solid var(--border);border-radius:7px;background:var(--white);text-align:center;transition:all .2s;font-size:11px" class="urg-opt">
+            <input type="radio" name="urg-2" value="long" style="accent-color:var(--blue);margin-bottom:2px">
+            <span style="font-size:16px">🗓️</span>
+            <span style="font-weight:700;color:var(--blue)">3 ปีขึ้นไป</span>
+            <span style="color:var(--muted);font-size:10px">ระยะยาว</span>
+          </label>
+        </div>
+      </div>
+      <!-- Goal 3 -->
+      <div style="background:var(--sand);border-radius:10px;padding:14px 16px;border:1.5px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <span style="font-size:20px;font-weight:900;color:var(--muted);width:28px;flex-shrink:0">3</span>
+          <input type="text" id="goal-3" placeholder="เช่น ส่งลูกเรียนต่างประเทศ" style="flex:1">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">
+          <label style="cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border:1.5px solid var(--border);border-radius:7px;background:var(--white);text-align:center;transition:all .2s;font-size:11px" class="urg-opt">
+            <input type="radio" name="urg-3" value="now" style="accent-color:var(--red);margin-bottom:2px">
+            <span style="font-size:16px">🔥</span>
+            <span style="font-weight:700;color:var(--red)">เร่งด่วน</span>
+            <span style="color:var(--muted);font-size:10px">ทำทันที</span>
+          </label>
+          <label style="cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border:1.5px solid var(--border);border-radius:7px;background:var(--white);text-align:center;transition:all .2s;font-size:11px" class="urg-opt">
+            <input type="radio" name="urg-3" value="1y" style="accent-color:var(--gold);margin-bottom:2px">
+            <span style="font-size:16px">⚡</span>
+            <span style="font-weight:700;color:var(--gold)">ภายใน 1 ปี</span>
+            <span style="color:var(--muted);font-size:10px">วางแผนได้เลย</span>
+          </label>
+          <label style="cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border:1.5px solid var(--border);border-radius:7px;background:var(--white);text-align:center;transition:all .2s;font-size:11px" class="urg-opt">
+            <input type="radio" name="urg-3" value="3y" style="accent-color:var(--green);margin-bottom:2px">
+            <span style="font-size:16px">🎯</span>
+            <span style="font-weight:700;color:var(--green)">1–3 ปี</span>
+            <span style="color:var(--muted);font-size:10px">ระยะกลาง</span>
+          </label>
+          <label style="cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border:1.5px solid var(--border);border-radius:7px;background:var(--white);text-align:center;transition:all .2s;font-size:11px" class="urg-opt">
+            <input type="radio" name="urg-3" value="long" style="accent-color:var(--blue);margin-bottom:2px">
+            <span style="font-size:16px">🗓️</span>
+            <span style="font-weight:700;color:var(--blue)">3 ปีขึ้นไป</span>
+            <span style="color:var(--muted);font-size:10px">ระยะยาว</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-add" onclick="addGoalItem()" style="margin-top:10px">＋ เพิ่มเป้าหมาย</button>
+
+    <div class="sec-div" style="margin-top:18px">💭 ประสบการณ์ที่ผ่านมา</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>เคยทำประกันหรือวางแผนการเงินมาก่อนไหม?</label>
+        <select id="goal-exp">
+          <option value="">— เลือก —</option>
+          <option>ไม่เคยเลย</option>
+          <option>เคยแต่ไม่ได้ทำต่อ</option>
+          <option>มีอยู่บ้างแต่ไม่แน่ใจว่าพอ</option>
+          <option>มีและกำลังดูแลอยู่</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>ถ้าเคย — เหตุผลที่หยุด/เปลี่ยน</label>
+        <input type="text" id="goal-why-stop" placeholder="เช่น ราคาแพง / ไม่เข้าใจ / เปลี่ยนงาน">
+      </div>
+    </div>
+    <div class="form-group full">
+      <label>📝 สิ่งที่คาดหวังจากที่ปรึกษาการเงิน</label>
+      <textarea id="goal-expect" rows="2" placeholder="เช่น อยากให้ช่วยออกแบบแผนที่เหมาะกับตัวเอง / ต้องการคำแนะนำเรื่องประกัน..."></textarea>
+    </div>
+  </div>
+
+  <!-- IMPORTANCE RADAR CHART -->
+  <div class="card">
+    <div class="card-label">วิเคราะห์ความสำคัญ</div>
+    <div class="card-title">📊 ให้คะแนนความสำคัญในแต่ละด้าน</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px">เลื่อนสเกล 1–5 เพื่อให้เห็นภาพความต้องการของคุณ</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+      <div>
+        <label style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span>🛡️ ความคุ้มครองชีวิต</span><strong id="lbl-prot">3</strong>
+        </label>
+        <input type="range" min="1" max="5" value="3" id="imp-prot" style="width:100%;accent-color:var(--blue)" oninput="updateRadar(this,'lbl-prot')">
+      </div>
+      <div>
+        <label style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span>🏥 สุขภาพ/โรคร้ายแรง</span><strong id="lbl-health">3</strong>
+        </label>
+        <input type="range" min="1" max="5" value="3" id="imp-health" style="width:100%;accent-color:var(--blue)" oninput="updateRadar(this,'lbl-health')">
+      </div>
+      <div>
+        <label style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span>💰 การออม</span><strong id="lbl-save">3</strong>
+        </label>
+        <input type="range" min="1" max="5" value="3" id="imp-save" style="width:100%;accent-color:var(--green)" oninput="updateRadar(this,'lbl-save')">
+      </div>
+      <div>
+        <label style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span>🌅 แผนเกษียณ</span><strong id="lbl-retire">3</strong>
+        </label>
+        <input type="range" min="1" max="5" value="3" id="imp-retire" style="width:100%;accent-color:var(--green)" oninput="updateRadar(this,'lbl-retire')">
+      </div>
+      <div>
+        <label style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span>📈 การลงทุน</span><strong id="lbl-inv">3</strong>
+        </label>
+        <input type="range" min="1" max="5" value="3" id="imp-inv" style="width:100%;accent-color:var(--gold)" oninput="updateRadar(this,'lbl-inv')">
+      </div>
+      <div>
+        <label style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span>🧾 วางแผนภาษี</span><strong id="lbl-tax">3</strong>
+        </label>
+        <input type="range" min="1" max="5" value="3" id="imp-tax" style="width:100%;accent-color:var(--gold)" oninput="updateRadar(this,'lbl-tax')">
+      </div>
+    </div>
+    <div class="chart-wrap" style="height:240px"><canvas id="chart-radar"></canvas></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="goStep(0)">← ย้อนกลับ</button>
+    <button class="btn btn-primary" onclick="goStep(2)">ถัดไป → งบกระแสเงินสด 📊</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PANEL 2 · งบกระแสเงินสด & งบดุล
+══════════════════════════════════════════ -->
+<div class="step-panel" id="panel-2">
+
+  <!-- CASHFLOW STATEMENT -->
+  <div class="card">
+    <div class="card-label">หน้าที่ 3 · งบดุล</div>
+    <div class="card-title">📊 งบกระแสเงินสด (Cash Flow Statement)</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <!-- INCOME -->
+      <div>
+        <div class="sec-div">💚 กระแสเงินเข้า</div>
+
+        <div class="ico-lbl"><span class="ico">💼</span>รายได้ประจำ</div>
+        <label class="row-label">เงินเดือน</label>
+        <div class="custom-row period-row">
+          <input type="number" placeholder="เงินเดือน" id="cf-salary" oninput="calcCF()" class="period-input">
+          <select id="cf-salary-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
+            <option value="1">฿/เดือน</option>
+            <option value="3">฿/ไตรมาส</option>
+            <option value="12">฿/ปี</option>
+          </select>
+        </div>
+        <label class="row-label">ค่าจ้าง</label>
+        <div class="custom-row period-row">
+          <input type="number" placeholder="ค่าจ้าง" id="cf-wage" oninput="calcCF()" class="period-input">
+          <select id="cf-wage-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
+            <option value="1">฿/เดือน</option>
+            <option value="3">฿/ไตรมาส</option>
+            <option value="12">฿/ปี</option>
+          </select>
+        </div>
+        <label class="row-label">รายได้จากค่าเช่า</label>
+        <div class="custom-row period-row">
+          <input type="number" placeholder="รายได้จากค่าเช่า" id="cf-rent-in" oninput="calcCF()" class="period-input">
+          <select id="cf-rent-in-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
+            <option value="1">฿/เดือน</option>
+            <option value="3">฿/ไตรมาส</option>
+            <option value="12">฿/ปี</option>
+          </select>
+        </div>
+        <div id="cf-income-extra"></div>
+        <button class="btn-add" onclick="addExtraRow('cf-income-extra','cf-inc-x','calcCF')">＋ เพิ่มรายได้อื่นๆ</button>
+
+        <div style="margin-top:12px" class="ico-lbl"><span class="ico">🎯</span>รายได้ผันแปร</div>
+        <label class="row-label">โบนัส / คอมมิชชั่น</label>
+        <div class="custom-row period-row">
+          <input type="number" placeholder="โบนัส / คอมมิชชั่น" id="cf-bonus" oninput="calcCF()" class="period-input">
+          <select id="cf-bonus-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
+            <option value="1">฿/เดือน</option>
+            <option value="3">฿/ไตรมาส</option>
+            <option value="12">฿/ปี</option>
+          </select>
+        </div>
+        <label class="row-label">ดอกเบี้ย/เงินปันผล</label>
+        <div class="custom-row period-row">
+          <input type="number" placeholder="ดอกเบี้ย/เงินปันผล" id="cf-div" oninput="calcCF()" class="period-input">
+          <select id="cf-div-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
+            <option value="1">฿/เดือน</option>
+            <option value="3">฿/ไตรมาส</option>
+            <option value="12">฿/ปี</option>
+          </select>
+        </div>
+        <div id="cf-var-extra"></div>
+        <button class="btn-add" onclick="addExtraRow('cf-var-extra','cf-var-x','calcCF')">＋ เพิ่มรายได้ผันแปร</button>
+
+        <div style="margin-top:14px" class="calc-box"><span class="lbl">💚 รวมรายได้/เดือน</span><span id="cf-total-in" style="color:#2a7a2a">0</span> บาท</div>
+      </div>
+
+      <!-- EXPENSE -->
+      <div>
+        <div class="sec-div">❤️ กระแสเงินออก</div>
+
+        <div class="ico-lbl"><span class="ico">🏠</span>รายจ่ายประจำ</div>
+        <label class="row-label">ค่าเช่า/ผ่อนบ้าน</label>
+        <div class="custom-row period-row">
+          <input type="number" placeholder="ค่าเช่า/ผ่อนบ้าน" id="cf-house" oninput="calcCF()" class="period-input">
+          <select id="cf-house-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
+            <option value="1">฿/เดือน</option>
+            <option value="3">฿/ไตรมาส</option>
+            <option value="12">฿/ปี</option>
+          </select>
+        </div>
+        <label class="row-label">ค่าผ่อนรถ</label>
+        <div class="custom-row period-row">
+          <input type="number" placeholder="ค่าผ่อนรถ" id="cf-car" oninput="calcCF()" class="period-input">
+          <select id="cf-car-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
+            <option value="1">฿/เดือน</option>
+            <option value="3">฿/ไตรมาส</option>
+            <option value="12">฿/ปี</option>
+          </select>
+        </div>
+        <label class="row-label">ค่าไฟ/น้ำ/อินเทอร์เน็ต</label>
+        <div class="custom-row period-row">
+          <input type="number" placeholder="ค่าไฟ/น้ำ/อินเทอร์เน็ต" id="cf-util" oninput="calcCF()" class="period-input">
+          <select id="cf-util-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
+            <option value="1">฿/เดือน</option>
+            <option value="3">฿/ไตรมาส</option>
+            <option value="12">฿/ปี</option>
+          </select>
+        </div>
+        <label class="row-label">ค่าประกันภัย (เบี้ย)</label>
+        <div class="custom-row period-row">
+          <input type="number" placeholder="ค่าประกันภัย (เบี้ย)" id="cf-ins" oninput="calcCF()" class="period-input">
+          <select id="cf-ins-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
+            <option value="1">฿/เดือน</option>
+            <option value="3">฿/ไตรมาส</option>
+            <option value="12">฿/ปี</option>
+          </select>
+        </div>
+        <label class="row-label">ค่าดูแลพ่อแม่</label>
+        <div class="custom-row period-row">
+          <input type="number" placeholder="ค่าดูแลพ่อแม่" id="cf-parents" oninput="calcCF()" class="period-input">
+          <select id="cf-parents-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
+            <option value="1">฿/เดือน</option>
+            <option value="3">฿/ไตรมาส</option>
+            <option value="12">฿/ปี</option>
+          </select>
+        </div>
+        <label class="row-label">ค่าเลี้ยงดูบุตร</label>
+        <div class="custom-row period-row">
+          <input type="number" placeholder="ค่าเลี้ยงดูบุตร" id="cf-kids" oninput="calcCF()" class="period-input">
+          <select id="cf-kids-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
+            <option value="1">฿/เดือน</option>
+            <option value="3">฿/ไตรมาส</option>
+            <option value="12">฿/ปี</option>
+          </select>
+        </div>
+        <label class="row-label">ภาษีรถยนต์</label>
+        <div class="custom-row period-row">
+          <input type="number" placeholder="ภาษีรถยนต์" id="cf-cartax" oninput="calcCF()" class="period-input">
+          <select id="cf-cartax-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
+            <option value="1">฿/เดือน</option>
+            <option value="3">฿/ไตรมาส</option>
+            <option value="12">฿/ปี</option>
+          </select>
+        </div>
+        <div id="cf-fixed-extra"></div>
+        <button class="btn-add" onclick="addExtraRow('cf-fixed-extra','cf-fix-x','calcCF')">＋ เพิ่มรายจ่ายประจำ</button>
+
+        <div style="margin-top:12px" class="ico-lbl"><span class="ico">🛒</span>รายจ่ายไม่คงที่</div>
+        <label class="row-label">ค่าอาหาร</label>
+        <div class="custom-row period-row">
+          <input type="number" placeholder="ค่าอาหาร" id="cf-food" oninput="calcCF()" class="period-input">
+          <select id="cf-food-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
+            <option value="1">฿/เดือน</option>
+            <option value="3">฿/ไตรมาส</option>
+            <option value="12">฿/ปี</option>
+          </select>
+        </div>
+        <label class="row-label">ค่าเดินทาง</label>
+        <div class="custom-row period-row">
+          <input type="number" placeholder="ค่าเดินทาง" id="cf-trans" oninput="calcCF()" class="period-input">
+          <select id="cf-trans-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
+            <option value="1">฿/เดือน</option>
+            <option value="3">฿/ไตรมาส</option>
+            <option value="12">฿/ปี</option>
+          </select>
+        </div>
+        <label class="row-label">ค่าช้อปปิ้ง/บันเทิง</label>
+        <div class="custom-row period-row">
+          <input type="number" placeholder="ค่าช้อปปิ้ง/บันเทิง" id="cf-shop" oninput="calcCF()" class="period-input">
+          <select id="cf-shop-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
+            <option value="1">฿/เดือน</option>
+            <option value="3">฿/ไตรมาส</option>
+            <option value="12">฿/ปี</option>
+          </select>
+        </div>
+        <label class="row-label">ค่าพัฒนาตัวเอง</label>
+        <div class="custom-row period-row">
+          <input type="number" placeholder="ค่าพัฒนาตัวเอง" id="cf-self" oninput="calcCF()" class="period-input">
+          <select id="cf-self-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
+            <option value="1">฿/เดือน</option>
+            <option value="3">฿/ไตรมาส</option>
+            <option value="12">฿/ปี</option>
+          </select>
+        </div>
+        <label class="row-label">ค่าท่องเที่ยว</label>
+        <div class="custom-row period-row">
+          <input type="number" placeholder="ค่าท่องเที่ยว" id="cf-travel" oninput="calcCF()" class="period-input">
+          <select id="cf-travel-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
+            <option value="1">฿/เดือน</option>
+            <option value="3">฿/ไตรมาส</option>
+            <option value="12">฿/ปี</option>
+          </select>
+        </div>
+        <div id="cf-var2-extra"></div>
+        <button class="btn-add" onclick="addExtraRow('cf-var2-extra','cf-var2-x','calcCF')">＋ เพิ่มรายจ่ายอื่นๆ</button>
+
+        <div style="margin-top:14px" class="calc-box"><span class="lbl">❤️ รวมรายจ่าย/เดือน</span><span id="cf-total-out" style="color:var(--red)">0</span> บาท</div>
+      </div>
+    </div>
+
+    <!-- NET + CHART -->
+    <div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap">
+      <div class="calc-box" style="flex:1;min-width:200px" id="cf-net-box">
+        <span class="lbl">💵 เงินคงเหลือ/เดือน</span><span id="cf-net">0</span> บาท
+      </div>
+      <div class="calc-box" style="flex:1;min-width:200px">
+        <span class="lbl">🏦 สำรองฉุกเฉิน ×6</span><span id="cf-emg6">0</span> บาท
+      </div>
+      <div class="calc-box" style="flex:1;min-width:200px">
+        <span class="lbl">🏦 สำรองฉุกเฉิน ×12</span><span id="cf-emg12">0</span> บาท
+      </div>
+    </div>
+
+    <!-- CHARTS -->
+    <div class="chart-row" style="margin-top:20px">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;letter-spacing:.06em">📊 สัดส่วนรายได้ vs รายจ่าย</div>
+        <div class="chart-wrap"><canvas id="chart-cf-bar"></canvas></div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;letter-spacing:.06em">🥧 โครงสร้างรายจ่าย</div>
+        <div class="chart-wrap"><canvas id="chart-cf-pie"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BALANCE SHEET -->
+  <div class="card">
+    <div class="card-label">งบดุลส่วนบุคคล</div>
+    <div class="card-title">⚖️ Personal Balance Sheet</div>
+
+    <div class="bs-grid">
+      <!-- ASSETS -->
+      <div>
+        <h4><span>💚</span> สินทรัพย์ (Assets)</h4>
+
+        <div class="ico-lbl" style="margin-bottom:6px"><span class="ico">💧</span>สินทรัพย์สภาพคล่อง</div>
+        <label class="row-label">เงินสด / เงินฝาก</label>
+        <div class="custom-row"><input type="number" placeholder="เงินสด / เงินฝาก" id="a-cash" oninput="calcBS()"><span style="font-size:11px;color:var(--muted);white-space:nowrap">฿</span></div>
+        <label class="row-label">กองทุนตลาดเงิน</label>
+        <div class="custom-row"><input type="number" placeholder="กองทุนตลาดเงิน" id="a-mmf" oninput="calcBS()"><span style="font-size:11px;color:var(--muted);white-space:nowrap">฿</span></div>
+        <div id="bs-liq-extra"></div>
+        <button class="btn-add" onclick="addExtraRow('bs-liq-extra','bs-liq-x','calcBS')">＋ เพิ่ม</button>
+
+        <div class="ico-lbl" style="margin:12px 0 6px"><span class="ico">📈</span>สินทรัพย์ลงทุน</div>
+        <label class="row-label">กองทุนรวม</label>
+        <div class="custom-row"><input type="number" placeholder="กองทุนรวม" id="a-fund" oninput="calcBS()"><span style="font-size:11px;color:var(--muted);white-space:nowrap">฿</span></div>
+        <label class="row-label">หุ้น</label>
+        <div class="custom-row"><input type="number" placeholder="หุ้น" id="a-stock" oninput="calcBS()"><span style="font-size:11px;color:var(--muted);white-space:nowrap">฿</span></div>
+        <label class="row-label">ทองคำ</label>
+        <div class="custom-row"><input type="number" placeholder="ทองคำ" id="a-gold" oninput="calcBS()"><span style="font-size:11px;color:var(--muted);white-space:nowrap">฿</span></div>
+        <label class="row-label">ประกันชีวิต (มูลค่าเวนคืน)</label>
+        <div class="custom-row"><input type="number" placeholder="ประกันชีวิต (มูลค่าเวนคืน)" id="a-insval" oninput="calcBS()"><span style="font-size:11px;color:var(--muted);white-space:nowrap">฿</span></div>
+        <div id="bs-inv-extra"></div>
+        <button class="btn-add" onclick="addExtraRow('bs-inv-extra','bs-inv-x','calcBS')">＋ เพิ่ม</button>
+
+        <div class="ico-lbl" style="margin:12px 0 6px"><span class="ico">🏠</span>สินทรัพย์ใช้งาน</div>
+        <label class="row-label">บ้าน/คอนโด</label>
+        <div class="custom-row"><input type="number" placeholder="บ้าน/คอนโด" id="a-home" oninput="calcBS()"><span style="font-size:11px;color:var(--muted);white-space:nowrap">฿</span></div>
+        <label class="row-label">รถยนต์</label>
+        <div class="custom-row"><input type="number" placeholder="รถยนต์" id="a-car" oninput="calcBS()"><span style="font-size:11px;color:var(--muted);white-space:nowrap">฿</span></div>
+        <div id="bs-use-extra"></div>
+        <button class="btn-add" onclick="addExtraRow('bs-use-extra','bs-use-x','calcBS')">＋ เพิ่ม</button>
+
+        <div class="calc-box" style="margin-top:12px"><span class="lbl">💚 รวมสินทรัพย์</span><span id="bs-total-a" style="color:#2a7a2a;font-size:15px">0</span> บาท</div>
+      </div>
+
+      <!-- LIABILITIES -->
+      <div>
+        <h4><span>❤️</span> หนี้สิน (Liabilities)</h4>
+
+        <div class="ico-lbl" style="margin-bottom:6px"><span class="ico">🏦</span>หนี้สินระยะสั้น</div>
+        <label class="row-label">บัตรเครดิต</label>
+        <div class="custom-row"><input type="number" placeholder="บัตรเครดิต" id="l-cc" oninput="calcBS()"><span style="font-size:11px;color:var(--muted);white-space:nowrap">฿</span></div>
+        <label class="row-label">หนี้ส่วนบุคคล</label>
+        <div class="custom-row"><input type="number" placeholder="หนี้ส่วนบุคคล" id="l-personal" oninput="calcBS()"><span style="font-size:11px;color:var(--muted);white-space:nowrap">฿</span></div>
+        <div id="bs-stl-extra"></div>
+        <button class="btn-add" onclick="addExtraRow('bs-stl-extra','bs-stl-x','calcBS')">＋ เพิ่ม</button>
+
+        <div class="ico-lbl" style="margin:12px 0 6px"><span class="ico">🏗️</span>หนี้สินระยะยาว</div>
+        <label class="row-label">สินเชื่อบ้าน (คงเหลือ)</label>
+        <div class="custom-row"><input type="number" placeholder="สินเชื่อบ้าน (คงเหลือ)" id="l-home" oninput="calcBS()"><span style="font-size:11px;color:var(--muted);white-space:nowrap">฿</span></div>
+        <label class="row-label">สินเชื่อรถ (คงเหลือ)</label>
+        <div class="custom-row"><input type="number" placeholder="สินเชื่อรถ (คงเหลือ)" id="l-car" oninput="calcBS()"><span style="font-size:11px;color:var(--muted);white-space:nowrap">฿</span></div>
+        <label class="row-label">สินเชื่อธุรกิจ</label>
+        <div class="custom-row"><input type="number" placeholder="สินเชื่อธุรกิจ" id="l-biz" oninput="calcBS()"><span style="font-size:11px;color:var(--muted);white-space:nowrap">฿</span></div>
+        <div id="bs-ltl-extra"></div>
+        <button class="btn-add" onclick="addExtraRow('bs-ltl-extra','bs-ltl-x','calcBS')">＋ เพิ่ม</button>
+
+        <div class="calc-box" style="margin-top:12px"><span class="lbl">❤️ รวมหนี้สิน</span><span id="bs-total-l" style="color:var(--red);font-size:15px">0</span> บาท</div>
+
+        <div style="margin-top:12px;padding:14px 16px;border-radius:var(--radius);border:2px solid var(--gold);background:var(--gold-lt)">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9a6e1a;margin-bottom:4px">⭐ ความมั่งคั่งสุทธิ (Net Worth)</div>
+          <div id="bs-networth" style="font-size:22px;font-weight:800">0 บาท</div>
+          <div id="bs-nw-badge" style="margin-top:4px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BS CHART -->
+    <div style="margin-top:20px">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;letter-spacing:.06em">📊 สินทรัพย์ vs หนี้สิน vs ความมั่งคั่งสุทธิ</div>
+      <div class="chart-wrap"><canvas id="chart-bs"></canvas></div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="goStep(1)">← ย้อนกลับ</button>
+    <button class="btn btn-primary" onclick="goStep(3)">ถัดไป → ปิรามิด 🔺</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PANEL 3 · ภาพรวมปิรามิดทางการเงิน
+══════════════════════════════════════════ -->
+<div class="step-panel" id="panel-3">
+  <!-- HERO -->
+  <div class="card" style="background:var(--black);border-color:var(--black);color:var(--white);text-align:center;padding:36px 28px">
+    <div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:8px">แนวคิดหลัก</div>
+    <div style="font-size:24px;font-weight:800;margin-bottom:10px;line-height:1.3">🔺 Financial Planning Pyramid</div>
+    <div style="font-size:14px;color:#aaa;max-width:540px;margin:0 auto;line-height:1.8">
+      การสร้างความมั่งคั่งที่ยั่งยืน ต้องเริ่มจาก<strong style="color:var(--gold)">ฐานที่แข็งแกร่ง</strong>ก่อนเสมอ<br>
+      เหมือนการสร้างบ้าน — ถ้าฐานไม่แน่น ยอดจะพังทลาย
+    </div>
+  </div>
+
+  <!-- ANIMATED PYRAMID + DESCRIPTIONS -->
+  <div class="card">
+    <div class="card-label">โครงสร้าง</div>
+    <div class="card-title">3 ชั้นของปิรามิดการเงิน</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:center">
+      <!-- SVG pyramid -->
+      <div class="pyramid-wrap" style="margin:0">
+        <svg viewBox="0 0 340 300" width="100%" style="max-width:340px">
+          <!-- Layer 3: Investment (top) -->
+          <polygon points="170,12 248,105 92,105" fill="#C9A84C" opacity=".95"/>
+          <text x="170" y="55" text-anchor="middle" font-family="Noto Sans Thai,sans-serif" font-size="11" font-weight="700" fill="#fff">📈 Investment</text>
+          <text x="170" y="71" text-anchor="middle" font-family="Noto Sans Thai,sans-serif" font-size="9" fill="#ffe8a0">Wealth Transfer</text>
+          <text x="170" y="85" text-anchor="middle" font-family="Noto Sans Thai,sans-serif" font-size="8" fill="#fff9dd">ลงทุน / ส่งต่อมรดก</text>
+
+          <!-- Layer 2: Saving (middle) -->
+          <polygon points="92,112 248,112 290,185 50,185" fill="#7B9E87" opacity=".95"/>
+          <text x="170" y="143" text-anchor="middle" font-family="Noto Sans Thai,sans-serif" font-size="11" font-weight="700" fill="#fff">💰 Saving</text>
+          <text x="170" y="158" text-anchor="middle" font-family="Noto Sans Thai,sans-serif" font-size="9" fill="#d4ebd9">Short · Mid · Long Term</text>
+          <text x="170" y="172" text-anchor="middle" font-family="Noto Sans Thai,sans-serif" font-size="8" fill="#e8f5ea">วางแผนเป้าหมายการเงิน</text>
+
+          <!-- Layer 1: Protection (base) — HIGHLIGHTED -->
+          <polygon points="50,192 290,192 338,278 2,278" fill="#4A7B9D" opacity=".97"/>
+          <rect x="2" y="192" width="336" height="86" fill="none" stroke="#fff" stroke-width="2.5" stroke-dasharray="6,3" rx="2"/>
+          <text x="170" y="224" text-anchor="middle" font-family="Noto Sans Thai,sans-serif" font-size="12" font-weight="800" fill="#fff">🛡️ Protection</text>
+          <text x="170" y="240" text-anchor="middle" font-family="Noto Sans Thai,sans-serif" font-size="9" fill="#d0e4f0">ฐานความมั่นคง — ต้องแน่นก่อน</text>
+          <text x="170" y="255" text-anchor="middle" font-family="Noto Sans Thai,sans-serif" font-size="8.5" fill="#e8f2f8">Emergency Cash · Risk Management</text>
+          <text x="170" y="270" text-anchor="middle" font-family="Noto Sans Thai,sans-serif" font-size="8" fill="#b8d4e8">สำรองฉุกเฉิน 6–12 เท่า · โอนย้ายความเสี่ยง</text>
+
+          <!-- Arrow: bottom up -->
+          <line x1="320" y1="270" x2="320" y2="20" stroke="#C9A84C" stroke-width="2" marker-end="url(#arr)"/>
+          <defs><marker id="arr" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L0,8 L8,4 z" fill="#C9A84C"/></marker></defs>
+          <text x="328" y="150" text-anchor="middle" font-family="Noto Sans Thai,sans-serif" font-size="8" fill="#C9A84C" transform="rotate(90,328,150)">เริ่มจากฐานขึ้นไป</text>
+        </svg>
+      </div>
+
+      <!-- Layer descriptions -->
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <!-- Protection -->
+        <div style="border:2px solid var(--blue);border-radius:10px;padding:14px 16px;background:var(--blue-lt);position:relative">
+          <div style="position:absolute;top:-10px;left:14px;background:var(--blue);color:#fff;font-size:10px;font-weight:700;padding:2px 10px;border-radius:10px;letter-spacing:.06em">ชั้น 1 · ฐาน (สำคัญสุด)</div>
+          <div style="font-size:14px;font-weight:800;color:var(--blue);margin-bottom:4px;margin-top:4px">🛡️ Protection</div>
+          <div style="font-size:12px;color:var(--ink);line-height:1.7">
+            สำรองเงินฉุกเฉิน <strong>6–12 เท่า</strong>ของรายจ่าย<br>
+            โอนย้ายความเสี่ยง ด้วยประกันชีวิต สุขภาพ อุบัติเหตุ โรคร้ายแรง
+          </div>
+        </div>
+        <!-- Saving -->
+        <div style="border:1.5px solid var(--green);border-radius:10px;padding:14px 16px;background:var(--green-lt)">
+          <div style="font-size:14px;font-weight:800;color:var(--green);margin-bottom:4px">💰 Saving / Financial Planning</div>
+          <div style="font-size:12px;color:var(--ink);line-height:1.7">
+            วางแผนเป้าหมายระยะ <strong>สั้น · กลาง · ยาว</strong><br>
+            บ้าน รถ การศึกษา เกษียณ วางแผนภาษี
+          </div>
+        </div>
+        <!-- Investment -->
+        <div style="border:1.5px solid var(--gold);border-radius:10px;padding:14px 16px;background:var(--gold-lt)">
+          <div style="font-size:14px;font-weight:800;color:#9a6e1a;margin-bottom:4px">📈 Investment & Wealth Transfer</div>
+          <div style="font-size:12px;color:var(--ink);line-height:1.7">
+            ลงทุนให้เงินงอกเงย <strong>หุ้น กองทุน ทองคำ</strong><br>
+            วางแผนส่งต่อความมั่งคั่ง (Legacy)
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WHY BASE FIRST -->
+  <div class="card">
+    <div class="card-label">หัวใจสำคัญ</div>
+    <div class="card-title">⚠️ ทำไมต้องเริ่มจากฐานก่อน?</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px">
+      <div style="background:var(--red-lt);border-radius:10px;padding:16px;text-align:center">
+        <div style="font-size:28px;margin-bottom:8px">😰</div>
+        <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:6px">ไม่มีฐาน</div>
+        <div style="font-size:11px;color:var(--ink);line-height:1.7">ลงทุน → เกิดอุบัติเหตุ<br>→ เงินหมด → <strong>หนี้สิน</strong><br>→ อนาคตพัง</div>
+      </div>
+      <div style="background:#FFF8E7;border-radius:10px;padding:16px;text-align:center;border:1.5px solid #F0C040">
+        <div style="font-size:28px;margin-bottom:8px">😐</div>
+        <div style="font-size:12px;font-weight:700;color:#856404;margin-bottom:6px">มีฐานบางส่วน</div>
+        <div style="font-size:11px;color:var(--ink);line-height:1.7">มีประกัน แต่ไม่พอ<br>→ เจ็บป่วยรุนแรง<br>→ ยังต้องใช้เงินออม</div>
+      </div>
+      <div style="background:var(--green-lt);border-radius:10px;padding:16px;text-align:center;border:1.5px solid var(--green)">
+        <div style="font-size:28px;margin-bottom:8px">😊</div>
+        <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:6px">ฐานแข็งแกร่ง</div>
+        <div style="font-size:11px;color:var(--ink);line-height:1.7">ทำประกัน → ลงทุน<br>→ เกิดเหตุ → มีคุ้มครอง<br>→ <strong>เงินลงทุนปลอดภัย</strong></div>
+      </div>
+    </div>
+
+    <!-- Timeline scenarios -->
+    <div style="background:var(--sand);border-radius:10px;padding:18px 20px;margin-bottom:0">
+      <div style="font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--muted);margin-bottom:14px;text-transform:uppercase">📋 เปรียบเทียบ 3 ระดับ ก่อนวางแผน</div>
+      <!-- Level 1 -->
+      <div style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 10px;border-radius:10px">ระดับ 1</span>
+          <span style="font-size:13px;font-weight:600">ไม่มีการป้องกันเลย</span>
+          <span style="margin-left:auto;font-size:11px;color:var(--red);font-weight:700">❌ การลงทุน "ล้มเหลว"</span>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;font-size:12px;flex-wrap:wrap">
+          <span style="background:var(--green-lt);padding:4px 10px;border-radius:6px">💹 ลงทุน</span>
+          <span style="color:var(--muted)">→</span>
+          <span style="background:#fee;padding:4px 10px;border-radius:6px">🚗 อุบัติเหตุ</span>
+          <span style="color:var(--muted)">→</span>
+          <span style="background:#fee;padding:4px 10px;border-radius:6px">💸 เงินหมด</span>
+          <span style="color:var(--muted)">→</span>
+          <span style="background:#fee;padding:4px 10px;border-radius:6px">💳 หนี้สิน</span>
+          <span style="color:var(--muted)">→</span>
+          <span style="background:#fee;padding:4px 10px;border-radius:6px">😰 อนาคตไม่แน่นอน</span>
+        </div>
+      </div>
+      <!-- Level 2 -->
+      <div style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="background:#856404;color:#fff;font-size:10px;font-weight:700;padding:2px 10px;border-radius:10px">ระดับ 2</span>
+          <span style="font-size:13px;font-weight:600">มีประกันบ้าง แต่ไม่ครบ</span>
+          <span style="margin-left:auto;font-size:11px;color:#856404;font-weight:700">⚠️ ยังเสี่ยง</span>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;font-size:12px;flex-wrap:wrap">
+          <span style="background:var(--green-lt);padding:4px 10px;border-radius:6px">💹 ลงทุน</span>
+          <span style="color:var(--muted)">→</span>
+          <span style="background:#fff3cd;padding:4px 10px;border-radius:6px">🏥 เจ็บป่วยหนัก</span>
+          <span style="color:var(--muted)">→</span>
+          <span style="background:#fff3cd;padding:4px 10px;border-radius:6px">💸 เงินหมด</span>
+          <span style="color:var(--muted)">→</span>
+          <span style="background:#fff3cd;padding:4px 10px;border-radius:6px">💳 หนี้สิน</span>
+          <span style="color:var(--muted)">→</span>
+          <span style="background:#fff3cd;padding:4px 10px;border-radius:6px">😐 อนาคตไม่แน่นอน</span>
+        </div>
+      </div>
+      <!-- Level 3 -->
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="background:var(--green);color:#fff;font-size:10px;font-weight:700;padding:2px 10px;border-radius:10px">ระดับ 3</span>
+          <span style="font-size:13px;font-weight:600">มีฐานแข็งแกร่ง ครบทุกด้าน</span>
+          <span style="margin-left:auto;font-size:11px;color:var(--green);font-weight:700">✅ Let's Go!</span>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;font-size:12px;flex-wrap:wrap">
+          <span style="background:var(--blue-lt);padding:4px 10px;border-radius:6px">🛡️ ทำประกัน</span>
+          <span style="color:var(--muted)">→</span>
+          <span style="background:var(--green-lt);padding:4px 10px;border-radius:6px">💹 ลงทุน</span>
+          <span style="color:var(--muted)">→</span>
+          <span style="background:#fee;padding:4px 10px;border-radius:6px">🚗 อุบัติเหตุ</span>
+          <span style="color:var(--muted)">→</span>
+          <span style="background:var(--blue-lt);padding:4px 10px;border-radius:6px">✅ มีคุ้มครอง</span>
+          <span style="color:var(--muted)">→</span>
+          <span style="background:var(--gold-lt);padding:4px 10px;border-radius:6px">💰 เงินเหลือ</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRINCIPLE CARDS -->
+  <div class="card">
+    <div class="card-label">หลักการสำคัญ</div>
+    <div class="card-title">💡 Serious Money — ไม่มีไม่ได้</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px">แม้เราสามารถวางแผนก่อนได้ แต่ขาดฐานที่แข็งแกร่ง ทุกอย่างเสี่ยงพัง</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:14px;background:var(--sand);border-radius:8px">
+        <span style="font-size:26px;flex-shrink:0">🏦</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:3px">Emergency Cash</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6">เงินสำรองฉุกเฉิน <strong>6–12 เท่า</strong>ของรายจ่ายต่อเดือน ใช้เมื่อเกิดเหตุไม่คาดฝัน</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:14px;background:var(--sand);border-radius:8px">
+        <span style="font-size:26px;flex-shrink:0">❤️‍🩹</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:3px">ความคุ้มครองชีวิต</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6">ทุนประกันอย่างน้อย <strong>รายจ่าย × 120 เดือน</strong> เพื่อปกป้องคนที่รัก</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:14px;background:var(--sand);border-radius:8px">
+        <span style="font-size:26px;flex-shrink:0">🏥</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:3px">ความคุ้มครองสุขภาพ</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6">ค่ารักษา อุบัติเหตุ และโรคร้ายแรง ต้องครอบคลุมก่อนลงทุน</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:14px;background:var(--sand);border-radius:8px">
+        <span style="font-size:26px;flex-shrink:0">🎯</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:3px">วางแผนตรงจุด</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6">ค้นหาเป้าหมาย วางแผนตรงจุด สร้างคุณค่าให้ลูกค้า ด้วยปิรามิดการเงิน</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quote -->
+    <div style="margin-top:20px;padding:18px 22px;background:var(--black);border-radius:10px;text-align:center">
+      <div style="font-size:15px;font-weight:700;color:var(--gold);line-height:1.7">"วางแผนวันนี้ เพื่อชีวิตที่คุณเลือกได้ในแบบที่คุณฝัน"</div>
+      <div style="font-size:11px;color:#666;margin-top:6px;letter-spacing:.08em">#ความมั่งคั่งสร้างได้ที่นี่ · Sunita MDRT</div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="goStep(2)">← ย้อนกลับ</button>
+    <button class="btn btn-primary" onclick="goStep(4)">ถัดไป → Protection 🛡️</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PANEL 4 · PROTECTION
+══════════════════════════════════════════ -->
+<div class="step-panel" id="panel-4">
+
+  <!-- ══ HLV STEP 1: INCOME ══ -->
+  <div class="card" style="border-left:4px solid var(--blue)">
+    <div class="card-label">ขั้นที่ 1 · Human Life Value</div>
+    <div class="card-title"><span class="dot" style="background:var(--blue)"></span>💙 คำนวณมูลค่าชีวิต (HLV)</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px">HLV = มูลค่า PV ของรายได้สุทธิที่ครอบครัวจะสูญเสียไป หากเสียชีวิตก่อนเกษียณ — คือทุนประกันชีวิตขั้นต่ำที่ควรมี</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px">
+      <div class="form-group">
+        <label>💵 รายได้ต่อปี (฿)</label>
+        <input type="number" id="hlv-income-yr" placeholder="600,000" oninput="calcHLV()">
+        <div style="font-size:10px;color:var(--muted);margin-top:3px">หรือ <span id="hlv-income-mo-disp">—</span> ฿/เดือน</div>
+      </div>
+      <div class="form-group">
+        <label>🛒 ค่าใช้จ่ายส่วนตัว/ปี (฿)</label>
+        <input type="number" id="hlv-expense-yr" placeholder="120,000" oninput="calcHLV()">
+        <div style="font-size:10px;color:var(--muted);margin-top:3px">สัดส่วนที่ไม่เกี่ยวครอบครัว</div>
+      </div>
+      <div class="form-group">
+        <label>📈 อัตราคิดลด (%/ปี)</label>
+        <input type="number" id="hlv-disc" placeholder="3.5" step="0.5" value="3.5" oninput="calcHLV()">
+        <div style="font-size:10px;color:var(--muted);margin-top:3px">discount rate (เงินเฟ้อ/อัตราดอก)</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px">
+      <div class="form-group">
+        <label>🎂 อายุปัจจุบัน</label>
+        <div class="calc-box"><span id="hlv-age-now" style="font-weight:800;color:var(--gold)">—</span> ปี</div>
+      </div>
+      <div class="form-group">
+        <label>🌅 อายุเกษียณ</label>
+        <input type="number" id="hlv-retire-age" placeholder="60" oninput="calcHLV()">
+      </div>
+      <div class="form-group">
+        <label>📈 อัตราเพิ่มเงินเดือน (%/ปี)</label>
+        <input type="number" id="hlv-salary-growth" placeholder="3" step="0.5" oninput="calcHLV()">
+      </div>
+    </div>
+
+    <!-- HLV diagram -->
+    <div style="background:var(--sand);border-radius:10px;padding:14px 16px;margin-bottom:14px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">📐 สูตร HLV = PV of (รายได้ − ค่าใช้จ่ายส่วนตัว) ตลอดช่วงทำงาน</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div style="background:var(--white);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;min-width:130px">
+          <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">รายได้สุทธิ/ปี</div>
+          <div id="hlv-net-income" style="font-size:15px;font-weight:800;color:var(--ink)">—</div>
+          <div style="font-size:9px;color:var(--muted)">฿/ปี</div>
+        </div>
+        <div style="text-align:center;padding:0 6px">
+          <div style="font-size:10px;color:var(--muted)">× ปีทำงานที่เหลือ</div>
+          <div style="height:2px;background:linear-gradient(to right,var(--blue),var(--gold));min-width:80px;border-radius:1px;position:relative;margin:4px 0">
+            <div style="position:absolute;right:-6px;top:-5px;color:var(--gold);font-size:12px">▶</div>
+          </div>
+          <div style="font-size:10px;color:var(--muted)">PV Annuity (i=<span id="hlv-disc-label">3.5</span>%)</div>
+        </div>
+        <div style="background:var(--blue-lt);border:1.5px solid var(--blue);border-radius:8px;padding:10px 14px;text-align:center;min-width:130px">
+          <div style="font-size:9px;color:var(--blue);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">🎯 HLV ที่ควรมี</div>
+          <div id="hlv-result" style="font-size:18px;font-weight:900;color:var(--blue)">—</div>
+          <div style="font-size:9px;color:var(--blue)">฿ (ทุนประกันขั้นต่ำ)</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <!-- ══ /HLV card ══ -->
+
+  <!-- ══ NEEDS-BASED APPROACH (separate section) ══ -->
+  <div class="card" style="border-left:4px solid var(--green)">
+    <div class="card-label">ขั้นที่ 2 · Needs-Based Approach</div>
+    <div class="card-title"><span class="dot" style="background:var(--green)"></span>📋 คำนวณทุนประกันแบบ Needs-Based</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:10px">ทุนประกัน = ภาระหนี้ + ค่าใช้จ่ายครอบครัว + เป้าหมาย − สินทรัพย์ที่มีอยู่</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">➕ ภาระ / ความต้องการ</div>
+        <div class="form-group" style="margin-bottom:8px"><label>🏠 หนี้สินทั้งหมด (฿)</label><input type="number" id="nb-debt" placeholder="0" oninput="calcHLV()"></div>
+        <div class="form-group" style="margin-bottom:8px"><label>👨‍👩‍👧 ค่าใช้จ่ายครอบครัว/เดือน (฿)</label><input type="number" id="nb-family-exp" placeholder="0" oninput="calcHLV()"></div>
+        <div class="form-group" style="margin-bottom:8px"><label>📅 ระยะเวลาที่ครอบครัวต้องการ (ปี)</label><input type="number" id="nb-years" placeholder="20" oninput="calcHLV()"></div>
+        <div class="form-group"><label>🎓 ทุนการศึกษาบุตร (฿)</label><input type="number" id="nb-edu" placeholder="0" oninput="calcHLV()"></div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">➖ สินทรัพย์ที่มีอยู่แล้ว</div>
+        <div class="form-group" style="margin-bottom:8px"><label>💰 เงินออม/เงินลงทุน (฿)</label><input type="number" id="nb-assets" placeholder="0" oninput="calcHLV()"></div>
+        <div class="form-group" style="margin-bottom:8px"><label>🛡️ ทุนประกันชีวิตที่มีอยู่ (฿)</label><input type="number" id="life-sum" placeholder="0" oninput="calcHLV()"></div>
+        <div class="form-group"><label>🏛️ สวัสดิการรัฐ/บำเหน็จ (฿)</label><input type="number" id="nb-pension" placeholder="0" oninput="calcHLV()"></div>
+      </div>
+    </div>
+    <div style="background:var(--sand);border-radius:8px;padding:12px 16px;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+      <div style="flex:1;min-width:150px;text-align:center">
+        <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">Needs-Based ทุนที่ต้องการ</div>
+        <div id="nb-result" style="font-size:18px;font-weight:800;color:var(--blue)">—</div>
+        <div style="font-size:9px;color:var(--muted)">฿</div>
+      </div>
+      <div style="font-size:20px;color:var(--muted)">→</div>
+      <div id="prot-gap-box" style="flex:1;min-width:150px;text-align:center;padding:10px;border-radius:8px;border:2px solid var(--border)">
+        <div id="prot-gap-label" style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">ช่องว่างทุนประกัน</div>
+        <div id="prot-gap" style="font-size:18px;font-weight:800">—</div>
+        <div style="font-size:9px;color:var(--muted)">฿ ที่ควรเพิ่ม</div>
+      </div>
+    </div>
+  </div>
+  <!-- ══ /Needs-Based card ══ -->
+
+  <!-- ══ COMPARISON: HLV vs Needs-Based ══ -->
+  <div class="card">
+    <div class="card-label">สรุปเปรียบเทียบ</div>
+    <div class="card-title">⚖️ HLV vs Needs-Based</div>
+    <!-- แนะนำ -->
+    <div style="margin-top:12px;background:var(--black);border-radius:8px;padding:14px 16px">
+      <div style="font-size:10px;color:#aaa;letter-spacing:.06em;margin-bottom:6px">💡 สรุปคำแนะนำ Protection</div>
+      <div id="prot-advice" style="font-size:13px;color:#ddd;line-height:1.9">กรอกข้อมูลเพื่อดูคำแนะนำ</div>
+    </div>
+
+    <!-- Chart -->
+    <div style="margin-top:14px;background:var(--sand);border-radius:10px;padding:14px 16px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">📊 HLV vs Needs-Based vs ทุนที่มีอยู่</div>
+      <div class="chart-wrap" style="height:200px"><canvas id="chart-prot"></canvas></div>
+    </div>
+  </div>
+  <!-- ══ /comparison card ══ -->
+
+  <!-- ══ ประกันสุขภาพ / non-life ══ -->
+  <div class="card">
+    <div class="card-label">ชั้นที่ 1 · ความคุ้มครองเพิ่มเติม</div>
+    <div class="card-title">🏥 ความคุ้มครองสุขภาพ & ทรัพย์สิน</div>
+    <div class="protect-grid">
+      <div class="form-group"><label>💳 เบี้ยประกันชีวิตรวม/ปี (฿)</label><input type="number" id="life-prem" placeholder="0"></div>
+      <div class="form-group"><label>🏥 ค่าห้อง/รักษา (฿/ปี)</label><input type="number" id="life-hosp" placeholder="0" oninput="calcHLV()"></div>
+      <div class="form-group"><label>🚗 อุบัติเหตุ (฿)</label><input type="number" id="life-acc" placeholder="0" oninput="calcHLV()"></div>
+      <div class="form-group"><label>💵 ค่าชดเชยรายได้ (฿/วัน)</label><input type="number" id="life-income" placeholder="0"></div>
+      <div class="form-group"><label>🎗️ โรคร้ายแรง CI (฿)</label><input type="number" id="life-ci" placeholder="0" oninput="calcHLV()"></div>
+    </div>
+    <div id="life-extra-fields"></div>
+    <button class="btn-add" onclick="addProtExtra()">＋ เพิ่มความคุ้มครองอื่นๆ</button>
+
+    <div class="sec-div">🚘 Non-life</div>
+    <div class="protect-grid">
+      <div class="form-group"><label>🚗 ประกันรถยนต์</label>
+        <select id="nl-car"><option value="">— ไม่มี —</option><option>ชั้น 1</option><option>ชั้น 2+</option><option>ชั้น 3</option></select>
+      </div>
+      <div class="form-group"><label>🏠 ประกันบ้าน</label>
+        <select id="nl-home"><option value="">— ไม่มี —</option><option>มี</option></select>
+      </div>
+    </div>
+    <div id="nonlife-extra"></div>
+    <button class="btn-add" onclick="addExtraRow('nonlife-extra','nl-x','null')">＋ เพิ่มประกันอื่นๆ</button>
+
+    <div class="sec-div">📝 บันทึก</div>
+    <textarea id="prot-note" rows="2" placeholder="ช่องว่างความคุ้มครองที่ต้องเพิ่มเติม..."></textarea>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="goStep(3)">← ย้อนกลับ</button>
+    <button class="btn btn-primary" onclick="goStep(5)">ถัดไป → Retirement 🌅</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PANEL 3 · SAVING
+══════════════════════════════════════════ -->
+<div class="step-panel" id="panel-5">
+  <div class="card">
+    <div class="card-label">ชั้นที่ 2 · กลางปิรามิด</div>
+    <div class="card-title"><span class="dot" style="background:var(--green)"></span>🌅 Retirement — แผนเกษียณอายุ</div>
+
+    <div class="sec-div">🌳 Retirement Plan — แผนเกษียณ</div>
+
+    <!-- ══ STEP 1: RETIREMENT NEED (TIME VALUE) ══ -->
+    <div class="card" style="border-left:4px solid var(--gold)">
+      <div class="card-label">ขั้นที่ 1 · Time Value of Money</div>
+      <div class="card-title">🎯 ความต้องการใช้เงินหลังเกษียณ (PV → FV)</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:14px">เงิน 50,000 บาทวันนี้ ≠ 50,000 บาทในอนาคต — ต้องปรับด้วยเงินเฟ้อให้อยู่ใน <strong>เวลาเดียวกัน</strong> ก่อนนำมาคำนวณ</p>
+
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px">
+        <div class="form-group">
+          <label>อายุปัจจุบัน</label>
+          <div class="calc-box" style="justify-content:center"><span id="retire-age-now" style="font-size:18px;font-weight:900;color:var(--gold)">—</span><span style="font-size:11px;color:var(--muted);margin-left:4px">ปี</span></div>
+        </div>
+        <div class="form-group">
+          <label>อายุเกษียณ</label>
+          <input type="number" id="retire-at" placeholder="60" oninput="calcRetirePlan()">
+        </div>
+        <div class="form-group">
+          <label>อายุขัยประมาณ</label>
+          <input type="number" id="retire-life" placeholder="85" oninput="calcRetirePlan()">
+        </div>
+        <div class="form-group">
+          <label>เงินเฟ้อ (%/ปี)</label>
+          <input type="number" id="retire-inf" placeholder="3" step="0.5" oninput="calcRetirePlan()">
+        </div>
+        <div class="form-group">
+          <label>ผลตอบแทน (%/ปี)</label>
+          <input type="number" id="retire-ret" placeholder="5" step="0.5" oninput="calcRetirePlan()">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>💰 ต้องการใช้เงินหลังเกษียณ (฿/เดือน) <span style="color:var(--muted);font-weight:400">— มูลค่าปัจจุบัน PV</span></label>
+          <input type="number" id="retire-need" placeholder="50,000" oninput="calcRetirePlan()">
+        </div>
+      </div>
+
+      <!-- PV → FV arrow diagram -->
+      <div style="background:var(--sand);border-radius:10px;padding:14px 16px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:0;flex-wrap:wrap">
+          <div style="background:var(--white);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;min-width:130px">
+            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">PV · วันนี้</div>
+            <div id="tvm-pv" style="font-size:16px;font-weight:800;color:var(--ink)">—</div>
+            <div style="font-size:9px;color:var(--muted)">฿/เดือน</div>
+          </div>
+          <div style="flex:1;text-align:center;padding:0 8px;min-width:100px">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:2px">เงินเฟ้อ <span id="tvm-inf-label">3</span>% × <span id="tvm-years-label">—</span> ปี</div>
+            <div style="height:2px;background:linear-gradient(to right,var(--gold),var(--green));border-radius:1px;position:relative">
+              <div style="position:absolute;right:-6px;top:-5px;color:var(--green);font-size:12px">▶</div>
+            </div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">FV = PV × (1+i)ⁿ</div>
+          </div>
+          <div style="background:var(--green-lt);border:1.5px solid var(--green);border-radius:8px;padding:10px 14px;text-align:center;min-width:130px">
+            <div style="font-size:9px;color:#2a6a3a;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">FV · ตอนเกษียณ</div>
+            <div id="tvm-fv" style="font-size:16px;font-weight:800;color:var(--green)">—</div>
+            <div style="font-size:9px;color:#2a6a3a">฿/เดือน (รวมเงินเฟ้อ)</div>
+          </div>
+          <div style="flex:1;text-align:center;padding:0 8px;min-width:120px">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:2px">× จำนวนปีหลังเกษียณ</div>
+            <div style="height:2px;background:linear-gradient(to right,var(--green),var(--blue));border-radius:1px;position:relative">
+              <div style="position:absolute;right:-6px;top:-5px;color:var(--blue);font-size:12px">▶</div>
+            </div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">PV of Annuity</div>
+          </div>
+          <div style="background:var(--black);border:1.5px solid #333;border-radius:8px;padding:10px 14px;text-align:center;min-width:140px">
+            <div style="font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">Retirement Fund ที่ต้องมี</div>
+            <div id="retire-lump" style="font-size:15px;font-weight:800;color:#e8c870">—</div>
+            <div style="font-size:9px;color:#666">฿ ณ วันเกษียณ</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- emoji timeline -->
+      <div id="retire-timeline" style="margin-bottom:14px"></div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div style="background:var(--gold-lt);border-radius:8px;padding:10px;text-align:center;border:1.5px solid var(--gold)">
+          <div style="font-size:9px;color:#9a6e1a;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">⏳ เหลือก่อนเกษียณ</div>
+          <div id="retire-years-left" style="font-size:22px;font-weight:900;color:var(--gold)">—</div>
+          <div style="font-size:10px;color:#9a6e1a">ปี</div>
+        </div>
+        <div style="background:var(--sand);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">📅 ระยะหลังเกษียณ</div>
+          <div id="retire-post-years" style="font-size:22px;font-weight:900;color:var(--ink)">—</div>
+          <div style="font-size:10px;color:var(--muted)">ปี</div>
+        </div>
+        <div style="background:var(--blue-lt);border-radius:8px;padding:10px;text-align:center;border:1.5px solid var(--blue)">
+          <div style="font-size:9px;color:var(--blue);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">📈 ใช้/เดือน (FV)</div>
+          <div id="retire-need-future" style="font-size:16px;font-weight:800;color:var(--blue)">—</div>
+          <div style="font-size:10px;color:var(--blue)">฿/เดือน</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ STEP 2: SOURCE OF FUNDS ══ -->
+    <div class="card" style="border-left:4px solid var(--green)">
+      <div class="card-label">ขั้นที่ 2 · Source of Funds</div>
+      <div class="card-title">💼 สินทรัพย์ที่มีอยู่ — FV ณ วันเกษียณ</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:14px">นำสินทรัพย์แต่ละรายการมาคำนวณ <strong>FV (Future Value)</strong> ณ วันเกษียณ เพื่อให้อยู่ในเวลาเดียวกันกับ Retirement Fund ก่อนนำมาเปรียบเทียบ</p>
+
+      <table class="tbl" id="source-of-funds-table">
+        <thead>
+          <tr>
+            <th>แหล่งเงินทุน</th>
+            <th>มูลค่าปัจจุบัน PV (฿)</th>
+            <th>ผลตอบแทน (%/ปี)</th>
+            <th>FV ณ วันเกษียณ (฿)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>📈 กองทุนสำรองเลี้ยงชีพ (PVD)</td>
+            <td><input type="number" id="ret-pvd" placeholder="0" oninput="calcRetirePlan()"></td>
+            <td><input type="number" id="ret-pvd-r" placeholder="5" step="0.5" oninput="calcRetirePlan()" style="width:70px"></td>
+            <td style="font-weight:700;color:var(--green)" id="ret-pvd-fv">—</td>
+          </tr>
+          <tr>
+            <td>🏛️ กบข. / บำเหน็จบำนาญ</td>
+            <td><input type="number" id="ret-gpf" placeholder="0" oninput="calcRetirePlan()"></td>
+            <td><input type="number" id="ret-gpf-r" placeholder="3" step="0.5" oninput="calcRetirePlan()" style="width:70px"></td>
+            <td style="font-weight:700;color:var(--green)" id="ret-gpf-fv">—</td>
+          </tr>
+          <tr>
+            <td>📜 ประกันชีวิต/บำนาญ (มูลค่าตอนเกษียณ)</td>
+            <td><input type="number" id="ret-annuity" placeholder="0" oninput="calcRetirePlan()"></td>
+            <td><input type="number" id="ret-annuity-r" placeholder="4" step="0.5" oninput="calcRetirePlan()" style="width:70px"></td>
+            <td style="font-weight:700;color:var(--green)" id="ret-annuity-fv">—</td>
+          </tr>
+          <tr>
+            <td>💰 RMF / กองทุนเพื่อการเลี้ยงชีพ</td>
+            <td><input type="number" id="ret-rmf" placeholder="0" oninput="calcRetirePlan()"></td>
+            <td><input type="number" id="ret-rmf-r" placeholder="6" step="0.5" oninput="calcRetirePlan()" style="width:70px"></td>
+            <td style="font-weight:700;color:var(--green)" id="ret-rmf-fv">—</td>
+          </tr>
+          <tr>
+            <td>🏠 อสังหาริมทรัพย์ / เงินปันผล</td>
+            <td><input type="number" id="ret-prop" placeholder="0" oninput="calcRetirePlan()"></td>
+            <td><input type="number" id="ret-prop-r" placeholder="4" step="0.5" oninput="calcRetirePlan()" style="width:70px"></td>
+            <td style="font-weight:700;color:var(--green)" id="ret-prop-fv">—</td>
+          </tr>
+          <tr>
+            <td>🏦 เงินออม / เงินลงทุนอื่นๆ (ปัจจุบัน)</td>
+            <td><input type="number" id="retire-current-saving" placeholder="0" oninput="calcRetirePlan()"></td>
+            <td><input type="number" id="retire-current-saving-r" placeholder="5" step="0.5" oninput="calcRetirePlan()" style="width:70px"></td>
+            <td style="font-weight:700;color:var(--green)" id="retire-current-saving-fv">—</td>
+          </tr>
+        </tbody>
+      </table>
+      <div id="ret-extra-rows"></div>
+      <button class="btn-add" onclick="addSourceRow()">＋ เพิ่มแหล่งเงินทุน</button>
+
+      <!-- Source of funds bar chart -->
+      <div style="margin-top:14px;background:var(--sand);border-radius:10px;padding:14px 16px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">📊 FV แหล่งเงินทุน ณ วันเกษียณ</div>
+        <div style="position:relative;height:180px"><canvas id="chart-source-funds"></canvas></div>
+      </div>
+
+      <div style="margin-top:12px" class="calc-box">
+        <span class="lbl">💼 รวม FV แหล่งเงินทุนทั้งหมด</span>
+        <span id="ret-prepared-total" style="font-size:16px;font-weight:800;color:var(--green)">0</span>
+        <span class="lbl" style="margin-left:8px">฿ ณ วันเกษียณ</span>
+      </div>
+    </div>
+
+    <!-- ══ STEP 3: GAP ANALYSIS ══ -->
+    <div class="card" style="border-left:4px solid var(--red)">
+      <div class="card-label">ขั้นที่ 3 · Gap Analysis</div>
+      <div class="card-title">📉 ช่องว่างที่ต้องวางแผน (Retirement Gap)</div>
+
+      <div style="background:var(--sand);border-radius:10px;padding:16px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <div style="flex:1;min-width:160px;text-align:center;padding:12px;background:var(--black);border-radius:8px">
+            <div style="font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">🏦 Retirement Fund ที่ต้องมี</div>
+            <div id="gap-need" style="font-size:17px;font-weight:800;color:#e8c870">—</div>
+            <div style="font-size:9px;color:#666">฿</div>
+          </div>
+          <div style="font-size:28px;color:var(--muted)">−</div>
+          <div style="flex:1;min-width:160px;text-align:center;padding:12px;background:var(--green-lt);border-radius:8px;border:1.5px solid var(--green)">
+            <div style="font-size:9px;color:#2a6a3a;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">💼 FV แหล่งเงินทุนที่มี</div>
+            <div id="gap-have" style="font-size:17px;font-weight:800;color:var(--green)">—</div>
+            <div style="font-size:9px;color:#2a6a3a">฿</div>
+          </div>
+          <div style="font-size:28px;color:var(--muted)">=</div>
+          <div id="gap-result-box" style="flex:1;min-width:160px;text-align:center;padding:12px;border-radius:8px;border:2px solid var(--red)">
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px" id="gap-label">⚠️ ช่องว่าง (GAP)</div>
+            <div id="ret-still-need" style="font-size:20px;font-weight:900">—</div>
+            <div style="font-size:9px" id="gap-sub">฿ ที่ต้องวางแผนเพิ่ม</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gap chart -->
+      <div style="position:relative;height:160px"><canvas id="chart-gap"></canvas></div>
+    </div>
+
+    <!-- ══ STEP 4: INVESTMENT STRATEGY ══ -->
+    <div class="card" style="border-left:4px solid var(--blue)">
+      <div class="card-label">ขั้นที่ 4 · Investment Strategy</div>
+      <div class="card-title">📈 แนวทางการลงทุน — ต้องออมเท่าไหร่?</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px">💰 ออมรายเดือน (PMT)</div>
+          <div style="background:var(--green-lt);border-radius:10px;padding:16px;text-align:center;border:1.5px solid var(--green)">
+            <div style="font-size:10px;color:#2a6a3a;margin-bottom:4px">ต้องออมเดือนละ</div>
+            <div id="retire-monthly-save" style="font-size:28px;font-weight:900;color:var(--green)">—</div>
+            <div style="font-size:11px;color:#2a6a3a">บาท/เดือน</div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px">💎 ออมรายปี (Annual)</div>
+          <div style="background:var(--gold-lt);border-radius:10px;padding:16px;text-align:center;border:1.5px solid var(--gold)">
+            <div style="font-size:10px;color:#9a6e1a;margin-bottom:4px">หรือปีละ</div>
+            <div id="retire-annual-save" style="font-size:28px;font-weight:900;color:var(--gold)">—</div>
+            <div style="font-size:11px;color:#9a6e1a">บาท/ปี</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- เส้นชีวิต + sensitivity -->
+      <div style="background:var(--sand);border-radius:10px;padding:14px 16px;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">📈 เส้นชีวิต — Wealth Accumulation & Decumulation</div>
+        <div style="position:relative;height:280px"><canvas id="chart-life"></canvas></div>
+      </div>
+
+      <!-- Sensitivity: what-if return rate -->
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px">🔬 Sensitivity Analysis — ถ้าผลตอบแทนต่างกัน?</div>
+        <table class="tbl" id="sensitivity-table">
+          <thead><tr><th>ผลตอบแทน (%/ปี)</th><th>เงินก้อนที่ต้องมี (฿)</th><th>ต้องออม/เดือน (฿)</th><th>ต้องออม/ปี (฿)</th></tr></thead>
+          <tbody id="sensitivity-body"></tbody>
+        </table>
+      </div>
+
+      <!-- Tax planning -->
+      <div class="sec-div">🧾 การวางแผนภาษีเพื่อเกษียณ</div>
+      <div class="form-row">
+        <div class="form-group"><label>รายได้ต่อปี (฿)</label><input type="number" id="tax-income" placeholder="0" oninput="calcTax()"></div>
+        <div class="form-group"><label>ลดหย่อนปัจจุบัน (฿/ปี)</label><input type="number" id="tax-deduct" placeholder="0" oninput="calcTax()"></div>
+        <div class="form-group"><div class="calc-box"><span class="lbl">🎯 ช่องว่างลดหย่อน</span><span id="tax-room">—</span> ฿/ปี</div></div>
+      </div>
+      <div id="tax-extra"></div>
+      <button class="btn-add" onclick="addExtraRow('tax-extra','tax-x','null')">＋ เพิ่มรายการลดหย่อน</button>
+
+      <div style="margin-top:12px;padding:14px 16px;background:var(--black);border-radius:8px">
+        <div style="font-size:10px;color:#aaa;margin-bottom:6px;letter-spacing:.06em">💡 คำแนะนำแนวทางลงทุนเบื้องต้น</div>
+        <div id="invest-advice" style="font-size:13px;color:#ddd;line-height:1.8">กรอกข้อมูลเพื่อดูคำแนะนำ</div>
+      </div>
+
+      <!-- ══ TIMELINE OVERVIEW (ท้ายสรุป) ══ -->
+      <div style="margin-top:18px;padding-top:18px;border-top:1.5px dashed var(--border)">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:14px">🗓️ ไทม์ไลน์การเกษียณโดยสรุป</div>
+
+        <div style="position:relative;padding:0 10px 10px">
+          <!-- Timeline bar -->
+          <div style="display:flex;align-items:center;height:10px;border-radius:6px;overflow:hidden">
+            <div id="tl-bar-save" style="flex:1;background:var(--blue);height:100%" title="ช่วงเก็บออม"></div>
+            <div id="tl-bar-retire" style="flex:1;background:var(--gold);height:100%" title="ช่วงใช้หลังเกษียณ"></div>
+          </div>
+          <!-- Markers -->
+          <div style="display:flex;justify-content:space-between;margin-top:6px">
+            <div style="text-align:left">
+              <div style="font-size:10px;color:var(--muted)">วันนี้</div>
+              <div style="font-size:15px;font-weight:800;color:var(--blue)" id="tl-age-now">— ปี</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:10px;color:var(--muted)">เกษียณ</div>
+              <div style="font-size:15px;font-weight:800;color:var(--gold)" id="tl-age-retire">— ปี</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:10px;color:var(--muted)">อายุขัยประมาณ</div>
+              <div style="font-size:15px;font-weight:800;color:var(--red)" id="tl-age-life">— ปี</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:18px">
+          <div class="calc-box" style="flex-direction:column;align-items:flex-start;padding:12px 14px">
+            <span class="lbl" style="font-size:10px">⏳ เวลาเก็บเงิน</span>
+            <span id="tl-years-save" style="font-size:18px;font-weight:900;color:var(--blue)">—</span>
+            <span style="font-size:10px;color:var(--muted)">ปี</span>
+          </div>
+          <div class="calc-box" style="flex-direction:column;align-items:flex-start;padding:12px 14px">
+            <span class="lbl" style="font-size:10px">🌅 ใช้หลังเกษียณ</span>
+            <span id="tl-years-retire" style="font-size:18px;font-weight:900;color:var(--gold)">—</span>
+            <span style="font-size:10px;color:var(--muted)">ปี</span>
+          </div>
+          <div class="calc-box" style="flex-direction:column;align-items:flex-start;padding:12px 14px">
+            <span class="lbl" style="font-size:10px">💰 ต้องออม/เดือน</span>
+            <span id="tl-monthly-save" style="font-size:18px;font-weight:900;color:var(--green)">—</span>
+            <span style="font-size:10px;color:var(--muted)">บาท</span>
+          </div>
+          <div class="calc-box" style="flex-direction:column;align-items:flex-start;padding:12px 14px">
+            <span class="lbl" style="font-size:10px">📈 ผลตอบแทนที่ใช้คำนวณ</span>
+            <span id="tl-return-rate" style="font-size:18px;font-weight:900;color:var(--ink)">—</span>
+            <span style="font-size:10px;color:var(--muted)">% ต่อปี</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="goStep(4)">← ย้อนกลับ</button>
+    <button class="btn btn-primary" onclick="goStep(6)">ถัดไป → Education Plan 🎓</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PANEL 6 · EDUCATION PLAN
+══════════════════════════════════════════ -->
+<div class="step-panel" id="panel-6">
+  <div class="card">
+    <div class="card-label">แผนการศึกษา</div>
+    <div class="card-title"><span class="dot" style="background:var(--gold)"></span>🎓 Education Plan — ทุนการศึกษา</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px">วางแผนทุนการศึกษาบุตรตั้งแต่วันนี้ ให้ลูกได้รับโอกาสที่ดีที่สุด</p>
+
+    <!-- CHILD INFO -->
+    <div class="sec-div">👶 ข้อมูลบุตร</div>
+    <div id="edu-children">
+      <div class="edu-child-card" style="background:var(--sand);border-radius:10px;padding:16px;margin-bottom:12px;border:1.5px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+          <span style="font-size:16px">👧</span>
+          <strong style="font-size:13px">บุตรคนที่ 1</strong>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>ชื่อบุตร</label><input type="text" id="child-1-name" placeholder="ชื่อ"></div>
+          <div class="form-group"><label>อายุปัจจุบัน (ปี)</label><input type="number" id="child-1-age" placeholder="0" min="0" max="25" oninput="calcEdu(1)"></div>
+          <div class="form-group"><label>อายุเริ่มเรียน ม.1 (ปี)</label><input type="number" id="child-1-start" placeholder="12" min="3" max="18" oninput="calcEdu(1)"></div>
+        </div>
+        <div class="sec-div" style="margin-top:8px">📚 ค่าเรียนรายปี (ปัจจุบัน)</div>
+        <table class="tbl">
+          <thead><tr><th>ระดับการศึกษา</th><th>ค่าเรียน/ปี (฿)</th><th>จำนวนปี</th><th>อายุที่เรียน</th></tr></thead>
+          <tbody>
+            <tr><td>🏫 อนุบาล</td><td><input type="number" id="c1-kindergarten" placeholder="0" oninput="calcEdu(1)"></td><td><input type="number" id="c1-kindergarten-y" value="3" min="1" max="5" oninput="calcEdu(1)"></td><td style="color:var(--muted);font-size:12px" id="c1-kindergarten-age">—</td></tr>
+            <tr><td>📖 ประถมศึกษา</td><td><input type="number" id="c1-primary" placeholder="0" oninput="calcEdu(1)"></td><td><input type="number" id="c1-primary-y" value="6" min="1" max="8" oninput="calcEdu(1)"></td><td style="color:var(--muted);font-size:12px" id="c1-primary-age">—</td></tr>
+            <tr><td>📘 มัธยมศึกษา</td><td><input type="number" id="c1-secondary" placeholder="0" oninput="calcEdu(1)"></td><td><input type="number" id="c1-secondary-y" value="6" min="1" max="8" oninput="calcEdu(1)"></td><td style="color:var(--muted);font-size:12px" id="c1-secondary-age">—</td></tr>
+            <tr><td>🎓 ปริญญาตรี</td><td><input type="number" id="c1-bachelor" placeholder="0" oninput="calcEdu(1)"></td><td><input type="number" id="c1-bachelor-y" value="4" min="1" max="6" oninput="calcEdu(1)"></td><td style="color:var(--muted);font-size:12px" id="c1-bachelor-age">—</td></tr>
+            <tr><td>📗 ปริญญาโท/เอก</td><td><input type="number" id="c1-master" placeholder="0" oninput="calcEdu(1)"></td><td><input type="number" id="c1-master-y" value="2" min="1" max="5" oninput="calcEdu(1)"></td><td style="color:var(--muted);font-size:12px" id="c1-master-age">—</td></tr>
+          </tbody>
+        </table>
+        <div class="form-row" style="margin-top:6px">
+          <div class="form-group">
+            <label>🌍 ประเทศที่ต้องการส่งลูกเรียน</label>
+            <select id="c1-country">
+              <option value="th">🇹🇭 ไทย</option>
+              <option value="us">🇺🇸 สหรัฐ</option>
+              <option value="uk">🇬🇧 อังกฤษ</option>
+              <option value="au">🇦🇺 ออสเตรเลีย</option>
+              <option value="sg">🇸🇬 สิงคโปร์</option>
+              <option value="other">🌍 อื่นๆ</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- RESULT for child 1 -->
+        <div class="form-row" style="margin-top:10px">
+          <div class="form-group"><label>📈 เงินเฟ้อการศึกษา (%/ปี)</label>
+            <input type="number" id="c1-inf" placeholder="4" step="0.5" value="4" oninput="calcEdu(1)">
+          </div>
+          <div class="form-group"><label>💹 ผลตอบแทนการออม (%/ปี)</label>
+            <input type="number" id="c1-ret" placeholder="5" step="0.5" value="5" oninput="calcEdu(1)">
+          </div>
+        </div>
+        <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px">
+          <div style="background:var(--blue-lt);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:9px;color:var(--blue);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">💰 FV รวมค่าเรียน</div>
+            <div id="c1-total-cost" style="font-size:14px;font-weight:800;color:var(--blue)">—</div>
+            <div style="font-size:9px;color:var(--muted)">฿ (รวมเงินเฟ้อ)</div>
+          </div>
+          <div style="background:var(--sand);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">📊 PV วันนี้</div>
+            <div id="c1-total-pv" style="font-size:14px;font-weight:800;color:var(--ink)">—</div>
+            <div style="font-size:9px;color:var(--muted)">฿</div>
+          </div>
+          <div style="background:var(--green-lt);border-radius:8px;padding:10px;text-align:center;border:1.5px solid var(--green)">
+            <div style="font-size:9px;color:#2a6a3a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">💰 ต้องออม/เดือน</div>
+            <div id="c1-monthly" style="font-size:14px;font-weight:800;color:var(--green)">—</div>
+            <div style="font-size:9px;color:#2a6a3a">฿/เดือน</div>
+          </div>
+          <div style="background:var(--gold-lt);border-radius:8px;padding:10px;text-align:center;border:1.5px solid var(--gold)">
+            <div style="font-size:9px;color:#9a6e1a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">🏦 เงินก้อน (PV)</div>
+            <div id="c1-lump" style="font-size:14px;font-weight:800;color:var(--gold)">—</div>
+            <div style="font-size:9px;color:#9a6e1a">฿</div>
+          </div>
+        </div>
+
+        <!-- EDU Timeline -->
+        <div id="c1-timeline" style="margin-top:14px"></div>
+
+        <!-- EDU Chart -->
+        <div class="chart-wrap" style="height:180px;margin-top:12px"><canvas id="chart-edu-1"></canvas></div>
+      </div>
+    </div>
+
+    <button class="btn-add" onclick="addChildCard()">＋ เพิ่มบุตรคนที่ 2, 3...</button>
+
+    <!-- TOTAL ALL CHILDREN -->
+    <div style="margin-top:16px;background:var(--black);border-radius:10px;padding:16px 20px;display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+      <div style="flex:1;min-width:160px">
+        <div style="font-size:10px;color:#aaa;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px">🎓 รวมทุนการศึกษาบุตรทั้งหมด</div>
+        <div id="edu-grand-total" style="font-size:22px;font-weight:800;color:var(--gold)">—</div>
+        <div style="font-size:11px;color:#666">บาท</div>
+      </div>
+      <div style="flex:1;min-width:160px">
+        <div style="font-size:10px;color:#aaa;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px">💸 รวมต้องออม/เดือน</div>
+        <div id="edu-monthly-total" style="font-size:22px;font-weight:800;color:var(--green)">—</div>
+        <div style="font-size:11px;color:#666">บาท/เดือน</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="goStep(5)">← ย้อนกลับ</button>
+    <button class="btn btn-gold" onclick="goStep(7)">ดูสรุปภาพรวม ⭐</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PANEL 5 · SUMMARY
+══════════════════════════════════════════ -->
+<div class="step-panel" id="panel-7">
+  <div class="card">
+    <div class="card-label">สรุป</div>
+    <div class="card-title">⭐ ภาพรวมปิรามิดการเงิน</div>
+
+    <div class="pyramid-wrap">
+      <svg class="pyramid-svg" viewBox="0 0 460 300" fill="none">
+        <!-- TOP: Investment -->
+        <polygon points="230,18 325,108 135,108" fill="#C9A84C" opacity=".95"/>
+        <text x="230" y="60" text-anchor="middle" font-family="Noto Sans Thai,sans-serif" font-size="12" font-weight="800" fill="#fff">📈 Investment</text>
+        <text x="230" y="76" text-anchor="middle" font-family="Noto Sans Thai,sans-serif" font-size="9" fill="#ffe">การลงทุน / ส่งต่อมรดก</text>
+        <text x="230" y="91" text-anchor="middle" font-family="Noto Sans Thai,sans-serif" font-size="9" fill="#ffe" id="sum-py-edu">—</text>
+
+        <!-- MIDDLE: Retirement + Education -->
+        <polygon points="135,113 325,113 385,198 75,198" fill="#7B9E87" opacity=".95"/>
+        <!-- divider line splitting middle in half -->
+        <line x1="230" y1="113" x2="230" y2="198" stroke="rgba(255,255,255,0.4)" stroke-width="1" stroke-dasharray="4,3"/>
+        <!-- Left: Retirement -->
+        <text x="158" y="148" text-anchor="middle" font-family="Noto Sans Thai,sans-serif" font-size="10" font-weight="700" fill="#fff">🌅 Retirement</text>
+        <text x="158" y="163" text-anchor="middle" font-family="Noto Sans Thai,sans-serif" font-size="8" fill="#dfe">แผนเกษียณ</text>
+        <text x="158" y="176" text-anchor="middle" font-family="Noto Sans Thai,sans-serif" font-size="8" fill="#efe" id="sum-py-save">—</text>
+        <!-- Right: Education -->
+        <text x="300" y="148" text-anchor="middle" font-family="Noto Sans Thai,sans-serif" font-size="10" font-weight="700" fill="#fff">🎓 Education</text>
+        <text x="300" y="163" text-anchor="middle" font-family="Noto Sans Thai,sans-serif" font-size="8" fill="#dfe">ทุนการศึกษา</text>
+        <text x="300" y="176" text-anchor="middle" font-family="Noto Sans Thai,sans-serif" font-size="8" fill="#efe" id="sum-py-edu2">—</text>
+
+        <!-- BASE: Protection -->
+        <polygon points="75,203 385,203 455,285 5,285" fill="#4A7B9D" opacity=".95"/>
+        <text x="230" y="237" text-anchor="middle" font-family="Noto Sans Thai,sans-serif" font-size="12" font-weight="800" fill="#fff">🛡️ Protection</text>
+        <text x="230" y="253" text-anchor="middle" font-family="Noto Sans Thai,sans-serif" font-size="9" fill="#def">Emergency Cash · Risk Management</text>
+        <text x="230" y="268" text-anchor="middle" font-family="Noto Sans Thai,sans-serif" font-size="9" fill="#cdf" id="sum-py-prot">—</text>
+      </svg>
+    </div>
+
+    <!-- COMPLETENESS SCORE -->
+    <div id="sum-completeness" style="margin-bottom:20px"></div>
+
+    <div class="sum-row" id="sum-kpi"></div>
+
+    <!-- VISUAL GAP PANEL -->
+    <div id="sum-gaps" style="margin-bottom:20px"></div>
+
+    <div class="sec-div">📊 ภาพรวมการเงิน</div>
+    <div class="chart-row">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px">💵 กระแสเงินสด</div>
+        <div class="chart-wrap"><canvas id="sum-chart-cf"></canvas></div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px">🌅 แผนเกษียณ vs 🎓 การศึกษา</div>
+        <div class="chart-wrap"><canvas id="sum-chart-save"></canvas></div>
+      </div>
+    </div>
+
+    <div class="sec-div">📋 รายละเอียดแต่ละชั้น</div>
+    <div id="sum-detail"></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="goStep(6)">← แก้ไข</button>
+    <button class="btn btn-primary" onclick="window.print()">🖨️ พิมพ์</button>
+  </div>
+</div>
+
+</div><!-- /shell -->
+
+<script>
+// ─── utils ───────────────────────
+const $ = id => document.getElementById(id);
+const fmt = n => Number(n||0).toLocaleString('th-TH');
+const val = id => { const el=$(id); return el ? cleanNum(el.value) : 0; };
+const sumExtra = prefix => {
+  let t=0;
+  document.querySelectorAll(`[data-extra="${prefix}"]`).forEach(i=>{ t+=cleanNum(i.value); });
+  return t;
+};
+
+// ─── charts registry ─────────────
+const charts = {};
+
+// Global Chart.js styling — modern look + fixes charts overflowing their container
+if(window.Chart){
+  Chart.defaults.responsive = true;
+  Chart.defaults.maintainAspectRatio = false;
+  Chart.defaults.font.family = "'Plus Jakarta Sans','Noto Sans Thai',sans-serif";
+  Chart.defaults.font.size = 11;
+  Chart.defaults.font.weight = '500';
+  Chart.defaults.color = '#5a564a';
+  Chart.defaults.borderColor = 'rgba(20,20,20,.06)';
+  Chart.defaults.plugins.legend.labels.usePointStyle = true;
+  Chart.defaults.plugins.legend.labels.boxWidth = 8;
+  Chart.defaults.plugins.legend.labels.boxHeight = 8;
+  Chart.defaults.plugins.legend.labels.padding = 14;
+  Chart.defaults.plugins.legend.labels.font = { family:"'Plus Jakarta Sans','Noto Sans Thai',sans-serif", size:11, weight:'600' };
+  Chart.defaults.plugins.tooltip.backgroundColor = '#161616';
+  Chart.defaults.plugins.tooltip.titleColor = '#e8c870';
+  Chart.defaults.plugins.tooltip.bodyColor = '#fff';
+  Chart.defaults.plugins.tooltip.padding = 10;
+  Chart.defaults.plugins.tooltip.cornerRadius = 8;
+  Chart.defaults.plugins.tooltip.titleFont = { family:"'Plus Jakarta Sans','Noto Sans Thai',sans-serif", size:12, weight:'700' };
+  Chart.defaults.plugins.tooltip.bodyFont  = { family:"'Plus Jakarta Sans','Noto Sans Thai',sans-serif", size:12, weight:'500' };
+  Chart.defaults.plugins.tooltip.displayColors = true;
+  Chart.defaults.plugins.tooltip.boxPadding = 4;
+  Chart.defaults.elements.bar.borderRadius = 8;
+  Chart.defaults.elements.bar.borderSkipped = false;
+  Chart.defaults.elements.line.tension = 0.35;
+  Chart.defaults.elements.line.borderWidth = 2.5;
+  Chart.defaults.elements.point.radius = 3;
+  Chart.defaults.elements.point.hoverRadius = 5;
+  Chart.defaults.scale.grid.color = 'rgba(20,20,20,.05)';
+  Chart.defaults.scale.ticks.font = { family:"'Plus Jakarta Sans','Noto Sans Thai',sans-serif", size:10.5 };
+  Chart.defaults.animation.duration = 600;
+  Chart.defaults.animation.easing = 'easeOutQuart';
+}
+
+function makeChart(id, cfg){
+  if(charts[id]) charts[id].destroy();
+  const ctx = $(id)?.getContext('2d');
+  if(!ctx) return;
+  charts[id] = new Chart(ctx, cfg);
+  return charts[id];
+}
+
+// ─── header ──────────────────────
+function updateHeader(){
+  const name = $('client-name')?.value||'—';
+  $('hdr-name').textContent = name;
+  if($('hdr-date')) $('hdr-date').textContent = '';
+}
+
+// ─── cashflow ────────────────────
+function calcCF(){
+  const income = periodVal('cf-salary')+periodVal('cf-wage')+periodVal('cf-rent-in')+periodVal('cf-bonus')+periodVal('cf-div')+sumExtra('cf-inc-x')+sumExtra('cf-var-x');
+  const fixed = periodVal('cf-house')+periodVal('cf-car')+periodVal('cf-util')+periodVal('cf-ins')+periodVal('cf-parents')+periodVal('cf-kids')+periodVal('cf-cartax')+sumExtra('cf-fix-x');
+  const variable = periodVal('cf-food')+periodVal('cf-trans')+periodVal('cf-shop')+periodVal('cf-self')+periodVal('cf-travel')+sumExtra('cf-var2-x');
+  const expense = fixed + variable;
+  const net = income - expense;
+  $('cf-total-in').textContent = fmt(income);
+  $('cf-total-out').textContent = fmt(expense);
+  $('cf-net').textContent = fmt(net);
+  $('cf-emg6').textContent = fmt(expense*6);
+  $('cf-emg12').textContent = fmt(expense*12);
+  const nb = $('cf-net-box');
+  if(nb) nb.style.borderColor = net>=0 ? 'var(--green)' : 'var(--red)';
+
+  // Bar chart
+  makeChart('chart-cf-bar',{
+    type:'bar',
+    data:{
+      labels:['รายได้',['รายจ่าย','ประจำ'],['รายจ่าย','ผันแปร'],'คงเหลือ'],
+      datasets:[{
+        data:[income,fixed,variable,Math.max(net,0)],
+        backgroundColor:['#7B9E87','#4A7B9D','#7B9E87aa',net>=0?'#C9A84C':'#C0392B'],
+        borderRadius:6
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{ticks:{callback:v=>fmt(v)}}}}
+  });
+
+  // Pie chart expenses
+  const expLabels=['บ้าน/รถ','สาธารณูปโภค','ดูแลครอบครัว','ค่าใช้จ่ายผันแปร'];
+  const expVals=[val('cf-house')+val('cf-car'), periodVal('cf-util'), val('cf-parents')+periodVal('cf-kids'), variable];
+  if(expVals.some(v=>v>0)){
+    makeChart('chart-cf-pie',{
+      type:'doughnut',
+      data:{labels:expLabels,datasets:[{data:expVals,backgroundColor:['#4A7B9D','#7B9E87','#C9A84C','#9B59B6'],borderWidth:2,borderColor:'#FAFAF8'}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:14}}}}
+    });
+  }
+
+  updateProtAdvice();
+}
+
+// ─── balance sheet ───────────────
+function calcBS(){
+  const assets = val('a-cash')+val('a-mmf')+val('a-fund')+val('a-stock')+val('a-gold')+val('a-insval')+val('a-home')+val('a-car')
+    +sumExtra('bs-liq-x')+sumExtra('bs-inv-x')+sumExtra('bs-use-x');
+  const liab = val('l-cc')+val('l-personal')+val('l-home')+val('l-car')+val('l-biz')
+    +sumExtra('bs-stl-x')+sumExtra('bs-ltl-x');
+  const nw = assets - liab;
+  $('bs-total-a').textContent = fmt(assets);
+  $('bs-total-l').textContent = fmt(liab);
+  $('bs-networth').textContent = fmt(nw)+' บาท';
+  $('bs-networth').style.color = nw>=0 ? '#2a7a2a' : 'var(--red)';
+  const badge = nw>=0
+    ? '<span class="badge badge-ok">✅ ความมั่งคั่งเป็นบวก</span>'
+    : '<span class="badge badge-bad">⚠️ หนี้สินเกินสินทรัพย์</span>';
+  $('bs-nw-badge').innerHTML = badge;
+
+  makeChart('chart-bs',{
+    type:'bar',
+    data:{
+      labels:['สินทรัพย์','หนี้สิน',['ความมั่งคั่ง','สุทธิ']],
+      datasets:[{data:[assets,liab,Math.abs(nw)],backgroundColor:['#7B9E87','#C0392B',nw>=0?'#C9A84C':'#E74C3C'],borderRadius:6}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{ticks:{callback:v=>fmt(v)}}}}
+  });
+}
+
+// ─── protection ──────────────────
+function updateProtAdvice(){ calcHLV(); }
+function _updateProtAdvice_legacy(){
+  const expense = periodVal('cf-house')+periodVal('cf-car')+periodVal('cf-util')+periodVal('cf-parents')+periodVal('cf-kids');
+  const lifeSum = val('life-sum');
+  const ci = val('life-ci');
+  const acc = val('life-acc');
+  let tips=[];
+  if(expense>0 && lifeSum < expense*120)
+    tips.push(`💡 ทุนประกันชีวิตควรอยู่ที่ <strong>${fmt(Math.round(expense*120))}</strong> บาท (รายจ่าย × 120 เดือน)`);
+  if(!ci) tips.push('💡 ยังขาดความคุ้มครองโรคร้ายแรง (CI) ควรพิจารณาเพิ่ม');
+  if(!acc) tips.push('💡 ยังขาดประกันอุบัติเหตุ');
+  if(tips.length===0) tips.push('✅ ความคุ้มครองเบื้องต้นครบแล้ว ควรตรวจสอบช่องว่างเพิ่มเติม');
+  $('prot-advice').innerHTML = tips.join('<br>');
+
+  makeChart('chart-prot',{
+    type:'bar',
+    data:{
+      labels:[['ค่าห้อง','รักษา'],'อุบัติเหตุ',['โรคร้าย','แรง'],['ทุนประกันชีวิต','(หมื่น฿)']],
+      datasets:[{
+        label:'ความคุ้มครอง (฿)',
+        data:[val('life-hosp'),val('life-acc'),val('life-ci'),lifeSum/10000],
+        backgroundColor:['#4A7B9D','#7B9E87','#C9A84C','#9B59B6'],
+        borderRadius:6
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>fmt(v)}}}}
+  });
+}
+
+// ─── saving (retirement-only) ────
+function calcSaving(){
+  calcRetirePlan();
+}
+
+// ─── tax ─────────────────────────
+function calcTax(){
+  const inc=val('tax-income'); const ded=val('tax-deduct');
+  const room=Math.max(0,(100000+inc*0.30)-ded);
+  $('tax-room').textContent=fmt(Math.round(room));
+}
+
+
+// ─── dynamic rows ─────────────────
+let extraCount=0;
+function addExtraRow(containerId, prefix, callbackName){
+  extraCount++;
+  const id=`${prefix}-${extraCount}`;
+  const div=document.createElement('div');
+  div.className='custom-row';
+  div.innerHTML=`<input type="text" placeholder="ระบุรายการ" style="flex:1.4"><input type="number" placeholder="0" id="${id}" data-extra="${prefix}" oninput="${callbackName!=='null'?callbackName+'()':''}" style="flex:1"><span style="font-size:11px;color:var(--muted);white-space:nowrap">฿/เดือน</span><button class="btn-remove" onclick="this.parentElement.remove();${callbackName!=='null'?callbackName+'()':''}">✕</button>`;
+  $(containerId).appendChild(div);
+  try{ const inp=$(id); if(inp && isMoneyInput(inp)){ attachMoneyFormatting(inp); } }catch(e){}
+}
+
+function addSavingRow(containerId, prefix){
+  extraCount++;
+  const id=`${prefix}-${extraCount}`;
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td><input type="text" placeholder="ระบุเป้าหมาย"></td><td><input type="number" id="${id}" data-extra="${prefix}" placeholder="0" oninput="calcSaving()"></td><td><input type="number" placeholder="ปี"></td>`;
+  // insert before the container (which is a div after the table)
+  const container=$(containerId);
+  container.appendChild(tr);
+}
+
+function addProtExtra(){
+  extraCount++;
+  const id = `life-x-${extraCount}`;
+  const div=document.createElement('div');
+  div.className='custom-row';
+  div.style.marginTop='8px';
+  div.innerHTML=`<input type="text" placeholder="ชื่อความคุ้มครอง" style="flex:1.2"><input type="number" id="${id}" data-extra="life-x" placeholder="0" style="flex:1"><span style="font-size:11px;color:var(--muted);white-space:nowrap">฿</span><button class="btn-remove" onclick="this.parentElement.remove()">✕</button>`;
+  $('life-extra-fields').appendChild(div);
+  try{ const inp=$(id); if(inp) attachMoneyFormatting(inp); }catch(e){}
+}
+
+
+
+// ─── summary ─────────────────────
+function buildSummary(){
+  const income=periodVal('cf-salary')+periodVal('cf-wage')+periodVal('cf-rent-in')+periodVal('cf-bonus')+periodVal('cf-div')+sumExtra('cf-inc-x')+sumExtra('cf-var-x');
+  const expense=periodVal('cf-house')+periodVal('cf-car')+periodVal('cf-util')+periodVal('cf-ins')+periodVal('cf-parents')+periodVal('cf-kids')+periodVal('cf-cartax')+periodVal('cf-food')+periodVal('cf-trans')+periodVal('cf-shop')+periodVal('cf-self')+periodVal('cf-travel')+sumExtra('cf-fix-x')+sumExtra('cf-var2-x');
+  const net=income-expense;
+  const assets=val('a-cash')+val('a-mmf')+val('a-fund')+val('a-stock')+val('a-gold')+val('a-insval')+val('a-home')+val('a-car');
+  const liab=val('l-cc')+val('l-personal')+val('l-home')+val('l-car')+val('l-biz');
+  const nw=assets-liab;
+
+  // Retirement
+  const retireMonthly = parseFloat($('retire-monthly-save')?.textContent?.replace(/,/g,''))||0;
+  const retireLump = parseFloat($('retire-lump')?.textContent?.replace(/,/g,''))||0;
+
+  // Education (sum across all children)
+  let eduTotal=0, eduMonthly=0;
+  document.querySelectorAll('[id^="c"][id$="-total-cost"]').forEach(el=>{
+    const v=parseFloat(el.textContent.replace(/,/g,''))||0; eduTotal+=v;
+  });
+  document.querySelectorAll('[id^="c"][id$="-monthly"]').forEach(el=>{
+    const v=parseFloat(el.textContent.replace(/,/g,''))||0; eduMonthly+=v;
+  });
+
+  // Targets used for red/yellow/green completeness coloring
+  const hlvTarget = parseFloat($('hlv-result')?.textContent?.replace(/,/g,''))||0;
+  const nbTarget  = parseFloat($('nb-result')?.textContent?.replace(/,/g,''))||0;
+  const protTarget = Math.max(hlvTarget, nbTarget);
+  const lifeSumVal = val('life-sum');
+
+  // pyramid text
+  if($('sum-py-prot')) $('sum-py-prot').textContent='ทุนประกัน '+fmt(val('life-sum'))+'฿';
+  if($('sum-py-save')) $('sum-py-save').textContent='ออม/เดือน '+fmt(Math.round(retireMonthly))+'฿';
+  if($('sum-py-edu2')) $('sum-py-edu2').textContent='รวม '+fmt(Math.round(eduTotal))+'฿';
+  if($('sum-py-edu')) $('sum-py-edu').textContent='Portfolio + Legacy';
+
+  $('sum-kpi').innerHTML=`
+    <div class="sum-block"><div class="sl">💵 รายได้/เดือน</div><div class="sv">${fmt(income)}</div><div class="ss">บาท</div></div>
+    <div class="sum-block"><div class="sl">❤️ รายจ่าย/เดือน</div><div class="sv">${fmt(expense)}</div><div class="ss">บาท</div></div>
+    <div class="sum-block"><div class="sl">${net>=0?'✅':'⚠️'} คงเหลือ/เดือน</div><div class="sv" style="color:${net>=0?'#2a7a2a':'var(--red)'}">${fmt(net)}</div><div class="ss">บาท</div></div>
+    <div class="sum-block"><div class="sl">⭐ ความมั่งคั่งสุทธิ</div><div class="sv" style="color:${nw>=0?'#2a7a2a':'var(--red)'}">${fmt(nw)}</div><div class="ss">บาท</div></div>
+    <div class="sum-block"><div class="sl">🏦 สำรองฉุกเฉิน (×6)</div><div class="sv">${fmt(expense*6)}</div><div class="ss">บาท</div></div>
+    <div class="sum-block"><div class="sl">🌅 ออมเกษียณ/เดือน</div><div class="sv">${fmt(Math.round(retireMonthly))}</div><div class="ss">บาท</div></div>
+    <div class="sum-block"><div class="sl">🎓 ทุนการศึกษารวม</div><div class="sv">${fmt(Math.round(eduTotal))}</div><div class="ss">บาท</div></div>
+    <div class="sum-block"><div class="sl">📚 ออมการศึกษา/เดือน</div><div class="sv">${fmt(Math.round(eduMonthly))}</div><div class="ss">บาท</div></div>
+  `;
+
+  // summary charts
+  makeChart('sum-chart-cf',{
+    type:'bar',
+    data:{labels:['รายได้','รายจ่าย','คงเหลือ'],
+      datasets:[{data:[income,expense,Math.max(net,0)],backgroundColor:['#7B9E87','#C0392B',net>=0?'#C9A84C':'#C0392B'],borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>fmt(v)}}}}
+  });
+  makeChart('sum-chart-save',{
+    type:'bar',
+    data:{labels:[['ออม/เดือน','(เกษียณ)'],['ออม/เดือน','(การศึกษา)']],
+      datasets:[{data:[Math.round(retireMonthly)||0,Math.round(eduMonthly)||0],backgroundColor:['#7B9E87','#C9A84C'],borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>fmt(v)}}}}
+  });
+
+  const name=$('client-name')?.value||'—';
+  const age=$('client-age')?.value||'—';
+
+  // ── COMPLETENESS SCORE (red = ยังไม่เตรียม, yellow = เตรียมไว้บ้างแต่ไม่ถึงเป้า, green = เพียงพอ) ──
+  const checks = [
+    {label:'ชื่อลูกค้า',           status: $('client-name')?.value ? 'green' : 'red'},
+    {label:'วันเกิด / อายุ',        status: $('client-dob')?.value ? 'green' : 'red'},
+    {label:'รายได้',               status: (periodVal('cf-salary')+periodVal('cf-wage'))>0 ? 'green' : 'red'},
+    {label:'รายจ่ายประจำ',          status: (periodVal('cf-house')+periodVal('cf-food'))>0 ? 'green' : 'red'},
+    {label:'สินทรัพย์ (งบดุล)',     status: (val('a-cash')+val('a-fund')+val('a-stock'))>0 ? 'green' : 'red'},
+    {label:'หนี้สิน (งบดุล)',       status: (val('l-home')+val('l-car')+val('l-cc'))>0 ? 'green' : 'red'},
+    {label:'ทุนประกันชีวิต',
+      status: protTarget>0
+        ? (lifeSumVal<=0 ? 'red' : lifeSumVal<protTarget ? 'yellow' : 'green')
+        : (lifeSumVal>0 ? 'green' : 'red')},
+    {label:'ความคุ้มครองสุขภาพ',   status: val('life-hosp')>0 ? 'green' : 'red'},
+    {label:'โรคร้ายแรง CI',        status: val('life-ci')>0 ? 'green' : 'red'},
+    {label:'อายุเกษียณ',            status: $('retire-at')?.value ? 'green' : 'red'},
+    {label:'เงินที่ต้องการ/เกษียณ', status: val('retire-need')>0 ? 'green' : 'red'},
+    {label:'แผนเกษียณ (ออม/เดือน เทียบเงินคงเหลือ)',
+      status: retireMonthly>0
+        ? (net<=0 ? 'red' : net<retireMonthly ? 'yellow' : 'green')
+        : (($('retire-lump')?.textContent||'')!=='—' ? 'green' : 'red')},
+    {label:'ข้อมูลบุตร',           status: ($('child-1-name')?.value||$('child-1-age')?.value) ? 'green' : 'red'},
+    {label:'แผนการศึกษา (ออม/เดือน เทียบเงินคงเหลือ)',
+      status: eduMonthly>0
+        ? (net<=0 ? 'red' : net<eduMonthly ? 'yellow' : 'green')
+        : ((val('c1-bachelor')+val('c1-primary'))>0 ? 'green' : 'red')},
+    {label:'เป้าหมายทางการเงิน',   status: $('goal-1')?.value ? 'green' : 'red'},
+  ];
+
+  const greenN  = checks.filter(c=>c.status==='green').length;
+  const yellowN = checks.filter(c=>c.status==='yellow').length;
+  const redN    = checks.filter(c=>c.status==='red').length;
+  const total   = checks.length;
+  const pct     = Math.round((greenN + yellowN*0.5)/total*100);
+  const pctColor = pct>=80?'var(--green)':pct>=50?'var(--gold)':'var(--red)';
+
+  const STATUS_STYLE = {
+    green:  {bg:'var(--green-lt)', fg:'#2a6a3a', icon:'✅'},
+    yellow: {bg:'var(--gold-lt)',  fg:'#8a6d1f', icon:'🟡'},
+    red:    {bg:'var(--red-lt)',   fg:'var(--red)', icon:'❌'},
+  };
+
+  $('sum-completeness').innerHTML = `
+    <div style="background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px 20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div>
+          <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:2px">ความครบถ้วนของข้อมูล</div>
+          <div style="font-size:22px;font-weight:900;color:${pctColor}">${pct}% <span style="font-size:13px;font-weight:400;color:var(--muted)">(🟢${greenN} 🟡${yellowN} 🔴${redN} / ${total} รายการ)</span></div>
+        </div>
+        <div style="font-size:40px">${pct>=80?'✅':pct>=50?'🔶':'⚠️'}</div>
+      </div>
+      <!-- Progress bar -->
+      <div style="height:10px;background:#eee;border-radius:5px;overflow:hidden;margin-bottom:12px">
+        <div style="height:100%;width:${pct}%;background:${pctColor};border-radius:5px;transition:width .4s"></div>
+      </div>
+      <!-- Legend -->
+      <div style="display:flex;gap:14px;margin-bottom:10px;font-size:10.5px;color:var(--muted)">
+        <span>🔴 ยังไม่ได้เตรียม</span><span>🟡 เตรียมไว้บ้าง ยังไม่ถึงเป้า</span><span>🟢 เพียงพอแล้ว</span>
+      </div>
+      <!-- Checklist grid -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
+        ${checks.map(c=>{ const s=STATUS_STYLE[c.status]; return `
+          <div style="display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:6px;background:${s.bg}">
+            <span style="font-size:13px">${s.icon}</span>
+            <span style="font-size:11px;font-weight:600;color:${s.fg}">${c.label}</span>
+          </div>`; }).join('')}
+      </div>
+    </div>`;
+
+  // ── VISUAL GAPS ───────────────────────
+  const gaps = [];
+  
+  // Protection gap
+  const hlvEl  = $('hlv-result')?.textContent?.replace(/,/g,'')||'0';
+  const hlvNum = parseFloat(hlvEl)||0;
+  const lifeS  = val('life-sum');
+  if(hlvNum>0 && lifeS<hlvNum){
+    gaps.push({
+      icon:'🛡️', title:'ช่องว่างทุนประกันชีวิต',
+      have:lifeS, need:hlvNum,
+      pct:Math.min(lifeS/hlvNum*100,100),
+      color:'var(--blue)',
+      action:`ควรเพิ่มทุนประกันอีก ${fmt(Math.round(hlvNum-lifeS))} ฿`
+    });
+  }
+  if(!val('life-ci')){
+    gaps.push({icon:'🎗️',title:'โรคร้ายแรง (CI)',have:0,need:1,pct:0,color:'var(--blue)',action:'ยังไม่มีความคุ้มครอง CI — ควรพิจารณาเพิ่ม'});
+  }
+  if(!val('life-hosp')){
+    gaps.push({icon:'🏥',title:'ค่ารักษาพยาบาล',have:0,need:1,pct:0,color:'var(--blue)',action:'ยังไม่มีประกันสุขภาพ — ควรเพิ่ม'});
+  }
+  
+  // Emergency fund gap
+  const expenseEmerg = periodVal('cf-house')+periodVal('cf-car')+periodVal('cf-util')+periodVal('cf-parents')+periodVal('cf-kids')+periodVal('cf-food');
+  const emgNeed = expenseEmerg*6;
+  const liquid  = val('a-cash')+val('a-mmf');
+  if(emgNeed>0 && liquid<emgNeed){
+    gaps.push({
+      icon:'🏦', title:'กองทุนฉุกเฉิน (6 เท่า)',
+      have:liquid, need:emgNeed,
+      pct:Math.min(liquid/emgNeed*100,100),
+      color:'var(--green)',
+      action:`มีอยู่ ${fmt(Math.round(liquid))} ฿ ควรมี ${fmt(Math.round(emgNeed))} ฿`
+    });
+  }
+  
+  // Retirement gap
+  const retGapEl = $('ret-still-need');
+  const retGap = parseFloat(retGapEl?.textContent?.replace(/,/g,'')||'0')||0;
+  const retLump = parseFloat($('retire-lump')?.textContent?.replace(/,/g,'')||'0')||0;
+  if(retLump>0){
+    const retHave = retLump - retGap;
+    gaps.push({
+      icon:'🌅', title:'กองทุนเกษียณ',
+      have:Math.max(retHave,0), need:retLump,
+      pct:Math.min(Math.max(retHave,0)/retLump*100,100),
+      color:'#7B9E87',
+      action: retGap>0 ? `ยังขาดอีก ${fmt(Math.round(retGap))} ฿ ต้องออม ${fmt(Math.round(retireMonthly))} ฿/เดือน` : '✅ แหล่งเงินทุนเพียงพอแล้ว'
+    });
+  }
+  
+  // Education gap
+  if(eduTotal>0){
+    gaps.push({
+      icon:'🎓', title:'ทุนการศึกษา',
+      have:0, need:eduTotal,
+      pct:0,
+      color:'var(--gold)',
+      action:`ต้องเตรียม ${fmt(Math.round(eduTotal))} ฿ · ออม ${fmt(Math.round(eduMonthly))} ฿/เดือน`
+    });
+  }
+
+  $('sum-gaps').innerHTML = gaps.length===0 ? '' : `
+    <div style="background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px 20px">
+      <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:14px">🔍 ช่องว่างที่ต้องวางแผน (GAP Analysis)</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        ${gaps.map(g=>`
+          <div style="background:var(--sand);border-radius:8px;padding:12px 16px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <div style="font-size:13px;font-weight:700">${g.icon} ${g.title}</div>
+              <div style="font-size:12px;font-weight:800;color:${g.color}">${Math.round(g.pct)}%</div>
+            </div>
+            <div style="height:8px;background:#ddd;border-radius:4px;overflow:hidden;margin-bottom:6px">
+              <div style="height:100%;width:${g.pct}%;background:${g.color};border-radius:4px;transition:width .5s"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted)">
+              <span>${g.action}</span>
+              ${g.need>1?`<span>มีอยู่ ${fmt(Math.round(g.have))} / ${fmt(Math.round(g.need))} ฿</span>`:''}
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+
+  $('sum-detail').innerHTML=`
+    <div style="background:var(--blue-lt);border-radius:8px;padding:14px 18px;margin-bottom:10px">
+      <strong>🛡️ Protection</strong><br>
+      ทุนประกันชีวิต: <strong>${fmt(val('life-sum'))} ฿</strong> · ค่าห้อง/รักษา: <strong>${fmt(val('life-hosp'))} ฿/ปี</strong><br>
+      อุบัติเหตุ: <strong>${fmt(val('life-acc'))} ฿</strong> · โรคร้ายแรง: <strong>${fmt(val('life-ci'))} ฿</strong>
+    </div>
+    <div style="background:var(--green-lt);border-radius:8px;padding:14px 18px;margin-bottom:10px">
+      <strong>🌅 Retirement Plan</strong><br>
+      อายุเกษียณ: <strong>${$('retire-at')?.value||'—'} ปี</strong> · เงินก้อนที่ต้องมี: <strong>${fmt(retireLump)} ฿</strong><br>
+      ต้องออมเดือนละ: <strong>${fmt(Math.round(retireMonthly))} ฿</strong>
+    </div>
+    <div style="background:var(--gold-lt);border-radius:8px;padding:14px 18px;margin-bottom:10px">
+      <strong>🎓 Education Plan</strong><br>
+      ทุนการศึกษารวม (FV): <strong>${fmt(Math.round(eduTotal))} ฿</strong><br>
+      ต้องออมเดือนละ: <strong>${fmt(Math.round(eduMonthly))} ฿</strong>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-top:6px">
+      ลูกค้า: ${name} · อายุ: ${age} ปี
+    </div>
+  `;
+}
+// ─── step nav ────────────────────
+function goStep(n){
+  document.querySelectorAll('.step-panel').forEach((p,i)=>p.classList.toggle('active',i===n));
+  document.querySelectorAll('.step-pill[data-step]').forEach(p=>{
+    const s = +p.dataset.step;
+    p.classList.remove('active','done');
+    if(s < 0) return; // skip client list pill
+    if(s===n) p.classList.add('active');
+    else if(s<n) p.classList.add('done');
+  });
+  if(n===7) buildSummary();
+  if(n===4 || n===5) syncFields();
+  window.scrollTo({top:0,behavior:'smooth'});
+  // Charts built while this panel was hidden (display:none) get the wrong canvas size,
+  // which makes bars/labels look misaligned — resize them now that the panel is visible.
+  requestAnimationFrame(()=>{
+    setTimeout(()=>{
+      Object.values(charts).forEach(c=>{ try{ c.resize(); }catch(e){} });
+    }, 50);
+  });
+}
+
+document.querySelectorAll('.step-pill[data-step]').forEach(p=>{
+  const s = +p.dataset.step;
+  if(s >= 0) p.addEventListener('click',()=>goStep(s));
+});
+
+// ─── init ────────────────────────
+updateHeader();
+
+// ─── goal page helpers ───────────
+function highlightWhy(cb){
+  const card = cb.closest('label');
+  if(cb.checked){
+    card.style.borderColor='var(--gold)';
+    card.style.background='var(--gold-lt)';
+  } else {
+    card.style.borderColor='var(--border)';
+    card.style.background='var(--sand)';
+  }
+}
+function highlightWorry(cb){
+  const card = cb.closest('label');
+  if(cb.checked){
+    card.style.borderColor='var(--red)';
+    card.style.background='var(--red-lt)';
+  } else {
+    card.style.borderColor='var(--border)';
+    card.style.background='var(--sand)';
+  }
+}
+
+// ─── radar chart ─────────────────
+function updateRadar(el, lblId){
+  $(lblId).textContent = el.value;
+  const labels=['ความคุ้มครอง','สุขภาพ','การออม','เกษียณ','ลงทุน','ภาษี'];
+  const data=[val('imp-prot'),val('imp-health'),val('imp-save'),val('imp-retire'),val('imp-inv'),val('imp-tax')];
+  makeChart('chart-radar',{
+    type:'radar',
+    data:{
+      labels,
+      datasets:[{
+        label:'ระดับความสำคัญ',
+        data,
+        backgroundColor:'rgba(201,168,76,0.2)',
+        borderColor:'var(--gold)',
+        pointBackgroundColor:'var(--gold)',
+        borderWidth:2,
+        pointRadius:4
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      scales:{r:{min:0,max:5,ticks:{stepSize:1,font:{size:10}},pointLabels:{font:{size:11}}}},
+      plugins:{legend:{display:false}}
+    }
+  });
+}
+
+// ─── init radar ──────────────────
+function initRadar(){ try{ updateRadar($('imp-prot'),'lbl-prot'); }catch(e){} }
+
+try{ initRadar(); }catch(e){}
+try{
+  const sm = $('storage-mode');
+  if(sm) sm.textContent = _store.isLocal() ? '(โหมด In-memory — ข้อมูลหายเมื่อปิด)' : '(บันทึกใน Browser)';
+}catch(e){}
+
+
+// ─── LIVE COMMA NUMBER FORMATTING (commas appear inside the box while typing) ─────
+function isMoneyInput(el){
+  if(el.id==='client-kids' || el.id==='client-depend') return false;
+  // exclude ages, year counts, durations, rates/percentages, discount/growth/inflation fields
+  if(/(-age|-y|-r|-at|-inf|-disc|-growth|-years|-start|-ret)$/.test(el.id)) return false;
+  if(el.id==='retire-life') return false;
+  return true;
+}
+
+// Strip commas before parsing — used everywhere a money input's value is read
+function cleanNum(v){
+  return parseFloat((v||'').toString().replace(/,/g,'')) || 0;
+}
+
+function formatMoneyInputValue(raw){
+  // keep digits and at most one decimal point
+  let cleaned = (raw||'').replace(/[^\d.]/g,'');
+  const firstDot = cleaned.indexOf('.');
+  if(firstDot !== -1){
+    cleaned = cleaned.slice(0,firstDot+1) + cleaned.slice(firstDot+1).replace(/\./g,'');
+  }
+  let [intPart, decPart] = cleaned.split('.');
+  intPart = intPart.replace(/^0+(?=\d)/,''); // trim leading zeros
+  const withCommas = intPart ? Number(intPart).toLocaleString('en-US') : '';
+  return decPart !== undefined ? withCommas + '.' + decPart : withCommas;
+}
+
+function attachMoneyFormatting(el){
+  if(el._moneyFormatted) return;
+  el._moneyFormatted = true;
+  el.type = 'text';
+  el.setAttribute('inputmode','decimal');
+  el.autocomplete = 'off';
+  if(el.value) el.value = formatMoneyInputValue(el.value);
+  el.addEventListener('input', () => {
+    const before = el.value;
+    const caretFromEnd = before.length - (el.selectionStart ?? before.length);
+    const formatted = formatMoneyInputValue(before);
+    el.value = formatted;
+    const pos = Math.max(0, formatted.length - caretFromEnd);
+    try{ el.setSelectionRange(pos, pos); }catch(e){}
+  });
+  el.addEventListener('blur', () => { el.value = formatMoneyInputValue(el.value); });
+}
+
+function addCommaListeners(){
+  document.querySelectorAll('input[type=number]').forEach(el=>{
+    if(!isMoneyInput(el)) return;
+    attachMoneyFormatting(el);
+  });
+}
+
+// Show formatted number as styled overlay under the input
+function liveCommaDisplay(inputId, displayId){
+  const el=$(inputId); const disp=$(displayId);
+  if(!el||!disp) return;
+  el.addEventListener('input',()=>{
+    const v=parseFloat(el.value)||0;
+    disp.textContent = v>0 ? fmt(v)+' บาท' : '';
+  });
+}
+
+// ─── RETIREMENT PLANNER (FChFP) ──
+function calcRetirePlan(){
+  const ageNow   = parseFloat($('client-age')?.value)||0;
+  const retireAt = parseFloat($('retire-at')?.value)||60;
+  const lifeExp  = parseFloat($('retire-life')?.value)||85;
+  const infPct   = parseFloat($('retire-inf')?.value)||3;
+  const retPct   = parseFloat($('retire-ret')?.value)||5;
+  const needNow  = cleanNum($('retire-need')?.value)||0;
+  const inf      = infPct/100;
+  const ret      = retPct/100;
+
+  const yearsLeft = Math.max(retireAt - ageNow, 0);
+  const postYears = Math.max(lifeExp - retireAt, 0);
+
+  // ── STEP 1: Time Value ──────────────────
+  // FV of monthly need at retirement
+  const needFV = needNow * Math.pow(1+inf, yearsLeft);
+  const needFVAnn = needFV * 12;
+
+  // Retirement Fund needed (PV of annuity at retirement, real rate)
+  const realRate = ret - inf;
+  let lumpSum = 0;
+  if(postYears > 0){
+    if(Math.abs(realRate) < 0.0001){
+      lumpSum = needFVAnn * postYears;
+    } else {
+      lumpSum = needFVAnn * (1 - Math.pow(1+realRate, -postYears)) / realRate;
+    }
+  }
+
+  // Update TVM display
+  if($('tvm-pv'))   $('tvm-pv').textContent   = needNow   ? fmt(Math.round(needNow))   : '—';
+  if($('tvm-fv'))   $('tvm-fv').textContent   = needNow   ? fmt(Math.round(needFV))    : '—';
+  if($('tvm-inf-label')) $('tvm-inf-label').textContent = infPct;
+  if($('tvm-years-label')) $('tvm-years-label').textContent = yearsLeft || '—';
+  if($('retire-age-now'))   $('retire-age-now').textContent   = ageNow   || '—';
+  if($('retire-years-left')) $('retire-years-left').textContent = yearsLeft || '—';
+  if($('retire-post-years')) $('retire-post-years').textContent = postYears || '—';
+  if($('retire-need-future')) $('retire-need-future').textContent = needNow ? fmt(Math.round(needFV)) : '—';
+  if($('retire-lump'))   $('retire-lump').textContent   = needNow ? fmt(Math.round(lumpSum)) : '—';
+  if($('retire-total-spend')) $('retire-total-spend').textContent = needNow ? fmt(Math.round(needFVAnn * postYears)) : '—';
+
+  // ── STEP 2: Source of Funds — FV of each asset ──
+  const sources = [
+    {pv:'ret-pvd',  r:'ret-pvd-r',  fvEl:'ret-pvd-fv',  label:'PVD'},
+    {pv:'ret-gpf',  r:'ret-gpf-r',  fvEl:'ret-gpf-fv',  label:'กบข.'},
+    {pv:'ret-annuity', r:'ret-annuity-r', fvEl:'ret-annuity-fv', label:'ประกัน/บำนาญ'},
+    {pv:'ret-rmf',  r:'ret-rmf-r',  fvEl:'ret-rmf-fv',  label:'RMF'},
+    {pv:'ret-prop', r:'ret-prop-r', fvEl:'ret-prop-fv',  label:'อสังหาฯ'},
+    {pv:'retire-current-saving', r:'retire-current-saving-r', fvEl:'retire-current-saving-fv', label:'เงินออม'},
+  ];
+
+  let totalFV = 0;
+  const sourceLabels = [], sourceFVs = [];
+  sources.forEach(s=>{
+    const pv = parseFloat($(s.pv)?.value)||0;
+    const r  = (parseFloat($(s.r)?.value)||5)/100;
+    const fv = pv * Math.pow(1+r, yearsLeft);
+    if($(s.fvEl)) $(s.fvEl).textContent = pv ? fmt(Math.round(fv)) : '—';
+    if(pv>0){ sourceLabels.push(s.label); sourceFVs.push(Math.round(fv)); }
+    totalFV += fv;
+  });
+
+  // Extra source rows
+  document.querySelectorAll('[data-extra="ret-x"]').forEach(el=>{
+    const pv = parseFloat(el.value)||0;
+    totalFV += pv * Math.pow(1+ret, yearsLeft);
+  });
+
+  if($('ret-prepared-total')) $('ret-prepared-total').textContent = fmt(Math.round(totalFV));
+
+  // Source chart
+  if(sourceFVs.length>0){
+    makeChart('chart-source-funds',{
+      type:'bar',
+      data:{labels:sourceLabels, datasets:[{data:sourceFVs, backgroundColor:['#7B9E87','#4A7B9D','#C9A84C','#9B59B6','#E67E22','#16A085'], borderRadius:6}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v}}}}
+    });
+  }
+
+  // ── STEP 3: Gap Analysis ──────────────
+  const gap = lumpSum - totalFV;
+  if($('gap-need')) $('gap-need').textContent = needNow ? fmt(Math.round(lumpSum)) : '—';
+  if($('gap-have')) $('gap-have').textContent = fmt(Math.round(totalFV));
+
+  const gapEl = $('ret-still-need');
+  const gapBox = $('gap-result-box');
+  const gapLbl = $('gap-label');
+  const gapSub = $('gap-sub');
+  if(gapEl){
+    gapEl.textContent = needNow ? fmt(Math.round(Math.abs(gap))) : '—';
+    if(gap <= 0){
+      gapEl.style.color = 'var(--green)';
+      if(gapBox){ gapBox.style.borderColor='var(--green)'; gapBox.style.background='var(--green-lt)'; }
+      if(gapLbl) gapLbl.textContent = '✅ เกินพอ (Surplus)';
+      if(gapSub) gapSub.textContent = '฿ เกินเป้าหมาย';
+    } else {
+      gapEl.style.color = 'var(--red)';
+      if(gapBox){ gapBox.style.borderColor='var(--red)'; gapBox.style.background='var(--red-lt)'; }
+      if(gapLbl) gapLbl.textContent = '⚠️ ช่องว่าง (GAP)';
+      if(gapSub) gapSub.textContent = '฿ ที่ต้องวางแผนเพิ่ม';
+    }
+  }
+
+  // Gap bar chart
+  makeChart('chart-gap',{
+    type:'bar',
+    data:{
+      labels:[['Retirement Fund','ที่ต้องมี'],['FV แหล่งเงินทุน','ที่มี'],'GAP'],
+      datasets:[{data:[Math.round(lumpSum)||0, Math.round(totalFV)||0, Math.round(Math.abs(gap))||0],
+        backgroundColor:['#0D0D0D','#7B9E87', gap>0?'#C0392B':'#7B9E87'], borderRadius:6}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{ticks:{callback:v=>v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v}}}}
+  });
+
+  // ── STEP 4: Investment Strategy ──────
+  const gapToFill = Math.max(gap, 0);
+  const r = ret/12;
+  const n = yearsLeft*12;
+  let monthlySave = 0;
+  if(yearsLeft>0 && gapToFill>0){
+    monthlySave = r>0 ? gapToFill*r/(Math.pow(1+r,n)-1) : gapToFill/n;
+  }
+  const annualSave = monthlySave*12;
+
+  if($('retire-monthly-save')) $('retire-monthly-save').textContent = gapToFill>0&&yearsLeft>0 ? fmt(Math.round(monthlySave)) : '✅ พอแล้ว';
+  if($('retire-annual-save'))  $('retire-annual-save').textContent  = gapToFill>0&&yearsLeft>0 ? fmt(Math.round(annualSave))  : '✅ พอแล้ว';
+
+  // ── Timeline overview (top of panel) ──
+  if($('tl-age-now'))      $('tl-age-now').textContent      = ageNow   ? ageNow+' ปี'   : '— ปี';
+  if($('tl-age-retire'))   $('tl-age-retire').textContent   = retireAt ? retireAt+' ปี' : '— ปี';
+  if($('tl-age-life'))     $('tl-age-life').textContent     = lifeExp  ? lifeExp+' ปี'  : '— ปี';
+  if($('tl-years-save'))   $('tl-years-save').textContent   = yearsLeft || '—';
+  if($('tl-years-retire')) $('tl-years-retire').textContent = postYears || '—';
+  if($('tl-bar-save') && $('tl-bar-retire')){
+    const totalYears = yearsLeft + postYears;
+    if(totalYears > 0){
+      $('tl-bar-save').style.flex   = String(Math.max(yearsLeft, 0.0001));
+      $('tl-bar-retire').style.flex = String(Math.max(postYears, 0.0001));
+    } else {
+      $('tl-bar-save').style.flex = '1';
+      $('tl-bar-retire').style.flex = '1';
+    }
+  }
+  if($('tl-monthly-save')) $('tl-monthly-save').textContent = (gapToFill>0&&yearsLeft>0) ? fmt(Math.round(monthlySave)) : '✅ พอแล้ว';
+  if($('tl-return-rate'))  $('tl-return-rate').textContent  = retPct;
+
+  // Sensitivity table
+  const sbody = $('sensitivity-body');
+  if(sbody && needNow && yearsLeft>0){
+    const rates = [3,4,5,6,7,8,10];
+    sbody.innerHTML = rates.map(rPct=>{
+      const rr = rPct/100;
+      const realR = rr - inf;
+      let ls = 0;
+      if(Math.abs(realR)<0.0001){ ls=needFVAnn*postYears; }
+      else { ls=needFVAnn*(1-Math.pow(1+realR,-postYears))/realR; }
+      const thisGap = Math.max(ls - totalFV, 0);
+      const rm = rr/12;
+      const nm = yearsLeft*12;
+      const ms = rm>0&&nm>0&&thisGap>0 ? thisGap*rm/(Math.pow(1+rm,nm)-1) : (thisGap>0?thisGap/nm:0);
+      const isCurrent = rPct===Math.round(retPct);
+      return `<tr style="${isCurrent?'background:var(--gold-lt);font-weight:700':''}">
+        <td>${rPct}% ${isCurrent?'← ปัจจุบัน':''}</td>
+        <td>${fmt(Math.round(ls))}</td>
+        <td>${ms>0?fmt(Math.round(ms)):'✅ พอแล้ว'}</td>
+        <td>${ms>0?fmt(Math.round(ms*12)):'✅ พอแล้ว'}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Investment advice
+  const advEl = $('invest-advice');
+  if(advEl && needNow){
+    const tips = [];
+    if(gapToFill<=0) tips.push('✅ สินทรัพย์ที่มีอยู่เพียงพอสำหรับเกษียณแล้ว ควรรักษาระดับการออมและทบทวนทุกปี');
+    else {
+      if(yearsLeft>=20) tips.push(`🟢 มีเวลา ${yearsLeft} ปี — แนะนำลงทุนในสินทรัพย์ที่มีการเติบโต เช่น กองทุนรวมหุ้น (70-80%) ผสมตราสารหนี้ (20-30%)`);
+      else if(yearsLeft>=10) tips.push(`🟡 เหลือเวลา ${yearsLeft} ปี — ควรปรับสมดุลเป็น กองทุนหุ้น 50% + ตราสารหนี้ 30% + เงินสด 20%`);
+      else tips.push(`🔴 เหลือเวลา ${yearsLeft} ปี — ควรลดความเสี่ยง เน้นตราสารหนี้ และออมรายเดือนอย่างสม่ำเสมอ`);
+      if(monthlySave > 0) tips.push(`💰 ต้องออม <strong>${fmt(Math.round(monthlySave))} ฿/เดือน</strong> ที่ผลตอบแทน ${retPct}%/ปี เพื่อปิด GAP`);
+      tips.push(`🧾 ใช้ RMF/SSF ลดหย่อนภาษีสูงสุดรายปี เพื่อเพิ่มประสิทธิภาพการออม`);
+    }
+    advEl.innerHTML = tips.join('<br>');
+  }
+
+  // Draw life chart & timeline
+  drawLifeChart(ageNow, retireAt, lifeExp, needNow, infPct, retPct, cleanNum($('retire-current-saving')?.value)||0, totalFV, monthlySave);
+  drawRetireTimeline(ageNow, retireAt, lifeExp);
+
+  // Prepared fund summary
+  if($('ret-prepared-total')) $('ret-prepared-total').textContent = fmt(Math.round(totalFV));
+}
+
+function addSourceRow(){
+  extraCount++;
+  const id = `ret-x-${extraCount}`;
+  const fvId = `ret-x-fv-${extraCount}`;
+  const rId = `ret-x-r-${extraCount}`;
+  const tbody = $('source-of-funds-table')?.querySelector('tbody');
+  if(!tbody) return;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td><input type="text" placeholder="ชื่อแหล่งเงินทุน" style="width:100%"></td>
+    <td><input type="number" id="${id}" data-extra="ret-x" placeholder="0" oninput="calcRetirePlan()"></td>
+    <td><input type="number" id="${rId}" placeholder="5" step="0.5" oninput="calcRetirePlan()" style="width:70px"></td>
+    <td style="font-weight:700;color:var(--green)" id="${fvId}">—</td>`;
+  tbody.appendChild(tr);
+  try{ const inp=$(id); if(inp && isMoneyInput(inp)) attachMoneyFormatting(inp); }catch(e){}
+}
+
+function drawRetireTimeline(now, retire, life){
+  const el = $('retire-timeline');
+  if(!el) return;
+  if(!now||!retire||!life){ el.innerHTML=''; return; }
+
+  const total = Math.max(life, 1);
+  const pct = age => (age/total)*100;
+
+  const stages = [
+    {age:0,   emoji:'👶', label:'เกิด'},
+    {age:6,   emoji:'🧒', label:'เด็ก'},
+    {age:18,  emoji:'🧑', label:'หนุ่มสาว'},
+    {age:30,  emoji:'🧑‍💼', label:'วัยทำงาน'},
+    {age:retire, emoji:'🌅', label:'เกษียณ'},
+    {age:life,   emoji:'🧓', label:'บั้นปลาย'},
+  ].filter((s,i,arr)=> i===0 || s.age > arr[i-1].age)
+   .filter(s=>s.age<=life);
+
+  const stageMarkers = stages.map(s=>{
+    const left = pct(s.age);
+    return `<div style="position:absolute;left:${left}%;top:0;transform:translateX(-50%);text-align:center;min-width:32px">
+      <div style="font-size:22px;line-height:1.1">${s.emoji}</div>
+      <div style="font-size:8px;color:var(--muted);white-space:nowrap;margin-top:2px;font-weight:600">${s.label}</div>
+      <div style="font-size:8px;color:var(--muted)">${s.age} ปี</div>
+    </div>`;
+  }).join('');
+
+  const pNow    = pct(now);
+  const pRetire = pct(retire);
+
+  el.innerHTML = `
+    <div style="position:relative;height:76px;padding:0 16px;margin-bottom:4px">${stageMarkers}</div>
+    <div style="position:relative;padding:0 16px">
+      <div style="position:relative;height:10px;border-radius:5px;background:#eee;overflow:hidden">
+        <div style="position:absolute;left:0;width:${pNow}%;height:100%;background:#bbb"></div>
+        <div style="position:absolute;left:${pNow}%;width:${Math.max(pRetire-pNow,0)}%;height:100%;background:var(--gold)"></div>
+        <div style="position:absolute;left:${pRetire}%;right:0;height:100%;background:#4A7B9D"></div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:6px;font-size:10px;color:var(--muted)">
+        <span><span style="display:inline-block;width:10px;height:5px;background:var(--gold);border-radius:2px;margin-right:3px;vertical-align:middle"></span>วัยทำงาน (${Math.max(retire-now,0)} ปี)</span>
+        <span><span style="display:inline-block;width:10px;height:5px;background:#4A7B9D;border-radius:2px;margin-right:3px;vertical-align:middle"></span>หลังเกษียณ (${Math.max(life-retire,0)} ปี)</span>
+      </div>
+    </div>`;
+}
+
+function drawLifeChart(now, retire, life, needNow, inf, retRate, currentSaving){
+  if(!now||!retire||!life||!needNow) return;
+
+  const labels = [];
+  const wealthData = [];   // accumulated wealth line (green)
+  const needData = [];     // spending need line (red dashed)
+  const annotations = {};
+
+  const monthlyRate = retRate/12/100;
+  const infRate = inf/100;
+  let wealth = currentSaving || 0;
+
+  // Phase 1: accumulation (now → retire) — saving monthly
+  const yearsLeft = Math.max(retire - now, 1);
+  const needFuture = needNow * Math.pow(1+infRate, yearsLeft);
+  const lumpNeeded = needFuture*12 * ((1-Math.pow(1+(retRate-inf)/100,-( life-retire))) / ((retRate-inf)/100||0.0001));
+  const r = retRate/12/100;
+  const n = yearsLeft*12;
+  const monthlySave = r>0 ? (lumpNeeded - currentSaving*Math.pow(1+r,n)) * r / (Math.pow(1+r,n)-1) : (lumpNeeded - currentSaving)/n;
+
+  for(let age = now; age <= life; age++){
+    labels.push(age+'ปี');
+    if(age < retire){
+      // Saving phase — wealth grows
+      wealth = wealth*(1+retRate/100) + Math.max(monthlySave,0)*12;
+    } else {
+      // Spending phase — wealth depletes
+      const spendPerYear = needNow * Math.pow(1+infRate, age-now) * 12;
+      wealth = wealth*(1+retRate/100) - spendPerYear;
+    }
+    wealthData.push(Math.round(Math.max(wealth, 0)));
+    needData.push(Math.round(needNow * Math.pow(1+infRate, age-now) * 12));
+  }
+
+  makeChart('chart-life', {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: '💰 ความมั่งคั่งสะสม',
+          data: wealthData,
+          borderColor: '#7B9E87',
+          backgroundColor: 'rgba(123,158,135,0.12)',
+          borderWidth: 2.5,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+        },
+        {
+          label: '📈 ค่าใช้จ่าย/ปี (รวมเงินเฟ้อ)',
+          data: needData,
+          borderColor: '#C9A84C',
+          borderWidth: 1.5,
+          borderDash: [6,4],
+          fill: false,
+          tension: 0.4,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode:'index', intersect:false },
+      plugins: {
+        legend: { position:'top', labels:{ font:{size:11}, boxWidth:14 } },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.raw)} บาท`
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { maxTicksLimit: 12, font:{size:10} },
+          grid: { display:false }
+        },
+        y: {
+          ticks: { callback: v => v>=1000000 ? (v/1000000).toFixed(1)+'M' : v>=1000 ? (v/1000).toFixed(0)+'K' : v, font:{size:10} },
+          grid: { color:'rgba(0,0,0,0.05)' }
+        }
+      }
+    }
+  });
+
+  // Add vertical annotation lines via plugin workaround (draw on chartjs afterDraw)
+  // We'll use a custom plugin inline approach via afterDraw — skip for now, annotations shown via labels
+}
+
+
+// ─── per-goal urgency highlight ──
+document.addEventListener('change', e => {
+  if(e.target.type==='radio' && e.target.name.startsWith('urg-')){
+    const colorMap = {now:'var(--red)',  '1y':'var(--gold)', '3y':'var(--green)', long:'var(--blue)'};
+    const bgMap    = {now:'var(--red-lt)', '1y':'var(--gold-lt)', '3y':'var(--green-lt)', long:'var(--blue-lt)'};
+    const borderMap= {now:'var(--red)',  '1y':'var(--gold)', '3y':'var(--green)', long:'var(--blue)'};
+    // reset siblings
+    const name = e.target.name;
+    document.querySelectorAll(`input[name="${name}"]`).forEach(r=>{
+      const lbl = r.closest('label');
+      lbl.style.background = 'var(--white)';
+      lbl.style.borderColor = 'var(--border)';
+    });
+    // highlight selected
+    const selLbl = e.target.closest('label');
+    selLbl.style.background = bgMap[e.target.value];
+    selLbl.style.borderColor = borderMap[e.target.value];
+  }
+});
+
+let goalCount = 3;
+function addGoalItem(){
+  goalCount++;
+  const i = goalCount;
+  const div = document.createElement('div');
+  div.style.cssText = 'background:var(--sand);border-radius:10px;padding:14px 16px;border:1.5px solid var(--border)';
+  div.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <span style="font-size:20px;font-weight:900;color:var(--muted);width:28px;flex-shrink:0">${i}</span>
+      <input type="text" id="goal-${i}" placeholder="ระบุเป้าหมาย..." style="flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font);font-size:13px;background:var(--white);outline:none">
+      <button onclick="this.closest('div').parentElement.remove()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:0 4px">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">
+      ${['🔥|เร่งด่วน|ทำทันที|now|var(--red)','⚡|ภายใน 1 ปี|วางแผนได้เลย|1y|var(--gold)','🎯|1–3 ปี|ระยะกลาง|3y|var(--green)','🗓️|3 ปีขึ้นไป|ระยะยาว|long|var(--blue)']
+        .map(s=>{const[ico,lbl,sub,val,col]=s.split('|');
+          return `<label style="cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border:1.5px solid var(--border);border-radius:7px;background:var(--white);text-align:center;font-size:11px">
+            <input type="radio" name="urg-${i}" value="${val}" style="accent-color:${col};margin-bottom:2px">
+            <span style="font-size:16px">${ico}</span>
+            <span style="font-weight:700;color:${col}">${lbl}</span>
+            <span style="color:var(--muted);font-size:10px">${sub}</span>
+          </label>`;}).join('')}
+    </div>`;
+  document.getElementById('goal-items').appendChild(div);
+}
+
+
+// ─── EDUCATION PLAN (FChFP TVM) ──
+let childCount = 1;
+
+function calcEdu(n){
+  const childAge  = parseFloat(document.getElementById(`child-${n}-age`)?.value)||0;
+  const infRate   = (parseFloat(document.getElementById(`c${n}-inf`)?.value)||4)/100;
+  const retRate   = (parseFloat(document.getElementById(`c${n}-ret`)?.value)||5)/100;
+
+  const stages = [
+    {id:'kindergarten', label:'อนุบาล',   yearsUntil:0,  defaultYrs:3},
+    {id:'primary',      label:'ประถม',    yearsUntil:3,  defaultYrs:6},
+    {id:'secondary',    label:'มัธยม',    yearsUntil:9,  defaultYrs:6},
+    {id:'bachelor',     label:'ป.ตรี',    yearsUntil:15, defaultYrs:4},
+    {id:'master',       label:'ป.โท/เอก', yearsUntil:19, defaultYrs:2},
+  ];
+
+  let totalFV=0, totalPV=0;
+  const chartLabels=[], chartFVs=[], chartPVs=[], timelineStages=[];
+
+  stages.forEach(s=>{
+    const feeNow = parseFloat(document.getElementById(`c${n}-${s.id}`)?.value)||0;
+    const yrs    = parseFloat(document.getElementById(`c${n}-${s.id}-y`)?.value)||s.defaultYrs;
+    const ageEl  = document.getElementById(`c${n}-${s.id}-age`);
+    const ageStart = childAge + s.yearsUntil;
+    if(ageEl) ageEl.textContent = yrs>0 ? `${ageStart}–${ageStart+yrs} ปี` : '—';
+
+    if(feeNow>0 && yrs>0){
+      let stageFV=0, stagePV=0;
+      for(let y=0;y<yrs;y++){
+        const yr = s.yearsUntil+y;
+        const fv = feeNow * Math.pow(1+infRate, yr);   // FV with education inflation
+        stageFV += fv;
+        stagePV += fv / Math.pow(1+retRate, yr);        // PV discounted at return rate
+      }
+      totalFV += stageFV;
+      totalPV += stagePV;
+      chartLabels.push(s.label);
+      chartFVs.push(Math.round(stageFV));
+      chartPVs.push(Math.round(stagePV));
+      timelineStages.push({label:s.label, from:ageStart, to:ageStart+yrs, fv:stageFV});
+    }
+  });
+
+  // Monthly saving = PMT to accumulate totalPV (invest from now)
+  const r = retRate/12;
+  const saveYears = Math.max(stages[0].yearsUntil||1, 1);
+  const nm = saveYears*12;
+  const monthlySave = r>0&&nm>0&&totalPV>0 ? totalPV*r/(Math.pow(1+r,nm)-1) : (nm>0?totalPV/nm:0);
+
+  const get = id => document.getElementById(id);
+  if(get(`c${n}-total-cost`)) get(`c${n}-total-cost`).textContent = totalFV>0?fmt(Math.round(totalFV)):'—';
+  if(get(`c${n}-total-pv`))   get(`c${n}-total-pv`).textContent   = totalPV>0?fmt(Math.round(totalPV)):'—';
+  if(get(`c${n}-monthly`))    get(`c${n}-monthly`).textContent    = monthlySave>0?fmt(Math.round(monthlySave)):'—';
+  if(get(`c${n}-lump`))       get(`c${n}-lump`).textContent       = totalPV>0?fmt(Math.round(totalPV)):'—';
+
+  // Timeline
+  const tlEl = document.getElementById(`c${n}-timeline`);
+  if(tlEl && timelineStages.length>0){
+    const maxAge=25, colors=['#7B9E87','#4A7B9D','#C9A84C','#9B59B6','#E67E22'];
+    const nowPct=(childAge/maxAge)*100;
+    tlEl.innerHTML=`
+      <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">📅 Timeline & FV แต่ละช่วง</div>
+      <div style="position:relative;height:28px;background:#eee;border-radius:4px;overflow:hidden">
+        ${timelineStages.map((s,i)=>`<div style="position:absolute;left:${(s.from/maxAge)*100}%;width:${((s.to-s.from)/maxAge)*100}%;height:100%;background:${colors[i]};opacity:.85;border-radius:3px;display:flex;align-items:center;justify-content:center"><span style="font-size:9px;color:#fff;font-weight:700;padding:0 3px;white-space:nowrap">${s.label}</span></div>`).join('')}
+      </div>
+      <div style="position:relative;height:18px"><div style="position:absolute;left:${nowPct}%;transform:translateX(-50%);font-size:9px;color:var(--gold);font-weight:700;white-space:nowrap">▲ ปัจจุบัน (${childAge}ปี)</div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:2px">
+        ${timelineStages.map((s,i)=>`<span style="font-size:10px;color:${colors[i]};font-weight:600">● ${s.label} FV=${fmt(Math.round(s.fv))}฿</span>`).join('')}
+      </div>`;
+  }
+
+  // Bar chart: FV vs PV
+  if(chartLabels.length>0){
+    makeChart(`chart-edu-${n}`,{
+      type:'bar',
+      data:{labels:chartLabels,datasets:[
+        {label:'💰 FV (ค่าจริงอนาคต)',data:chartFVs,backgroundColor:'rgba(74,123,157,0.85)',borderRadius:4},
+        {label:'📊 PV (มูลค่าปัจจุบัน)',data:chartPVs,backgroundColor:'rgba(123,158,135,0.85)',borderRadius:4}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{position:'top',labels:{font:{size:10},boxWidth:12}}},
+        scales:{y:{ticks:{callback:v=>v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v}}}}
+    });
+  }
+
+  // Grand totals
+  let gFV=0, gMo=0;
+  document.querySelectorAll('[id^="c"][id$="-total-cost"]').forEach(el=>{gFV+=parseFloat(el.textContent.replace(/,/g,''))||0;});
+  document.querySelectorAll('[id^="c"][id$="-monthly"]').forEach(el=>{gMo+=parseFloat(el.textContent.replace(/,/g,''))||0;});
+  const gt=$('edu-grand-total');   if(gt) gt.textContent=gFV>0?fmt(Math.round(gFV)):'—';
+  const gm=$('edu-monthly-total'); if(gm) gm.textContent=gMo>0?fmt(Math.round(gMo)):'—';
+}
+
+function addChildCard(){
+  childCount++;
+  const n = childCount;
+  const container = document.getElementById('edu-children');
+  const div = document.createElement('div');
+  div.className = 'edu-child-card';
+  div.style.cssText = 'background:var(--sand);border-radius:10px;padding:16px;margin-bottom:12px;border:1.5px solid var(--border)';
+  div.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <span style="font-size:16px">👦</span>
+      <strong style="font-size:13px">บุตรคนที่ ${n}</strong>
+      <button onclick="this.closest('.edu-child-card').remove()" style="margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>ชื่อบุตร</label><input type="text" id="child-${n}-name" placeholder="ชื่อ"></div>
+      <div class="form-group"><label>อายุปัจจุบัน (ปี)</label><input type="number" id="child-${n}-age" placeholder="0" oninput="calcEdu(${n})"></div>
+      <div class="form-group"><label>อายุเริ่มเรียน ม.1</label><input type="number" id="child-${n}-start" placeholder="12" oninput="calcEdu(${n})"></div>
+    </div>
+    <div class="sec-div">📚 ค่าเรียนรายปี (ปัจจุบัน)</div>
+    <table class="tbl">
+      <thead><tr><th>ระดับ</th><th>ค่าเรียน/ปี (฿)</th><th>จำนวนปี</th><th>อายุ</th></tr></thead>
+      <tbody>
+        ${[['kindergarten','🏫 อนุบาล',3,0],['primary','📖 ประถม',6,3],['secondary','📘 มัธยม',6,9],['bachelor','🎓 ป.ตรี',4,15],['master','📗 ป.โท/เอก',2,19]]
+          .map(([id,lbl,yrs])=>`<tr><td>${lbl}</td><td><input type="number" id="c${n}-${id}" placeholder="0" oninput="calcEdu(${n})"></td><td><input type="number" id="c${n}-${id}-y" value="${yrs}" oninput="calcEdu(${n})"></td><td style="color:var(--muted);font-size:12px" id="c${n}-${id}-age">—</td></tr>`).join('')}
+      </tbody>
+    </table>
+    <div class="form-row" style="margin-top:10px">
+      <div class="form-group"><label>📈 เงินเฟ้อการศึกษา (%)</label><input type="number" id="c${n}-inf" value="4" step="0.5" oninput="calcEdu(${n})"></div>
+      <div class="form-group"><label>🌍 ประเทศ</label>
+        <select id="c${n}-country">
+          <option value="th">🇹🇭 ไทย</option><option value="us">🇺🇸 สหรัฐ</option>
+          <option value="uk">🇬🇧 อังกฤษ</option><option value="au">🇦🇺 ออสเตรเลีย</option>
+          <option value="sg">🇸🇬 สิงคโปร์</option><option value="other">🌍 อื่นๆ</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+      <div style="background:var(--blue-lt);border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">📚 รวมค่าเรียน</div>
+        <div id="c${n}-total-cost" style="font-size:17px;font-weight:800;color:var(--blue)">—</div>
+        <div style="font-size:10px;color:var(--muted)">บาท</div>
+      </div>
+      <div style="background:var(--green-lt);border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">💰 ออม/เดือน</div>
+        <div id="c${n}-monthly" style="font-size:17px;font-weight:800;color:var(--green)">—</div>
+        <div style="font-size:10px;color:var(--muted)">บาท/เดือน</div>
+      </div>
+      <div style="background:var(--gold-lt);border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">🏦 เงินก้อนเริ่มต้น</div>
+        <div id="c${n}-lump" style="font-size:17px;font-weight:800;color:var(--gold)">—</div>
+        <div style="font-size:10px;color:var(--muted)">บาท</div>
+      </div>
+    </div>
+    <div id="c${n}-timeline" style="margin-top:12px"></div>
+    <div class="chart-wrap" style="height:180px;margin-top:10px"><canvas id="chart-edu-${n}"></canvas></div>`;
+  container.appendChild(div);
+  try{
+    div.querySelectorAll('input[type=number]').forEach(inp=>{ if(isMoneyInput(inp)) attachMoneyFormatting(inp); });
+  }catch(e){}
+}
+
+
+// ─── HLV & NEEDS-BASED PROTECTION ───
+function calcHLV(){
+  const ageNow   = parseFloat($('client-age')?.value)||0;
+  const retireAt = parseFloat($('hlv-retire-age')?.value)||60;
+  const incomeYr = cleanNum($('hlv-income-yr')?.value)||0;
+  const expYr    = cleanNum($('hlv-expense-yr')?.value)||0;
+  const discPct  = parseFloat($('hlv-disc')?.value)||3.5;
+  const growPct  = parseFloat($('hlv-salary-growth')?.value)||3;
+  const disc     = discPct/100;
+  const grow     = growPct/100;
+  const yearsLeft= Math.max(retireAt-ageNow,0);
+
+  // Update age display
+  if($('hlv-age-now')) $('hlv-age-now').textContent = ageNow||'—';
+  if($('hlv-disc-label')) $('hlv-disc-label').textContent = discPct;
+
+  // HLV = PV of growing annuity of net income
+  const netIncome = Math.max(incomeYr - expYr, 0);
+  let hlv = 0;
+  if(netIncome>0 && yearsLeft>0){
+    if(Math.abs(disc-grow)<0.0001){
+      hlv = netIncome * yearsLeft;
+    } else {
+      // PV of growing annuity: PV = C/(r-g) * [1 - ((1+g)/(1+r))^n]
+      hlv = netIncome/(disc-grow) * (1 - Math.pow((1+grow)/(1+disc), yearsLeft));
+    }
+  }
+
+  if($('hlv-net-income')) $('hlv-net-income').textContent = netIncome>0?fmt(Math.round(netIncome)):'—';
+  if($('hlv-income-mo-disp')) $('hlv-income-mo-disp').textContent = incomeYr>0?fmt(Math.round(incomeYr/12)):'—';
+  if($('hlv-result')) $('hlv-result').textContent = hlv>0?fmt(Math.round(hlv)):'—';
+
+  // Needs-based approach
+  const debt     = cleanNum($('nb-debt')?.value)||0;
+  const famExp   = cleanNum($('nb-family-exp')?.value)||0;
+  const famYrs   = parseFloat($('nb-years')?.value)||20;
+  const edu      = cleanNum($('nb-edu')?.value)||0;
+  const assets   = cleanNum($('nb-assets')?.value)||0;
+  const existing = cleanNum($('life-sum')?.value)||0;
+  const pension  = cleanNum($('nb-pension')?.value)||0;
+
+  // PV of family expenses (simple annuity at discount rate)
+  const famPV = famExp>0&&disc>0 ? famExp*12*(1-Math.pow(1+disc,-famYrs))/disc : famExp*12*famYrs;
+  const nbNeed = Math.max(debt + famPV + edu - assets - pension, 0);
+  const gap    = Math.max(nbNeed - existing, 0);
+  const surplus= existing - nbNeed;
+
+  if($('nb-result')) $('nb-result').textContent = fmt(Math.round(nbNeed));
+  if($('prot-gap'))  $('prot-gap').textContent  = fmt(Math.round(Math.abs(gap||surplus)));
+
+  const gapBox  = $('prot-gap-box');
+  const gapLbl  = $('prot-gap-label');
+  if(gapBox && gapLbl){
+    if(existing >= nbNeed){
+      gapBox.style.borderColor='var(--green)'; gapBox.style.background='var(--green-lt)';
+      gapLbl.textContent='✅ เพียงพอแล้ว (Surplus)';
+      if($('prot-gap')) $('prot-gap').style.color='var(--green)';
+    } else {
+      gapBox.style.borderColor='var(--red)'; gapBox.style.background='var(--red-lt)';
+      gapLbl.textContent='⚠️ ช่องว่างทุนประกัน';
+      if($('prot-gap')) $('prot-gap').style.color='var(--red)';
+    }
+  }
+
+  // Advice
+  const advEl = $('prot-advice');
+  if(advEl){
+    const tips=[];
+    if(hlv>0) tips.push(`📐 <strong>HLV: ${fmt(Math.round(hlv))} ฿</strong> — ทุนประกันชีวิตขั้นต่ำตามวิธี Human Life Value`);
+    if(nbNeed>0) tips.push(`📋 <strong>Needs-Based: ${fmt(Math.round(nbNeed))} ฿</strong> — ทุนที่ครอบครัวต้องการจริง`);
+    const recommended = Math.max(hlv, nbNeed);
+    if(recommended>0) tips.push(`🎯 <strong>แนะนำทุนประกัน: ${fmt(Math.round(recommended))} ฿</strong> (ใช้ค่าสูงสุดระหว่าง 2 วิธี)`);
+    if(gap>0) tips.push(`⚠️ ยังขาดอีก <strong>${fmt(Math.round(gap))} ฿</strong> ควรพิจารณาเพิ่มทุนประกัน`);
+    if(!$('life-ci')?.value||val('life-ci')===0) tips.push('💡 ยังขาดความคุ้มครองโรคร้ายแรง (CI)');
+    if(!$('life-acc')?.value||val('life-acc')===0) tips.push('💡 ยังขาดประกันอุบัติเหตุ');
+    advEl.innerHTML = tips.length?tips.join('<br>'):'กรอกข้อมูลเพื่อดูคำแนะนำ';
+  }
+
+  // Protection chart: HLV vs Needs-Based vs Existing
+  makeChart('chart-prot',{
+    type:'bar',
+    data:{
+      labels:['HLV','Needs-Based',['ทุนที่มี','อยู่']],
+      datasets:[{
+        data:[Math.round(hlv)||0, Math.round(nbNeed)||0, existing||0],
+        backgroundColor:['#4A7B9D','#7B9E87','#C9A84C'],
+        borderRadius:6
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{ticks:{callback:v=>v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v}}}}
+  });
+}
+
+
+// ─── AUTO-FILL: sync fields across pages ──
+function syncFields(){
+  // ── Protection ← Cashflow & Client info ──
+  const incomeYr = (periodVal('cf-salary')+periodVal('cf-wage')+periodVal('cf-rent-in')+periodVal('cf-bonus')+periodVal('cf-div'))*12;
+  const expYr    = (periodVal('cf-house')+periodVal('cf-car')+periodVal('cf-util')+periodVal('cf-food')+periodVal('cf-trans')+
+                    periodVal('cf-parents')+periodVal('cf-kids')+periodVal('cf-shop')+periodVal('cf-self'))*12;
+
+  // HLV income/expense (only fill if empty)
+  if($('hlv-income-yr') && !$('hlv-income-yr').value && incomeYr>0){
+    $('hlv-income-yr').value = Math.round(incomeYr);
+  }
+  if($('hlv-expense-yr') && !$('hlv-expense-yr').value && expYr>0){
+    $('hlv-expense-yr').value = Math.round(expYr * 0.2); // ~20% personal expenses
+  }
+  // Needs-based: family monthly expense
+  const famExpMo = periodVal('cf-house')+periodVal('cf-car')+periodVal('cf-util')+periodVal('cf-parents')+periodVal('cf-kids')+periodVal('cf-food');
+  if($('nb-family-exp') && !$('nb-family-exp').value && famExpMo>0){
+    $('nb-family-exp').value = Math.round(famExpMo);
+  }
+  // Total debt (from balance sheet liabilities)
+  const totalDebt = val('l-cc')+val('l-personal')+val('l-home')+val('l-car')+val('l-biz');
+  if($('nb-debt') && !$('nb-debt').value && totalDebt>0){
+    $('nb-debt').value = Math.round(totalDebt);
+  }
+  // Existing assets
+  const totalAssets = val('a-cash')+val('a-mmf')+val('a-fund')+val('a-stock')+val('a-gold');
+  if($('nb-assets') && !$('nb-assets').value && totalAssets>0){
+    $('nb-assets').value = Math.round(totalAssets);
+  }
+  // Retire age from retirement page
+  if($('hlv-retire-age') && !$('hlv-retire-age').value && $('retire-at')?.value){
+    $('hlv-retire-age').value = $('retire-at').value;
+  }
+
+  // ── Retirement ← Cashflow ──
+  // Monthly need for retirement = current monthly expenses (if not filled)
+  const monthlyExp = periodVal('cf-house')+periodVal('cf-car')+periodVal('cf-util')+periodVal('cf-parents')+periodVal('cf-kids')+periodVal('cf-food')+periodVal('cf-trans')+periodVal('cf-shop');
+  if($('retire-need') && !$('retire-need').value && monthlyExp>0){
+    $('retire-need').value = Math.round(monthlyExp);
+  }
+  // Existing savings for retirement
+  const retExisting = val('a-cash')+val('a-mmf')+val('a-fund')+val('a-stock');
+  if($('retire-current-saving') && !$('retire-current-saving').value && retExisting>0){
+    $('retire-current-saving').value = Math.round(retExisting);
+  }
+  // PVD/GPF from assets section
+  if($('ret-pvd') && !$('ret-pvd').value) $('ret-pvd').value = '';
+  
+  // ── Education ← Client (children count/age) ──
+  // child age fill is manual, but sync parent age for reference
+  if($('retire-age-now')) $('retire-age-now').textContent = $('client-age')?.value||'—';
+  if($('hlv-age-now')) $('hlv-age-now').textContent = $('client-age')?.value||'—';
+
+  // Recalc after sync
+  calcHLV();
+}
+
+// ─── age calculator ─────────────
+function calcAge(){
+  const dob = $('client-dob')?.value;
+  if(!dob){ $('client-age-display').textContent='—'; $('client-age').value=''; return; }
+  const today = new Date();
+  const birth = new Date(dob);
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if(m < 0 || (m===0 && today.getDate() < birth.getDate())) age--;
+  $('client-age-display').textContent = age;
+  $('client-age').value = age;
+}
+
+// ─── period-aware value getter ────
+function periodVal(id){
+  const v = cleanNum($(id)?.value);
+  const period = parseFloat($(id+'-period')?.value)||1;
+  return v / period; // value entered covers `period` month(s); convert to a monthly figure
+}
+
+// ─── comma format display ─────────
+function fmtInput(el){
+  // show formatted value as placeholder/overlay — we use title for now
+  const v = parseFloat(el.value)||0;
+  el.title = fmt(v) + ' บาท';
+}
+// attach to all number inputs on input event
+document.addEventListener('input', e => {
+  if(e.target.type==='number') fmtInput(e.target);
+});
+
+try{ calcAge(); }catch(e){}
+try{ addCommaListeners(); }catch(e){}
+try{ calcRetirePlan(); }catch(e){}
+
+// ══════════════════════════════════════════
+// FIREBASE CLOUD SYNC (Auth + Firestore)
+// ══════════════════════════════════════════
+
+function setCloudDot(state){
+  const dot = $('cloud-dot');
+  if(!dot) return;
+  const map = { off:'⚪', yellow:'🟡', green:'🟢', red:'🔴' };
+  dot.textContent = map[state]||'⚪';
+}
+
+function setSaveStatus(msg, color='var(--green)'){
+  const el=$('save-status');
+  if(el){ el.textContent=msg; el.style.color=color; }
+  if(msg) setTimeout(()=>{ if($('save-status')) $('save-status').textContent=''; }, 3000);
+}
+
+function updateAuthUI(){
+  const statusEl = $('auth-status');
+  const loginBtn = $('btn-login');
+  const logoutBtn = $('btn-logout');
+  if(_fbUser){
+    if(statusEl) statusEl.textContent = `☁️ ${_fbUser.displayName||_fbUser.email}`;
+    if(loginBtn) loginBtn.style.display = 'none';
+    if(logoutBtn) logoutBtn.style.display = 'inline-flex';
+    setCloudDot('green');
+  } else {
+    if(statusEl) statusEl.textContent = '💾 บันทึกในเครื่อง — Login เพื่อ sync Cloud';
+    if(loginBtn) loginBtn.style.display = 'inline-flex';
+    if(logoutBtn) logoutBtn.style.display = 'none';
+    setCloudDot('off');
+  }
+}
+
+async function firebaseLogin(){
+  if(!_fbReady){ alert('Firebase ยังโหลดไม่เสร็จ ลองใหม่อีกครั้ง'); return; }
+  try{
+    await window._fb.auth.signInWithPopup(window._fb.provider);
+    setSaveStatus('✅ เข้าสู่ระบบแล้ว','var(--green)');
+    renderClientList();
+  } catch(e){ setSaveStatus('❌ Login ไม่สำเร็จ','var(--red)'); }
+}
+
+async function firebaseLogout(){
+  if(!_fbReady) return;
+  await window._fb.auth.signOut();
+}
+
+function clientDocRef(id){
+  return window._fb.db.collection('advisors').doc(_fbUser.uid).collection('clients').doc(id);
+}
+
+async function cloudSaveClient(id, data){
+  if(!_fbUser||!_fbReady) return false;
+  try{
+    await clientDocRef(id).set({...data, updatedAt: window._fb.FieldValue.serverTimestamp()},{merge:true});
+    return true;
+  } catch(e){ return false; }
+}
+
+async function cloudLoadClient(id){
+  if(!_fbUser||!_fbReady) return null;
+  try{
+    const snap = await clientDocRef(id).get();
+    return snap.exists ? snap.data() : null;
+  } catch(e){ return null; }
+}
+
+async function cloudListClients(){
+  if(!_fbUser||!_fbReady) return [];
+  try{
+    const snap = await window._fb.db.collection('advisors').doc(_fbUser.uid)
+      .collection('clients').orderBy('updatedAt','desc').get();
+    return snap.docs.map(d=>({id:d.id,...d.data()}));
+  } catch(e){ return []; }
+}
+
+async function cloudDeleteClient(id){
+  if(!_fbUser||!_fbReady) return;
+  try{ await clientDocRef(id).delete(); } catch(e){}
+}
+
+const _localSaveClient = saveClient;
+saveClient = async function(){
+  _localSaveClient();
+  if(!_fbUser){ setSaveStatus('💾 บันทึกในเครื่องแล้ว','var(--green)'); return; }
+  const data = collectData();
+  setSaveStatus('☁️ กำลังบันทึก...','var(--muted)');
+  setCloudDot('yellow');
+  const ok = await cloudSaveClient(currentClientId, data);
+  if(ok){ setCloudDot('green'); setSaveStatus('☁️ บันทึก Cloud แล้ว','var(--green)'); }
+  else { setCloudDot('red'); setSaveStatus('⚠️ บันทึก Local เท่านั้น','#b8860b'); }
+};
+
+const _localRenderClientList = renderClientList;
+renderClientList = async function(){
+  _localRenderClientList();
+  if(!_fbUser) return;
+  const cloudClients = await cloudListClients();
+  if(!cloudClients.length) return;
+  const container = $('client-list-body');
+  if(!container) return;
+  const localClients = getAllClients();
+  cloudClients.forEach(c=>{
+    if(!localClients[c.id]){
+      const div = document.createElement('div');
+      div.style.cssText='display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;border:1.5px solid var(--border);background:#f0f8ff;cursor:pointer';
+      const d = c.updatedAt?.toDate ? c.updatedAt.toDate().toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'}) : '—';
+      div.innerHTML=`<div style="width:38px;height:38px;border-radius:50%;background:#4A7B9D;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">☁️</div>
+        <div style="flex:1"><div style="font-size:14px;font-weight:700">${c['client-name']||'—'} ${c['client-nickname']?'('+c['client-nickname']+')':''} <span style="font-size:10px;background:#4A7B9D;color:#fff;padding:1px 7px;border-radius:8px">Cloud</span></div>
+        <div style="font-size:10px;color:var(--muted)">☁️ ${d}</div></div>`;
+      div.onclick = ()=>loadFromCloud(c.id);
+      container.appendChild(div);
+    }
+  });
+};
+
+async function loadFromCloud(id){
+  setSaveStatus('☁️ กำลังโหลด...','var(--muted)');
+  const data = await cloudLoadClient(id);
+  if(!data){ setSaveStatus('❌ โหลดไม่ได้','var(--red)'); return; }
+  const clients = getAllClients();
+  clients[id] = data;
+  saveAllClients(clients);
+  currentClientId = id;
+  applyData(data);
+  $('save-client-name').textContent = data['client-name']||'—';
+  setCloudDot('green');
+  setSaveStatus('☁️ โหลดจาก Cloud แล้ว','var(--green)');
+  closeClientList(); goStep(0); updateHeader();
+}
+
+const _localDeleteClient = deleteClient;
+deleteClient = function(id, e){
+  _localDeleteClient(id, e);
+  if(_fbUser) cloudDeleteClient(id);
+};
+
+
+// ══════════════════════════════════════════
+// CLIENT DATA MANAGEMENT SYSTEM
+// ══════════════════════════════════════════
+
+let currentClientId = null;
+
+// All field IDs to save/load
+const FIELDS = [
+  'client-name','client-nickname','client-dob','client-age','client-job','client-status',
+  'client-kids','client-depend','client-tel','client-note',
+  // goal page
+  'goal-1','goal-2','goal-3','goal-why-other','goal-worry-other','goal-exp','goal-why-stop','goal-expect',
+  // cashflow
+  'cf-salary','cf-wage','cf-rent-in','cf-bonus','cf-div',
+  'cf-house','cf-car','cf-util','cf-ins','cf-parents','cf-kids','cf-cartax',
+  'cf-food','cf-trans','cf-shop','cf-self','cf-travel',
+  // cashflow period selects
+  'cf-house-period','cf-car-period','cf-ins-period','cf-parents-period','cf-cartax-period',
+  'cf-salary-period','cf-wage-period','cf-rent-in-period','cf-bonus-period','cf-div-period',
+  'cf-util-period','cf-kids-period','cf-food-period','cf-trans-period','cf-shop-period','cf-self-period','cf-travel-period',
+  // balance sheet
+  'a-cash','a-mmf','a-fund','a-stock','a-gold','a-insval','a-home','a-car',
+  'l-cc','l-personal','l-home','l-car','l-biz',
+  // protection
+  'life-sum','life-prem','life-hosp','life-acc','life-income','life-ci',
+  'nl-car','nl-home',
+  'prot-note',
+  // retirement
+  'retire-at','retire-life','retire-inf','retire-need','retire-ret','retire-current-saving',
+  'ret-pvd','ret-gpf','ret-annuity','ret-rmf','ret-prop',
+  'tax-income','tax-deduct',
+  // education
+  'child-1-name','child-1-age','child-1-start',
+  'c1-kindergarten','c1-kindergarten-y','c1-primary','c1-primary-y',
+  'c1-secondary','c1-secondary-y','c1-bachelor','c1-bachelor-y',
+  'c1-master','c1-master-y','c1-inf','c1-country',
+  // importance sliders
+  'imp-prot','imp-health','imp-save','imp-retire','imp-inv','imp-tax',
+];
+
+function getRadioValues(){
+  const radios = {};
+  for(let i=1;i<=10;i++){
+    const name=`urg-${i}`;
+    const el = document.querySelector(`input[name="${name}"]:checked`);
+    if(el) radios[name] = el.value;
+  }
+  return radios;
+}
+
+function setRadioValues(radios={}){
+  Object.entries(radios).forEach(([name,val])=>{
+    const el = document.querySelector(`input[name="${name}"][value="${val}"]`);
+    if(el){
+      el.checked = true;
+      el.dispatchEvent(new Event('change', {bubbles:true}));
+    }
+  });
+}
+
+function collectData(){
+  const data = { _savedAt: new Date().toISOString(), _version: 2 };
+  FIELDS.forEach(id=>{
+    const el = $(id);
+    if(!el) return;
+    if(el.tagName==='SELECT' || el.type==='text'||el.type==='number'||el.type==='date'||el.type==='hidden'){
+      data[id] = el.value;
+    } else if(el.tagName==='TEXTAREA'){
+      data[id] = el.value;
+    }
+  });
+  data._radios = getRadioValues();
+  // worry/why checkboxes
+  const checks = {};
+  document.querySelectorAll('.why-card input[type=checkbox], .worry-card input[type=checkbox]').forEach((cb,i)=>{
+    checks[`cb_${i}`] = cb.checked;
+  });
+  data._checks = checks;
+  // extra goal items added beyond the initial 3 (goal-4, goal-5, ...)
+  data._goalCount = goalCount;
+  for(let i=4;i<=goalCount;i++){
+    const el = $('goal-'+i);
+    if(el) data['goal-'+i] = el.value;
+  }
+  return data;
+}
+
+function applyData(data){
+  if(!data) return;
+  // sync dynamically-added goal item rows to match the loaded client
+  const targetCount = data._goalCount || 3;
+  const goalItems = $('goal-items');
+  if(goalItems){
+    while(goalCount > Math.max(targetCount,3) && goalItems.children.length > 3){
+      goalItems.removeChild(goalItems.lastChild);
+      goalCount--;
+    }
+    while(goalCount < targetCount) addGoalItem();
+  }
+  FIELDS.forEach(id=>{
+    const el=$(id);
+    if(!el||data[id]===undefined) return;
+    el.value = data[id];
+    if(el.type==='range') {
+      el.dispatchEvent(new Event('input'));
+    }
+  });
+  for(let i=4;i<=(data._goalCount||0);i++){
+    const el = $('goal-'+i);
+    if(el && data['goal-'+i]!==undefined) el.value = data['goal-'+i];
+  }
+  if(data._radios) setRadioValues(data._radios);
+  // restore checkboxes
+  if(data._checks){
+    const cbs = document.querySelectorAll('.why-card input[type=checkbox], .worry-card input[type=checkbox]');
+    Object.entries(data._checks).forEach(([k,v])=>{
+      const i = parseInt(k.replace('cb_',''));
+      if(cbs[i]){ cbs[i].checked = v; cbs[i].dispatchEvent(new Event('change',{bubbles:true})); }
+    });
+  }
+  // trigger recalcs
+  setTimeout(()=>{ calcAge(); calcCF(); calcBS(); updateProtAdvice(); calcRetirePlan(); updateRadar($('imp-prot'),'lbl-prot'); }, 100);
+}
+
+
+// ── Storage helpers ──
+// Safe storage wrapper (handles sandbox/iframe restrictions)
+const _store = (function(){
+  let _mem = {}; // in-memory fallback
+  let _ok = false;
+  try{ localStorage.setItem('_t','1'); localStorage.removeItem('_t'); _ok=true; } catch(e){}
+  return {
+    get: k => { try{ return _ok ? localStorage.getItem(k) : (_mem[k]||null); }catch(e){ return _mem[k]||null; } },
+    set: (k,v) => { try{ if(_ok) localStorage.setItem(k,v); else _mem[k]=v; }catch(e){ _mem[k]=v; } },
+    remove: k => { try{ if(_ok) localStorage.removeItem(k); else delete _mem[k]; }catch(e){ delete _mem[k]; } },
+    isLocal: () => !_ok
+  };
+})();
+
+function getAllClients(){
+  try{ return JSON.parse(_store.get('fp_clients')||'{}'); } catch(e){ return {}; }
+}
+function saveAllClients(clients){
+  _store.set('fp_clients', JSON.stringify(clients));
+}
+function genId(){
+  return 'c_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+}
+
+// ── Save current client ──
+function saveClient(){
+  const name = $('client-name')?.value?.trim() || 'ไม่ระบุชื่อ';
+  const data = collectData();
+  data._name = name;
+  const clients = getAllClients();
+  if(!currentClientId) currentClientId = genId();
+  clients[currentClientId] = data;
+  saveAllClients(clients);
+  $('save-client-name').textContent = name;
+  $('save-status').textContent = '✅ บันทึกแล้ว '+new Date().toLocaleTimeString('th-TH');
+  setTimeout(()=>{ if($('save-status')) $('save-status').textContent=''; }, 3000);
+}
+
+// ── New client ──
+function newClient(){
+  currentClientId = null;
+  FIELDS.forEach(id=>{ const el=$(id); if(el) el.value=''; });
+  document.querySelectorAll('.why-card input, .worry-card input').forEach(cb=>{ if(cb.type==='checkbox') cb.checked=false; });
+  // remove any dynamically-added goal items, back to the initial 3
+  const goalItems = $('goal-items');
+  if(goalItems) while(goalItems.children.length > 3) goalItems.removeChild(goalItems.lastChild);
+  goalCount = 3;
+  $('save-client-name').textContent = '— ลูกค้าใหม่ —';
+  $('save-status').textContent = '';
+  const today = new Date().toISOString().split('T')[0];
+  if($('client-dob')) $('client-dob').value='';
+  calcAge(); updateHeader();
+  goStep(0);
+}
+
+// ── Load client ──
+function loadClient(id){
+  const clients = getAllClients();
+  const data = clients[id];
+  if(!data) return;
+  currentClientId = id;
+  applyData(data);
+  $('save-client-name').textContent = data._name || '—';
+  $('save-status').textContent = '📂 โหลดแล้ว';
+  setTimeout(()=>{ if($('save-status')) $('save-status').textContent=''; }, 2000);
+  updateHeader();
+  closeClientList();
+  goStep(0);
+}
+
+// ── Delete client ──
+function deleteClient(id, e){
+  e.stopPropagation();
+  if(!confirm('ลบข้อมูลลูกค้านี้?')) return;
+  const clients = getAllClients();
+  delete clients[id];
+  saveAllClients(clients);
+  if(currentClientId===id){ newClient(); }
+  renderClientList();
+}
+
+// ── Render client list ──
+function renderClientList(){
+  const clients = getAllClients();
+  const search = $('search-client')?.value?.toLowerCase()||'';
+  const container = $('client-list-body');
+  if(!container) return;
+  const entries = Object.entries(clients).filter(([id,d])=>
+    (d._name||'').toLowerCase().includes(search)
+  ).sort((a,b)=> (b[1]._savedAt||'').localeCompare(a[1]._savedAt||''));
+
+  if(entries.length===0){
+    container.innerHTML='<div style="text-align:center;color:var(--muted);padding:30px;font-size:13px">ยังไม่มีข้อมูลลูกค้า<br><span style="font-size:11px">กรอกข้อมูลแล้วกด "💾 บันทึก"</span></div>';
+    return;
+  }
+
+  container.innerHTML = entries.map(([id,d])=>{
+    const isActive = id===currentClientId;
+    const savedDate = d._savedAt ? new Date(d._savedAt).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+    const age = d['client-age']||'';
+    const job = d['client-job']||'';
+    return `<div onclick="loadClient('${id}')" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;border:1.5px solid ${isActive?'var(--gold)':'var(--border)'};background:${isActive?'var(--gold-lt)':'var(--sand)'};cursor:pointer;transition:all .15s">
+      <div style="width:38px;height:38px;border-radius:50%;background:${isActive?'var(--gold)':'var(--border)'};display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">👤</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:700;color:var(--ink)">${d._name||'ไม่ระบุชื่อ'} ${isActive?'<span style="font-size:10px;background:var(--gold);color:#000;padding:1px 7px;border-radius:8px;margin-left:4px">กำลังใช้</span>':''}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">${[age?age+' ปี':'',job].filter(Boolean).join(' · ')}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:1px">💾 ${savedDate}</div>
+      </div>
+      <button onclick="deleteClient('${id}',event)" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:4px;flex-shrink:0" title="ลบ">🗑️</button>
+    </div>`;
+  }).join('');
+}
+
+// ── Show/hide modal ──
+function showClientList(){
+  renderClientList();
+  $('client-modal').style.display='block';
+  document.body.style.overflow='hidden';
+}
+function closeClientList(){
+  $('client-modal').style.display='none';
+  document.body.style.overflow='';
+}
+// Click outside to close
+$('client-modal')?.addEventListener('click', e=>{ if(e.target===$('client-modal')) closeClientList(); });
+
+// ── (Export/Import removed) ──
+function clearAllClients(){
+  if(!confirm('ลบข้อมูลลูกค้าทั้งหมด? ไม่สามารถกู้คืนได้')) return;
+  _store.remove('fp_clients');
+  currentClientId = null;
+  renderClientList();
+  newClient();
+}
+
+// ── Auto-save every 30 sec if client has name ──
+setInterval(()=>{
+  if($('client-name')?.value?.trim()) saveClient();
+}, 30000);
+
+// ── Update save bar name on header update ──
+try{
+  const _origUpdateHeader = updateHeader;
+  updateHeader = function(){
+    try{ _origUpdateHeader(); }catch(e){}
+    try{
+      const name = $('client-name')?.value||'';
+      if($('save-client-name') && name) $('save-client-name').textContent = name;
+    }catch(e){}
+  };
+}catch(e){}
+
+</script>
+</body>
+</html>
