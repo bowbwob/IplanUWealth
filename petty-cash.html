@@ -110,6 +110,21 @@ textarea{resize:vertical;min-height:56px}
 .photo-tools .tool.active{border-color:var(--gold);background:rgba(184,145,45,.1);color:var(--gold-soft)}
 .photo-tools .tool-danger:hover{border-color:var(--danger);color:var(--danger)}
 
+/* crop modal */
+.crop-modal{position:fixed;inset:0;background:rgba(30,25,15,.7);display:none;align-items:center;justify-content:center;z-index:70;padding:16px}
+.crop-modal.open{display:flex}
+.crop-inner{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:16px;max-width:min(92vw,760px);width:100%}
+.crop-title{font-size:.85rem;color:var(--mist);margin-bottom:10px;text-align:center}
+.crop-stage{position:relative;margin:0 auto;touch-action:none;user-select:none;-webkit-user-select:none}
+#cropCanvas{display:block;width:100%;height:auto;border-radius:2px}
+.handle{
+  position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;
+  background:rgba(184,145,45,.25);border:2px solid var(--gold);
+  box-shadow:0 0 0 3px rgba(255,255,255,.5);cursor:grab;
+}
+.handle::after{content:'';position:absolute;inset:11px;border-radius:50%;background:var(--gold)}
+.crop-actions{display:flex;gap:10px;margin-top:14px}
+
 button{
   font-family:'Anuphan',sans-serif;font-weight:500;font-size:.9rem;letter-spacing:.06em;
   border:none;border-radius:2px;padding:13px 20px;cursor:pointer;transition:opacity .2s,background .2s;
@@ -160,6 +175,21 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:now
 
 .actions{display:flex;gap:12px;margin-top:26px;flex-wrap:wrap}
 .actions button{flex:1;min-width:160px}
+
+/* crop modal */
+.crop-modal{position:fixed;inset:0;background:rgba(30,25,15,.72);display:none;align-items:center;justify-content:center;z-index:55;padding:16px}
+.crop-modal.open{display:flex}
+.crop-inner{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:18px;max-width:min(94vw,760px);width:100%}
+.crop-title{font-size:.85rem;color:var(--mist);margin-bottom:12px;text-align:center}
+.crop-stage{position:relative;margin:0 auto;touch-action:none;user-select:none;-webkit-user-select:none}
+#cropCanvas{display:block;width:100%;height:auto;border-radius:2px}
+.handle{
+  position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;
+  background:rgba(184,145,45,.25);border:2px solid var(--gold);box-shadow:0 0 0 3px rgba(255,255,255,.5);
+  touch-action:none;cursor:grab;
+}
+.handle::after{content:'';position:absolute;inset:11px;border-radius:50%;background:var(--gold)}
+.crop-actions{display:flex;gap:12px;margin-top:14px}
 
 /* lightbox */
 .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:50;padding:24px}
@@ -257,6 +287,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:now
             <input type="file" id="fPhoto" accept="image/*">
           </div>
           <div class="photo-tools" id="photoTools" hidden>
+            <button type="button" class="tool" id="btnCrop">◱ ตัดขอบใบเสร็จ</button>
             <button type="button" class="tool" id="btnRotate">⟳ หมุน 90°</button>
             <button type="button" class="tool" id="btnScanMode">✨ โหมดสแกน</button>
             <button type="button" class="tool tool-danger" id="btnClearPhoto">✕ เอารูปออก</button>
@@ -308,6 +339,24 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:now
     </div>
   </div>
 </main>
+
+<!-- crop modal -->
+<div class="crop-modal" id="cropModal">
+  <div class="crop-inner">
+    <div class="crop-title">ลากจุดทองทั้ง 4 มุมให้ครอบตัวใบเสร็จ</div>
+    <div class="crop-stage" id="cropStage">
+      <canvas id="cropCanvas"></canvas>
+      <div class="handle" data-i="0"></div>
+      <div class="handle" data-i="1"></div>
+      <div class="handle" data-i="2"></div>
+      <div class="handle" data-i="3"></div>
+    </div>
+    <div class="crop-actions">
+      <button class="btn-ghost" id="cropCancel">ยกเลิก</button>
+      <button class="btn-gold" id="cropApply" style="width:auto;flex:1">✓ ตัดขอบ</button>
+    </div>
+  </div>
+</div>
 
 <div class="lightbox" id="lightbox" onclick="this.classList.remove('open')"><img id="lightboxImg" alt="ใบเสร็จ"></div>
 <div class="toast" id="toast"></div>
@@ -372,8 +421,8 @@ $('fAmt').addEventListener('input',e=>{
   e.target.value = out;
 });
 
-/* ================= photo attach: rotate + scan enhance ================= */
-let photoSrc = null;      // ภาพต้นฉบับ (Image object)
+/* ================= photo attach: auto-crop + rotate + scan enhance ================= */
+let photoSrc = null;      // ภาพที่ใช้งานอยู่ (Image หรือ canvas)
 let photoRot = 0;         // 0/90/180/270
 let scanMode = false;     // โหมดสแกนเอกสาร
 
@@ -382,25 +431,51 @@ $('fPhoto').addEventListener('change',e=>{
   if(!file) return;
   const img = new Image();
   const url = URL.createObjectURL(file);
-  img.onload = ()=>{ URL.revokeObjectURL(url); photoSrc = img; photoRot = 0; renderPending(); };
+  img.onload = ()=>{
+    URL.revokeObjectURL(url);
+    photoRot = 0;
+    // auto-crop: หาขอบใบเสร็จอัตโนมัติ
+    const base = toCanvas(img, 1200);
+    const quad = autoDetectQuad(base);
+    if(quad){
+      photoSrc = warpQuad(base, quad);
+      toast('ตัดขอบใบเสร็จอัตโนมัติแล้ว ✂️ ไม่ตรงกด ◱ ปรับได้');
+    }else{
+      photoSrc = img;
+    }
+    renderPending();
+  };
   img.src = url;
 });
 
+/* วาดภาพลง canvas จำกัดขนาด */
+function toCanvas(src, max){
+  let w = src.width, h = src.height;
+  if(Math.max(w,h) > max){ const s = max/Math.max(w,h); w=Math.round(w*s); h=Math.round(h*s); }
+  const cv = document.createElement('canvas'); cv.width=w; cv.height=h;
+  cv.getContext('2d').drawImage(src,0,0,w,h);
+  return cv;
+}
+
+/* canvas ปัจจุบันหลังหมุน (ใช้เป็นฐานของ preview / crop) */
+function rotatedCanvas(max){
+  const base = toCanvas(photoSrc, max);
+  if(photoRot === 0) return base;
+  const rotated = (photoRot===90 || photoRot===270);
+  const cv = document.createElement('canvas');
+  cv.width  = rotated ? base.height : base.width;
+  cv.height = rotated ? base.width  : base.height;
+  const ctx = cv.getContext('2d');
+  ctx.translate(cv.width/2, cv.height/2);
+  ctx.rotate(photoRot*Math.PI/180);
+  ctx.drawImage(base, -base.width/2, -base.height/2);
+  return cv;
+}
+
 function renderPending(){
   if(!photoSrc){ pendingPhoto = null; return; }
-  const MAX = 1000;
-  let w = photoSrc.width, h = photoSrc.height;
-  if(Math.max(w,h) > MAX){ const s = MAX/Math.max(w,h); w = Math.round(w*s); h = Math.round(h*s); }
-  const rotated = (photoRot === 90 || photoRot === 270);
-  const cv = document.createElement('canvas');
-  cv.width  = rotated ? h : w;
-  cv.height = rotated ? w : h;
+  const cv = rotatedCanvas(1000);
   const ctx = cv.getContext('2d');
-  ctx.save();
-  ctx.translate(cv.width/2, cv.height/2);
-  ctx.rotate(photoRot * Math.PI/180);
-  ctx.drawImage(photoSrc, -w/2, -h/2, w, h);
-  ctx.restore();
   if(scanMode) applyScanFilter(cv, ctx);
   pendingPhoto = cv.toDataURL('image/jpeg', 0.6);
 
@@ -413,6 +488,197 @@ function renderPending(){
   $('photoTools').hidden = false;
   $('btnScanMode').classList.toggle('active', scanMode);
 }
+
+/* ---------- auto-detect: หา quad ของกระดาษสว่างชิ้นใหญ่สุด ---------- */
+function autoDetectQuad(cv){
+  const S = 300;
+  const s = toCanvas(cv, S);
+  const ctx = s.getContext('2d');
+  const {width:w, height:h} = s;
+  const d = ctx.getImageData(0,0,w,h).data;
+  const lum = new Uint8Array(w*h);
+  const hist = new Uint32Array(256);
+  for(let i=0;i<w*h;i++){
+    const l = (d[i*4]*0.299 + d[i*4+1]*0.587 + d[i*4+2]*0.114)|0;
+    lum[i]=l; hist[l]++;
+  }
+  // Otsu threshold
+  let total=w*h, sum=0; for(let t=0;t<256;t++) sum+=t*hist[t];
+  let sumB=0,wB=0,maxVar=0,thr=127;
+  for(let t=0;t<256;t++){
+    wB+=hist[t]; if(!wB) continue;
+    const wF=total-wB; if(!wF) break;
+    sumB+=t*hist[t];
+    const mB=sumB/wB, mF=(sum-sumB)/wF, v=wB*wF*(mB-mF)*(mB-mF);
+    if(v>maxVar){maxVar=v; thr=t;}
+  }
+  const bin = new Uint8Array(w*h);
+  for(let i=0;i<w*h;i++) bin[i] = lum[i]>thr ? 1:0;
+  // หา connected component สว่างที่ใหญ่สุด (flood fill)
+  const label = new Int32Array(w*h).fill(-1);
+  let best=-1, bestSize=0, cur=0;
+  const stack=[];
+  for(let i=0;i<w*h;i++){
+    if(bin[i] && label[i]<0){
+      let size=0; stack.length=0; stack.push(i); label[i]=cur;
+      while(stack.length){
+        const p=stack.pop(); size++;
+        const x=p%w, y=(p/w)|0;
+        if(x>0   && bin[p-1] && label[p-1]<0){label[p-1]=cur; stack.push(p-1);}
+        if(x<w-1 && bin[p+1] && label[p+1]<0){label[p+1]=cur; stack.push(p+1);}
+        if(y>0   && bin[p-w] && label[p-w]<0){label[p-w]=cur; stack.push(p-w);}
+        if(y<h-1 && bin[p+w] && label[p+w]<0){label[p+w]=cur; stack.push(p+w);}
+      }
+      if(size>bestSize){bestSize=size; best=cur;}
+      cur++;
+    }
+  }
+  // ต้องใหญ่พอ (20-97% ของภาพ) ถึงเชื่อว่าเป็นใบเสร็จ
+  if(best<0 || bestSize < total*0.20 || bestSize > total*0.97) return null;
+  // มุม 4 ด้านจากจุด extreme: x+y น้อยสุด=TL, x-y มากสุด=TR, x+y มากสุด=BR, x-y น้อยสุด=BL
+  let tl=null,tr=null,br=null,bl=null, vTL=1e9,vTR=-1e9,vBR=-1e9,vBL=1e9;
+  for(let i=0;i<w*h;i++){
+    if(label[i]!==best) continue;
+    const x=i%w, y=(i/w)|0, a=x+y, b=x-y;
+    if(a<vTL){vTL=a; tl=[x,y];}
+    if(a>vBR){vBR=a; br=[x,y];}
+    if(b>vTR){vTR=b; tr=[x,y];}
+    if(b<vBL){vBL=b; bl=[x,y];}
+  }
+  const sc = cv.width/w;
+  const quad = [tl,tr,br,bl].map(p=>[p[0]*sc, p[1]*sc]);
+  // กัน quad บี้แบน
+  const area = quadArea(quad);
+  if(area < cv.width*cv.height*0.15) return null;
+  return quad;
+}
+function quadArea(q){
+  let a=0;
+  for(let i=0;i<4;i++){ const j=(i+1)%4; a += q[i][0]*q[j][1] - q[j][0]*q[i][1]; }
+  return Math.abs(a/2);
+}
+
+/* ---------- perspective warp: ตัด quad แล้วดึงเป็นสี่เหลี่ยมตรง ---------- */
+function warpQuad(srcCv, quad){
+  const [tl,tr,br,bl] = quad;
+  const dist=(a,b)=>Math.hypot(a[0]-b[0], a[1]-b[1]);
+  let W = Math.round(Math.max(dist(tl,tr), dist(bl,br)));
+  let H = Math.round(Math.max(dist(tl,bl), dist(tr,br)));
+  const cap = 1000, sc = Math.min(1, cap/Math.max(W,H));
+  W=Math.max(1,Math.round(W*sc)); H=Math.max(1,Math.round(H*sc));
+  // homography: dest(x,y) -> src(u,v)
+  const Hm = homography([[0,0],[W,0],[W,H],[0,H]], quad);
+  const sctx = srcCv.getContext('2d');
+  const sdat = sctx.getImageData(0,0,srcCv.width,srcCv.height);
+  const sp = sdat.data, sw=srcCv.width, sh=srcCv.height;
+  const out = document.createElement('canvas'); out.width=W; out.height=H;
+  const octx = out.getContext('2d');
+  const odat = octx.createImageData(W,H);
+  const op = odat.data;
+  for(let y=0;y<H;y++){
+    for(let x=0;x<W;x++){
+      const den = Hm[6]*x + Hm[7]*y + 1;
+      let u = (Hm[0]*x + Hm[1]*y + Hm[2])/den;
+      let v = (Hm[3]*x + Hm[4]*y + Hm[5])/den;
+      const o=(y*W+x)*4;
+      if(u<0||v<0||u>sw-1||v>sh-1){ op[o]=op[o+1]=op[o+2]=255; op[o+3]=255; continue; }
+      // bilinear
+      const x0=u|0, y0=v|0, x1=Math.min(x0+1,sw-1), y1=Math.min(y0+1,sh-1);
+      const fx=u-x0, fy=v-y0;
+      for(let c=0;c<3;c++){
+        const p00=sp[(y0*sw+x0)*4+c], p10=sp[(y0*sw+x1)*4+c],
+              p01=sp[(y1*sw+x0)*4+c], p11=sp[(y1*sw+x1)*4+c];
+        op[o+c] = (p00*(1-fx)*(1-fy) + p10*fx*(1-fy) + p01*(1-fx)*fy + p11*fx*fy)|0;
+      }
+      op[o+3]=255;
+    }
+  }
+  octx.putImageData(odat,0,0);
+  return out;
+}
+/* แก้ระบบสมการ 8 ตัวแปรหา homography จาก 4 จุด */
+function homography(dst, src){
+  const A=[], b=[];
+  for(let i=0;i<4;i++){
+    const [x,y]=dst[i], [u,v]=src[i];
+    A.push([x,y,1,0,0,0,-x*u,-y*u]); b.push(u);
+    A.push([0,0,0,x,y,1,-x*v,-y*v]); b.push(v);
+  }
+  // Gaussian elimination
+  for(let c=0;c<8;c++){
+    let piv=c;
+    for(let r=c+1;r<8;r++) if(Math.abs(A[r][c])>Math.abs(A[piv][c])) piv=r;
+    [A[c],A[piv]]=[A[piv],A[c]]; [b[c],b[piv]]=[b[piv],b[c]];
+    const p=A[c][c]||1e-9;
+    for(let r=c+1;r<8;r++){
+      const f=A[r][c]/p;
+      for(let k=c;k<8;k++) A[r][k]-=f*A[c][k];
+      b[r]-=f*b[c];
+    }
+  }
+  const hm=new Array(8);
+  for(let r=7;r>=0;r--){
+    let s=b[r];
+    for(let k=r+1;k<8;k++) s-=A[r][k]*hm[k];
+    hm[r]=s/(A[r][r]||1e-9);
+  }
+  return hm;
+}
+
+/* ---------- manual crop modal (ปรับแก้เอง) ---------- */
+let cropQuad=null, cropBase=null, dragIdx=-1;
+$('btnCrop').addEventListener('click',()=>{
+  if(!photoSrc) return;
+  cropBase = rotatedCanvas(1200);
+  const auto = autoDetectQuad(cropBase);
+  const w=cropBase.width, h=cropBase.height, m=0.08;
+  cropQuad = auto || [[w*m,h*m],[w*(1-m),h*m],[w*(1-m),h*(1-m)],[w*m,h*(1-m)]];
+  const cc=$('cropCanvas');
+  cc.width=cropBase.width; cc.height=cropBase.height;
+  $('cropModal').classList.add('open');
+  requestAnimationFrame(drawCrop);
+});
+function drawCrop(){
+  const cc=$('cropCanvas'), ctx=cc.getContext('2d');
+  ctx.drawImage(cropBase,0,0);
+  ctx.fillStyle='rgba(30,25,15,.45)';
+  ctx.fillRect(0,0,cc.width,cc.height);
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(...cropQuad[0]); cropQuad.slice(1).forEach(p=>ctx.lineTo(...p)); ctx.closePath();
+  ctx.clip(); ctx.drawImage(cropBase,0,0); ctx.restore();
+  ctx.strokeStyle='#B8912D'; ctx.lineWidth=Math.max(2, cc.width/300);
+  ctx.beginPath();
+  ctx.moveTo(...cropQuad[0]); cropQuad.slice(1).forEach(p=>ctx.lineTo(...p)); ctx.closePath(); ctx.stroke();
+  // วางตำแหน่ง handle (แปลงเป็นพิกัดจอ)
+  const rect=cc.getBoundingClientRect(), stage=$('cropStage').getBoundingClientRect();
+  document.querySelectorAll('.handle').forEach((hd,i)=>{
+    hd.style.left = (cropQuad[i][0]/cc.width*rect.width + rect.left - stage.left) + 'px';
+    hd.style.top  = (cropQuad[i][1]/cc.height*rect.height + rect.top - stage.top) + 'px';
+  });
+}
+document.querySelectorAll('.handle').forEach(hd=>{
+  hd.addEventListener('pointerdown',e=>{
+    dragIdx=+hd.dataset.i; hd.setPointerCapture(e.pointerId); e.preventDefault();
+  });
+  hd.addEventListener('pointermove',e=>{
+    if(dragIdx<0) return;
+    const cc=$('cropCanvas'), rect=cc.getBoundingClientRect();
+    const x=(e.clientX-rect.left)/rect.width*cc.width;
+    const y=(e.clientY-rect.top)/rect.height*cc.height;
+    cropQuad[dragIdx]=[Math.max(0,Math.min(cc.width,x)), Math.max(0,Math.min(cc.height,y))];
+    drawCrop();
+  });
+  hd.addEventListener('pointerup',()=>{ dragIdx=-1; });
+});
+$('cropCancel').addEventListener('click',()=>$('cropModal').classList.remove('open'));
+$('cropApply').addEventListener('click',()=>{
+  photoSrc = warpQuad(cropBase, cropQuad);
+  photoRot = 0; // การหมุนถูกฝังในภาพแล้ว
+  $('cropModal').classList.remove('open');
+  renderPending();
+  toast('ตัดขอบแล้ว ✓');
+});
 
 /* ปรับภาพให้เหมือนสแกน: ขาวเทา + ยืดคอนทราสต์ให้พื้นกระดาษขาว ตัวหนังสือเข้ม */
 function applyScanFilter(cv, ctx){
