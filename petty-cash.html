@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>iPlanUWealth — Petty Cash Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── ถ้ามีไฟล์ฟอนต์ FC Minimal (ที่ซื้อลิขสิทธิ์แล้ว) ──
+   1. วางไฟล์ FCMinimal.woff2 ไว้โฟลเดอร์เดียวกับไฟล์นี้ (หรือใน repo Vercel)
+   2. ลบเครื่องหมาย comment ของบล็อกด้านล่างออก
+@font-face{
+  font-family:'FC Minimal';
+  src:url('FCMinimal.woff2') format('woff2');
+  font-weight:300 700;
+  font-display:swap;
+}
+   3. เปลี่ยน 'Anuphan' ทุกจุดใน CSS เป็น 'FC Minimal'
+──────────────────────────────────────────── */
+:root{
+  --ink:#F7F2E7;        /* พื้นหลังครีม */
+  --panel:#FFFDF8;      /* การ์ดขาวนวล */
+  --panel-2:#FFFFFF;    /* ช่องกรอกขาว */
+  --line:#E3D9C2;
+  --gold:#B8912D;
+  --gold-soft:#9A7820;
+  --ivory:#2C2721;      /* ตัวหนังสือหลัก (เข้ม) */
+  --mist:#8C8371;
+  --danger:#B0503F;
+  --ok:#B8912D;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{font-size:16px}
+body{
+  background:var(--ink);
+  color:var(--ivory);
+  font-family:'Anuphan',sans-serif;
+  font-weight:300;
+  min-height:100vh;
+  letter-spacing:.01em;
+}
+.serif{font-family:'Anuphan',serif}
+.latin-serif{font-family:'Anuphan',sans-serif}
+
+/* ---------- header ---------- */
+header{
+  padding:34px 28px 26px;
+  border-bottom:1px solid var(--line);
+  display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;
+}
+.brand-eyebrow{
+  font-size:.68rem;letter-spacing:.42em;text-transform:uppercase;color:var(--gold);
+  margin-bottom:10px;font-weight:500;font-family:'Anuphan',sans-serif;
+}
+h1{
+  font-family:'Anuphan',serif;font-weight:600;font-size:1.9rem;line-height:1.2;color:var(--ivory);
+}
+h1 em{font-family:'Anuphan',sans-serif;font-style:normal;font-weight:300;letter-spacing:.08em;color:var(--gold-soft)}
+.advisor{font-size:.8rem;color:var(--mist);margin-top:8px}
+.month-pick{display:flex;gap:10px;align-items:center}
+select,input,textarea{
+  background:var(--panel-2);border:1px solid var(--line);color:var(--ivory);
+  font-family:'Anuphan',sans-serif;font-weight:300;font-size:.95rem;
+  padding:11px 14px;border-radius:2px;outline:none;width:100%;
+  transition:border-color .2s;
+}
+select:focus,input:focus,textarea:focus{border-color:var(--gold)}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23B8912D'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+.month-pick select{width:auto;min-width:150px}
+
+/* ---------- layout ---------- */
+main{max-width:1180px;margin:0 auto;padding:30px 28px 90px}
+.grid{display:grid;grid-template-columns:340px 1fr;gap:26px;align-items:start}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+
+/* ---------- form card ---------- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:3px;overflow:hidden;box-shadow:0 1px 3px rgba(90,72,30,.06)}
+.card-head{
+  padding:16px 20px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.card-head h2{font-family:'Anuphan',serif;font-weight:600;font-size:1.02rem;letter-spacing:.02em}
+.rule{width:26px;height:1px;background:var(--gold)}
+.card-body{padding:20px}
+.field{margin-bottom:14px}
+.field label{
+  display:block;font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--mist);margin-bottom:7px;font-weight:400;
+}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+textarea{resize:vertical;min-height:56px}
+
+/* receipt attach */
+.attach{
+  border:1px dashed var(--line);border-radius:2px;padding:14px;text-align:center;cursor:pointer;
+  color:var(--mist);font-size:.85rem;transition:border-color .2s,color .2s;position:relative;
+}
+.attach:hover{border-color:var(--gold);color:var(--gold-soft)}
+.attach input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.attach.has-img{border-style:solid;border-color:var(--gold);color:var(--gold-soft)}
+.attach img{max-height:90px;display:block;margin:0 auto 8px;border-radius:2px}
+
+button{
+  font-family:'Anuphan',sans-serif;font-weight:500;font-size:.9rem;letter-spacing:.06em;
+  border:none;border-radius:2px;padding:13px 20px;cursor:pointer;transition:opacity .2s,background .2s;
+}
+.btn-gold{background:var(--gold);color:#FFFDF8;width:100%}
+.btn-gold:hover{background:#A5811F}
+.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ivory);font-weight:300}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold-soft)}
+
+/* ---------- ledger ---------- */
+.total-strip{
+  display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;
+  padding:22px 24px;border:1px solid var(--line);border-radius:3px;background:
+  linear-gradient(135deg,#FFFDF6 0%,#F4EBD3 100%);margin-bottom:26px;box-shadow:0 1px 3px rgba(90,72,30,.06);
+}
+.total-strip .lbl{font-size:.68rem;letter-spacing:.3em;text-transform:uppercase;color:var(--mist)}
+.total-strip .amt{
+  font-family:'Anuphan',sans-serif;font-weight:600;font-size:2.4rem;letter-spacing:.01em;color:var(--gold-soft);line-height:1;
+}
+.total-strip .amt small{font-size:1.1rem;color:var(--mist);font-weight:400;margin-left:6px}
+.total-strip .count{font-size:.8rem;color:var(--mist)}
+
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+thead th{
+  text-align:left;font-weight:400;font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--gold);padding:12px 12px;border-bottom:1px solid var(--gold);white-space:nowrap;
+}
+tbody td{padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:hover{background:rgba(184,145,45,.06)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cat-tag{
+  display:inline-block;font-size:.7rem;color:var(--gold-soft);border:1px solid rgba(184,145,45,.45);
+  padding:2px 8px;border-radius:999px;white-space:nowrap;
+}
+.muted{color:var(--mist);font-size:.78rem}
+.thumb{width:34px;height:34px;object-fit:cover;border-radius:2px;border:1px solid var(--line);cursor:pointer}
+.del{background:none;border:none;color:var(--mist);cursor:pointer;font-size:1rem;padding:4px}
+.del:hover{color:var(--danger)}
+.empty{padding:48px 20px;text-align:center;color:var(--mist);font-size:.9rem}
+.empty .serif{font-size:1.15rem;color:var(--ivory);margin-bottom:6px;display:block}
+
+/* summary */
+.sum-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:.88rem}
+.sum-row:last-child{border-bottom:none}
+.sum-row .v{font-variant-numeric:tabular-nums;color:var(--gold-soft)}
+.bar{height:3px;background:var(--panel-2);border-radius:2px;margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--gold);border-radius:2px}
+
+.actions{display:flex;gap:12px;margin-top:26px;flex-wrap:wrap}
+.actions button{flex:1;min-width:160px}
+
+/* lightbox */
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:50;padding:24px}
+.lightbox.open{display:flex}
+.lightbox img{max-width:92vw;max-height:88vh;border:1px solid var(--gold);border-radius:3px}
+
+/* toast */
+.toast{
+  position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--panel-2);border:1px solid var(--gold);color:var(--ivory);
+  padding:12px 22px;border-radius:2px;font-size:.85rem;opacity:0;pointer-events:none;
+  transition:opacity .25s,transform .25s;z-index:60;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ---------- print report ---------- */
+#printArea{display:none}
+@media print{
+  body>*:not(#printArea){display:none!important}
+  body{background:#fff;color:#000}
+  #printArea{display:block;font-family:'Anuphan',sans-serif;color:#000;padding:0 8px}
+  .p-head{text-align:center;margin-bottom:14px}
+  .p-head .p-brand{font-family:'Anuphan',serif;font-weight:700;font-size:15px;letter-spacing:.05em}
+  .p-head .p-sub{font-size:12px;margin-top:4px}
+  .p-head .p-firm{font-size:12px;margin-top:8px;text-align:left}
+  #printArea table{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px}
+  #printArea th,#printArea td{border:1px solid #000;padding:5px 6px;text-align:left;vertical-align:top}
+  #printArea th{background:#eee;font-weight:600}
+  #printArea td.num,#printArea th.num{text-align:right}
+  #printArea .p-total td{font-weight:700;background:#f4f0e2}
+  .p-cert{font-size:11px;margin-top:16px;line-height:2}
+  .p-sign{display:flex;justify-content:space-between;margin-top:26px;font-size:11px}
+  .p-sum{margin-top:14px;page-break-inside:avoid}
+  .p-sum h3,.p-receipts h3{font-size:12px;font-weight:700;margin:14px 0 6px}
+  .p-receipts{page-break-before:always}
+  .p-receipt-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .p-receipt-grid figure{border:1px solid #000;padding:6px;page-break-inside:avoid}
+  .p-receipt-grid img{width:100%;max-height:320px;object-fit:contain}
+  .p-receipt-grid figcaption{font-size:10px;margin-top:4px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="brand-eyebrow">iPlanUWealth · Petty Cash Ledger</div>
+    <h1>สมุดเงินสดย่อย <em>Petty Cash</em></h1>
+    <div class="advisor">คุณสุนิตา โพธิ์เกตุ · FChFP, MDRT</div>
+  </div>
+  <div class="month-pick">
+    <select id="selMonth" aria-label="เดือน"></select>
+    <select id="selYear" aria-label="ปี"></select>
+  </div>
+</header>
+
+<main>
+  <div class="grid">
+
+    <!-- ===== entry form ===== -->
+    <div class="card">
+      <div class="card-head"><h2>บันทึกรายการ</h2><div class="rule"></div></div>
+      <div class="card-body">
+        <div class="field">
+          <label for="fDate">วันที่เบิก</label>
+          <input type="date" id="fDate">
+        </div>
+        <div class="field">
+          <label for="fCat">หมวดค่าใช้จ่าย</label>
+          <select id="fCat"></select>
+        </div>
+        <div class="field">
+          <label for="fDesc">รายการ</label>
+          <input type="text" id="fDesc" placeholder="เช่น ค่ารับรองอาหารลูกค้า">
+        </div>
+        <div class="field">
+          <label for="fAmt">จำนวนเงิน (บาท)</label>
+          <input type="text" id="fAmt" inputmode="decimal" placeholder="0.00">
+        </div>
+        <div class="field">
+          <label for="fClient">ชื่อลูกค้า / เลขที่กรมธรรม์</label>
+          <input type="text" id="fClient" placeholder="ถ้ามี">
+        </div>
+        <div class="field">
+          <label for="fNote">หมายเหตุ</label>
+          <textarea id="fNote" placeholder="เช่น ไม่มีใบเสร็จ — จ่ายวินมอเตอร์ไซค์หน้าสาขา"></textarea>
+        </div>
+        <div class="field">
+          <label>ใบเสร็จ</label>
+          <div class="attach" id="attachBox">
+            <span id="attachLabel">แตะเพื่อถ่ายรูป / แนบใบเสร็จ</span>
+            <input type="file" id="fPhoto" accept="image/*" capture="environment">
+          </div>
+        </div>
+        <button class="btn-gold" id="btnAdd">บันทึกรายการ</button>
+      </div>
+    </div>
+
+    <!-- ===== ledger ===== -->
+    <div>
+      <div class="total-strip">
+        <div>
+          <div class="lbl">ยอดรวมประจำเดือน</div>
+          <div class="amt" id="totalAmt">0.00<small>THB</small></div>
+        </div>
+        <div class="count" id="entryCount">0 รายการ · ใบเสร็จ 0 ใบ</div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>รายการเบิกจ่าย</h2><div class="rule"></div></div>
+        <div style="overflow-x:auto">
+          <table id="ledger">
+            <thead>
+              <tr>
+                <th>#</th><th>วันที่</th><th>หมวด</th><th>รายการ</th>
+                <th class="num">จำนวนเงิน</th><th>ใบเสร็จ</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="ledgerBody"></tbody>
+          </table>
+          <div class="empty" id="emptyState">
+            <span class="serif">ยังไม่มีรายการในเดือนนี้</span>
+            เริ่มบันทึกรายการแรกจากแบบฟอร์มด้านซ้ายได้เลย
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:26px">
+        <div class="card-head"><h2>สรุปตามหมวด</h2><div class="rule"></div></div>
+        <div class="card-body" id="sumBody"></div>
+      </div>
+
+      <div class="actions">
+        <button class="btn-ghost" id="btnDoc">📄 ดาวน์โหลดรายงานเอกสาร</button>
+        <button class="btn-ghost" id="btnCsv">↓ Export CSV ส่งบัญชี</button>
+        <button class="btn-ghost" id="btnPrint">🖨 พิมพ์ / บันทึกเป็น PDF</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('open')"><img id="lightboxImg" alt="ใบเสร็จ"></div>
+<div class="toast" id="toast"></div>
+<div id="printArea"></div>
+
+<script>
+/* ================= config ================= */
+const CATS = [
+  "งานเอกสารและสำนักงาน",
+  "เดินทางและยานพาหนะ",
+  "รับรองและดูแลลูกค้า",
+  "การตลาดและสร้างโปรไฟล์",
+  "บริหารทีมงานและการประชุม",
+  "ค่าธรรมเนียมและเอกสารราชการ",
+  "อื่นๆ"
+];
+const TH_MONTHS = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+
+/* ================= storage (window.storage → localStorage fallback for Vercel) ================= */
+const store = {
+  async get(k){
+    if (window.storage) {
+      try { const r = await window.storage.get(k); return r ? r.value : null; }
+      catch(e){ return null; }
+    }
+    return localStorage.getItem(k);
+  },
+  async set(k,v){
+    if (window.storage) {
+      try { await window.storage.set(k,v); return; } catch(e){ console.error(e); return; }
+    }
+    localStorage.setItem(k,v);
+  }
+};
+
+/* ================= state ================= */
+let entries = [];   // current month entries
+let pendingPhoto = null;
+const now = new Date();
+let curMonth = now.getMonth();          // 0-11
+let curYearBE = now.getFullYear() + 543;
+
+const $ = id => document.getElementById(id);
+const keyFor = () => `pettycash:${curYearBE}-${String(curMonth+1).padStart(2,'0')}`;
+const fmt = n => Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+/* ================= init selectors ================= */
+TH_MONTHS.forEach((m,i)=>{ $('selMonth').add(new Option(m,i)); });
+for(let y=curYearBE-1;y<=curYearBE+1;y++){ $('selYear').add(new Option('พ.ศ. '+y,y)); }
+$('selMonth').value = curMonth;
+$('selYear').value = curYearBE;
+CATS.forEach(c=>{ $('fCat').add(new Option(c,c)); });
+$('fDate').valueAsDate = now;
+
+/* ================= live comma format on amount ================= */
+$('fAmt').addEventListener('input',e=>{
+  let raw = e.target.value.replace(/[^0-9.]/g,'');
+  const parts = raw.split('.');
+  let intp = parts[0].replace(/^0+(?=\d)/,'');
+  let out = intp.replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  if(parts.length>1) out += '.' + parts.slice(1).join('').slice(0,2);
+  e.target.value = out;
+});
+
+/* ================= photo attach + compress ================= */
+$('fPhoto').addEventListener('change',e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const img = new Image();
+  const url = URL.createObjectURL(file);
+  img.onload = ()=>{
+    const MAX = 1000;
+    let {width:w,height:h} = img;
+    if(Math.max(w,h)>MAX){ const s = MAX/Math.max(w,h); w=Math.round(w*s); h=Math.round(h*s); }
+    const cv = document.createElement('canvas'); cv.width=w; cv.height=h;
+    cv.getContext('2d').drawImage(img,0,0,w,h);
+    pendingPhoto = cv.toDataURL('image/jpeg',0.55);
+    URL.revokeObjectURL(url);
+    const box = $('attachBox');
+    box.classList.add('has-img');
+    box.querySelector('img')?.remove();
+    const th = document.createElement('img'); th.src = pendingPhoto;
+    box.insertBefore(th, box.firstChild);
+    $('attachLabel').textContent = 'แนบใบเสร็จแล้ว — แตะเพื่อเปลี่ยน';
+  };
+  img.src = url;
+});
+
+/* ================= CRUD ================= */
+async function load(){
+  const raw = await store.get(keyFor());
+  entries = raw ? JSON.parse(raw) : [];
+  render();
+}
+async function save(){ await store.set(keyFor(), JSON.stringify(entries)); }
+
+$('btnAdd').addEventListener('click', async ()=>{
+  const amt = parseFloat($('fAmt').value.replace(/,/g,''));
+  if(!$('fDesc').value.trim() || !amt || amt<=0){ toast('กรอกรายการและจำนวนเงินก่อนนะคะ'); return; }
+  entries.push({
+    id: Date.now(),
+    date: $('fDate').value,
+    cat: $('fCat').value,
+    desc: $('fDesc').value.trim(),
+    amt,
+    client: $('fClient').value.trim(),
+    note: $('fNote').value.trim(),
+    photo: pendingPhoto
+  });
+  entries.sort((a,b)=> a.date.localeCompare(b.date) || a.id-b.id);
+  await save();
+  ['fDesc','fAmt','fClient','fNote'].forEach(id=>$(id).value='');
+  pendingPhoto = null;
+  const box=$('attachBox'); box.classList.remove('has-img'); box.querySelector('img')?.remove();
+  $('attachLabel').textContent='แตะเพื่อถ่ายรูป / แนบใบเสร็จ'; $('fPhoto').value='';
+  render(); toast('บันทึกแล้ว ✓');
+});
+
+async function delEntry(id){
+  if(!confirm('ลบรายการนี้?')) return;
+  entries = entries.filter(e=>e.id!==id);
+  await save(); render(); toast('ลบรายการแล้ว');
+}
+
+/* ================= render ================= */
+function thDate(iso){
+  if(!iso) return '—';
+  const [y,m,d] = iso.split('-').map(Number);
+  return `${d}/${m}/${String(y+543).slice(-2)}`;
+}
+function render(){
+  const tb = $('ledgerBody'); tb.innerHTML='';
+  let total=0, receipts=0;
+  entries.forEach((e,i)=>{
+    total += e.amt; if(e.photo) receipts++;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="muted">${i+1}</td>
+      <td>${thDate(e.date)}</td>
+      <td><span class="cat-tag">${e.cat}</span></td>
+      <td>${esc(e.desc)}${e.client?`<div class="muted">${esc(e.client)}</div>`:''}${e.note?`<div class="muted">✎ ${esc(e.note)}</div>`:''}</td>
+      <td class="num">${fmt(e.amt)}</td>
+      <td>${e.photo?`<img class="thumb" src="${e.photo}" alt="ใบเสร็จ ${i+1}" onclick="viewPhoto('${e.id}')">`:'<span class="muted">—</span>'}</td>
+      <td><button class="del" aria-label="ลบ" onclick="delEntry(${e.id})">✕</button></td>`;
+    tb.appendChild(tr);
+  });
+  $('emptyState').style.display = entries.length? 'none':'block';
+  $('totalAmt').innerHTML = fmt(total)+'<small>THB</small>';
+  $('entryCount').textContent = `${entries.length} รายการ · ใบเสร็จ ${receipts} ใบ`;
+
+  // summary
+  const sums = {};
+  entries.forEach(e=>{ sums[e.cat]=(sums[e.cat]||0)+e.amt; });
+  const sb = $('sumBody'); sb.innerHTML='';
+  if(!entries.length){ sb.innerHTML='<div class="muted">ยังไม่มีข้อมูล</div>'; return; }
+  Object.entries(sums).sort((a,b)=>b[1]-a[1]).forEach(([c,v])=>{
+    const row=document.createElement('div');
+    row.innerHTML=`<div class="sum-row"><span>${c}</span><span class="v">${fmt(v)}</span></div>
+      <div class="bar"><i style="width:${(v/total*100).toFixed(1)}%"></i></div>`;
+    sb.appendChild(row);
+  });
+}
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function viewPhoto(id){
+  const e = entries.find(x=>x.id==id); if(!e?.photo) return;
+  $('lightboxImg').src = e.photo; $('lightbox').classList.add('open');
+}
+function toast(msg){
+  const t=$('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+/* ================= month switch ================= */
+$('selMonth').addEventListener('change',e=>{ curMonth=+e.target.value; load(); });
+$('selYear').addEventListener('change',e=>{ curYearBE=+e.target.value; load(); });
+
+/* ================= CSV export ================= */
+$('btnCsv').addEventListener('click',()=>{
+  if(!entries.length){ toast('ยังไม่มีรายการให้ export'); return; }
+  const head=['ลำดับ','วันที่เบิก','หมวดค่าใช้จ่าย','รายการ','จำนวนเงิน','ชื่อลูกค้า/เลขที่กรมธรรม์','หมายเหตุ','มีใบเสร็จ'];
+  const rows = entries.map((e,i)=>[i+1,thDate(e.date),e.cat,e.desc,e.amt.toFixed(2),e.client,e.note,e.photo?'มี':'ไม่มี']);
+  rows.push([]);
+  rows.push(['','','','รวม',entries.reduce((s,e)=>s+e.amt,0).toFixed(2),'','','']);
+  const csv = '\uFEFF'+[head,...rows].map(r=>r.map(c=>`"${String(c??'').replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download=`เงินสดย่อย_${TH_MONTHS[curMonth]}_${curYearBE}.csv`;
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('ดาวน์โหลด CSV แล้ว ✓');
+});
+
+/* ================= report builder (ใช้ร่วมกัน: พิมพ์ + ดาวน์โหลดไฟล์) ================= */
+function buildReportHTML(){
+  const total = entries.reduce((s,e)=>s+e.amt,0);
+  const sums={}; entries.forEach(e=>{ sums[e.cat]=(sums[e.cat]||0)+e.amt; });
+  const monthLabel = `${TH_MONTHS[curMonth]} ${curYearBE}`;
+  let html = `
+  <div class="p-head">
+    <div class="p-brand">สรุปค่าใช้จ่าย เงินสดย่อย ประจำเดือน ${monthLabel}</div>
+    <div class="p-sub">iPlanUWealth · Petty Cash Ledger</div>
+    <div class="p-firm">บจก./หจก./คุณ &nbsp;นางสาว สุนิตา โพธิ์เกตุ</div>
+  </div>
+  <table>
+    <thead><tr><th>#</th><th>วันที่เบิก</th><th>หมวด</th><th>รายการ</th>
+    <th class="num">จำนวนเงิน (THB)</th><th>ชื่อลูกค้า/เลขที่กรมธรรม์</th><th>หมายเหตุ</th><th>ใบเสร็จ</th></tr></thead><tbody>`;
+  entries.forEach((e,i)=>{
+    html += `<tr><td>${i+1}</td><td>${thDate(e.date)}</td><td>${e.cat}</td><td>${esc(e.desc)}</td>
+      <td class="num">${fmt(e.amt)}</td><td>${esc(e.client||'')}</td><td>${esc(e.note||'')}</td>
+      <td>${e.photo?'แนบ #'+(i+1):'ไม่มี'}</td></tr>`;
+  });
+  html += `<tr class="p-total"><td colspan="4">รวม</td><td class="num">${fmt(total)}</td><td colspan="3"></td></tr></tbody></table>
+  <div class="p-sum"><h3>สรุปตามหมวดค่าใช้จ่าย</h3><table><tbody>`;
+  Object.entries(sums).sort((a,b)=>b[1]-a[1]).forEach(([c,v])=>{
+    html+=`<tr><td>${c}</td><td class="num">${fmt(v)}</td></tr>`;
+  });
+  html += `</tbody></table></div>
+  <div class="p-cert">
+    ข้าพเจ้า....................................................................(ผู้เบิกจ่าย) &nbsp;ตำแหน่ง....................................
+    ขอรับรองว่า รายจ่ายข้างต้นนี้ (เฉพาะรายการที่ไม่มีใบเสร็จ) ไม่อาจเรียกใบเสร็จรับเงินจากผู้รับได้
+    และข้าพเจ้าได้จ่ายไปในงานของกิจการจริง
+  </div>
+  <div class="p-sign"><span>ผู้เบิกจ่าย..........................................</span><span>ผู้อนุมัติ..........................................</span></div>`;
+  const withPhotos = entries.filter(e=>e.photo);
+  if(withPhotos.length){
+    html += `<div class="p-receipts"><h3>ภาคผนวก — ใบเสร็จแนบ (${withPhotos.length} ใบ)</h3><div class="p-receipt-grid">`;
+    entries.forEach((e,i)=>{
+      if(!e.photo) return;
+      html += `<figure><img src="${e.photo}" alt=""><figcaption>#${i+1} · ${thDate(e.date)} · ${esc(e.desc)} · ${fmt(e.amt)} THB</figcaption></figure>`;
+    });
+    html += `</div></div>`;
+  }
+  return html;
+}
+
+/* ================= print report ================= */
+$('btnPrint').addEventListener('click',()=>{
+  if(!entries.length){ toast('ยังไม่มีรายการให้พิมพ์'); return; }
+  $('printArea').innerHTML = buildReportHTML();
+  window.print();
+});
+
+/* ================= download report as document ================= */
+const REPORT_CSS = `
+  body{font-family:'Anuphan','Helvetica Neue',sans-serif;color:#000;background:#fff;padding:24px;max-width:900px;margin:0 auto}
+  .p-head{text-align:center;margin-bottom:14px}
+  .p-head .p-brand{font-weight:700;font-size:17px;letter-spacing:.03em}
+  .p-head .p-sub{font-size:12px;margin-top:4px;color:#7a6a3a}
+  .p-head .p-firm{font-size:13px;margin-top:10px;text-align:left}
+  table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+  th,td{border:1px solid #333;padding:6px 7px;text-align:left;vertical-align:top}
+  th{background:#f4efe0;font-weight:600}
+  td.num,th.num{text-align:right}
+  .p-total td{font-weight:700;background:#faf5e6}
+  .p-cert{font-size:12px;margin-top:18px;line-height:2}
+  .p-sign{display:flex;justify-content:space-between;margin-top:28px;font-size:12px}
+  .p-sum h3,.p-receipts h3{font-size:13px;font-weight:700;margin:16px 0 6px}
+  .p-receipt-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .p-receipt-grid figure{border:1px solid #333;padding:6px;margin:0}
+  .p-receipt-grid img{width:100%;max-height:340px;object-fit:contain}
+  .p-receipt-grid figcaption{font-size:11px;margin-top:4px}
+  @media print{ body{padding:0} .p-receipts{page-break-before:always} figure{page-break-inside:avoid} }
+`;
+$('btnDoc').addEventListener('click',()=>{
+  if(!entries.length){ toast('ยังไม่มีรายการให้ดาวน์โหลด'); return; }
+  const doc = `<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เงินสดย่อย ${TH_MONTHS[curMonth]} ${curYearBE}</title>
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>${REPORT_CSS}</style></head><body>${buildReportHTML()}</body></html>`;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([doc],{type:'text/html;charset=utf-8'}));
+  a.download=`รายงานเงินสดย่อย_${TH_MONTHS[curMonth]}_${curYearBE}.html`;
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('ดาวน์โหลดรายงานแล้ว ✓ แชร์ต่อได้เลย');
+});
+
+load();
+</script>
+</body>
+</html>
