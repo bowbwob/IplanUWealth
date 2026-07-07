@@ -1145,7 +1145,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
       </div>
       <div class="form-group">
         <label>📈 อัตราคิดลด (%/ปี)</label>
-        <input type="number" id="hlv-disc" placeholder="3.5" step="0.5" value="3.5" oninput="calcHLV()">
+        <input type="number" id="hlv-disc" placeholder="0" step="0.5" value="0" oninput="calcHLV()">
         <div style="font-size:10px;color:var(--muted);margin-top:3px">discount rate (เงินเฟ้อ/อัตราดอก)</div>
       </div>
     </div>
@@ -1178,7 +1178,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
           <div style="height:2px;background:linear-gradient(to right,var(--blue),var(--gold));min-width:80px;border-radius:1px;position:relative;margin:4px 0">
             <div style="position:absolute;right:-6px;top:-5px;color:var(--gold);font-size:12px">▶</div>
           </div>
-          <div style="font-size:10px;color:var(--muted)">PV Annuity (i=<span id="hlv-disc-label">3.5</span>%)</div>
+          <div style="font-size:10px;color:var(--muted)">PV Annuity (i=<span id="hlv-disc-label">0</span>%)</div>
         </div>
         <div style="background:var(--blue-lt);border:1.5px solid var(--blue);border-radius:8px;padding:10px 14px;text-align:center;min-width:130px">
           <div style="font-size:9px;color:var(--blue);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">🎯 HLV ที่ควรมี</div>
@@ -1202,6 +1202,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
         <div class="form-group" style="margin-bottom:8px"><label>🏠 หนี้สินทั้งหมด (฿)</label><input type="number" id="nb-debt" placeholder="0" oninput="calcHLV()"></div>
         <div class="form-group" style="margin-bottom:8px"><label>👨‍👩‍👧 ค่าใช้จ่ายครอบครัว/เดือน (฿)</label><input type="number" id="nb-family-exp" placeholder="0" oninput="calcHLV()"></div>
         <div class="form-group" style="margin-bottom:8px"><label>📅 ระยะเวลาที่ครอบครัวต้องการ (ปี)</label><input type="number" id="nb-years" placeholder="20" oninput="calcHLV()"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div class="form-group"><label>📈 ผลตอบแทน i (%/ปี)</label><input type="number" id="nb-disc" placeholder="3.5" step="0.5" value="3.5" oninput="calcHLV()"></div>
+          <div class="form-group"><label>📊 เงินเฟ้อรายจ่าย g (%/ปี)</label><input type="number" id="nb-growth" placeholder="3" step="0.5" value="3" oninput="calcHLV()"></div>
+        </div>
         <div class="form-group"><label>🎓 ทุนการศึกษาบุตร (฿)</label><input type="number" id="nb-edu" placeholder="0" oninput="calcHLV()"></div>
       </div>
       <div>
@@ -1650,7 +1654,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
             <input type="number" id="c1-inf" placeholder="4" step="0.5" value="4" oninput="calcEdu(1)">
           </div>
           <div class="form-group"><label>💹 ผลตอบแทนการออม (%/ปี)</label>
-            <input type="number" id="c1-ret" placeholder="5" step="0.5" value="5" oninput="calcEdu(1)">
+            <input type="number" id="c1-ret" placeholder="0" step="0.5" value="0" oninput="calcEdu(1)">
           </div>
         </div>
         <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px">
@@ -2777,7 +2781,8 @@ let childCount = 1;
 function calcEdu(n){
   const childAge  = parseFloat(document.getElementById(`child-${n}-age`)?.value)||0;
   const infRate   = (parseFloat(document.getElementById(`c${n}-inf`)?.value)||4)/100;
-  const retRate   = (parseFloat(document.getElementById(`c${n}-ret`)?.value)||5)/100;
+  const retRaw    = document.getElementById(`c${n}-ret`)?.value;
+  const retRate   = ((retRaw===''||retRaw===undefined||retRaw===null||isNaN(parseFloat(retRaw))) ? 0 : parseFloat(retRaw))/100;
 
   const stages = [
     {id:'kindergarten', label:'อนุบาล',   yearsUntil:0,  defaultYrs:3},
@@ -2932,7 +2937,8 @@ function calcHLV(){
   const retireAt = parseFloat($('hlv-retire-age')?.value)||60;
   const incomeYr = cleanNum($('hlv-income-yr')?.value)||0;
   const expYr    = cleanNum($('hlv-expense-yr')?.value)||0;
-  const discPct  = parseFloat($('hlv-disc')?.value)||3.5;
+  const discRaw  = $('hlv-disc')?.value;
+  const discPct  = (discRaw===''||discRaw===undefined||discRaw===null||isNaN(parseFloat(discRaw))) ? 0 : parseFloat(discRaw);
   const growPct  = parseFloat($('hlv-salary-growth')?.value)||3;
   const disc     = discPct/100;
   const grow     = growPct/100;
@@ -2967,8 +2973,16 @@ function calcHLV(){
   const existing = cleanNum($('life-sum')?.value)||0;
   const pension  = cleanNum($('nb-pension')?.value)||0;
 
-  // PV of family expenses (simple annuity at discount rate)
-  const famPV = famExp>0&&disc>0 ? famExp*12*(1-Math.pow(1+disc,-famYrs))/disc : famExp*12*famYrs;
+  // Needs-Based uses its OWN rate, independent of HLV's discount rate:
+  // i' = (i - g) / (1 + g)  — adjusted rate for a growing annuity of family expenses
+  const nbIPct   = parseFloat($('nb-disc')?.value);
+  const nbGPct   = parseFloat($('nb-growth')?.value);
+  const nbI      = isNaN(nbIPct) ? 0.035 : nbIPct/100;
+  const nbG      = isNaN(nbGPct) ? 0.03  : nbGPct/100;
+  const nbDisc   = (nbI - nbG) / (1 + nbG);
+
+  // PV of family expenses (growing annuity, adjusted rate i')
+  const famPV = famExp>0&&Math.abs(nbDisc)>0.0001 ? famExp*12*(1-Math.pow(1+nbDisc,-famYrs))/nbDisc : famExp*12*famYrs;
   const nbNeed = Math.max(debt + famPV + edu - assets - pension, 0);
   const gap    = Math.max(nbNeed - existing, 0);
   const surplus= existing - nbNeed;
@@ -3391,6 +3405,7 @@ const _store = (function(){
   };
 })();
 
+// Local cache (offline fallback). Cloud (Vercel KV via /api/clients) is the source of truth.
 function getAllClients(){
   try{ return JSON.parse(_store.get('fp_clients')||'{}'); } catch(e){ return {}; }
 }
@@ -3401,17 +3416,58 @@ function genId(){
   return 'c_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
 }
 
+// ── Cloud sync helpers ──
+async function fetchClientsFromCloud(){
+  try{
+    const r = await fetch('/api/clients');
+    if(!r.ok) throw new Error('bad response');
+    const j = await r.json();
+    if(j.ok && j.clients){ saveAllClients(j.clients); return j.clients; }
+    throw new Error('malformed response');
+  }catch(e){
+    console.warn('Cloud fetch failed, using local cache', e);
+    return getAllClients();
+  }
+}
+async function pushClientToCloud(id, data){
+  try{
+    const r = await fetch('/api/clients', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ id, data })
+    });
+    return r.ok;
+  }catch(e){
+    console.warn('Cloud save failed, kept locally only', e);
+    return false;
+  }
+}
+async function deleteClientFromCloud(id){
+  try{
+    const r = await fetch('/api/clients?id='+encodeURIComponent(id), { method:'DELETE' });
+    return r.ok;
+  }catch(e){
+    console.warn('Cloud delete failed', e);
+    return false;
+  }
+}
+
 // ── Save current client ──
-function saveClient(){
+async function saveClient(){
   const name = $('client-name')?.value?.trim() || 'ไม่ระบุชื่อ';
   const data = collectData();
   data._name = name;
+  data._savedAt = new Date().toISOString();
   const clients = getAllClients();
   if(!currentClientId) currentClientId = genId();
   clients[currentClientId] = data;
-  saveAllClients(clients);
+  saveAllClients(clients); // local cache immediately
+  if($('save-status')) $('save-status').textContent = '⏳ กำลังบันทึกขึ้น cloud...';
+  const ok = await pushClientToCloud(currentClientId, data);
   $('save-client-name').textContent = name;
-  $('save-status').textContent = '✅ บันทึกแล้ว '+new Date().toLocaleTimeString('th-TH');
+  $('save-status').textContent = ok
+    ? '✅ บันทึกขึ้น cloud แล้ว '+new Date().toLocaleTimeString('th-TH')
+    : '⚠️ บันทึกไว้ในเครื่องเท่านั้น (cloud ไม่สำเร็จ)';
   setTimeout(()=>{ if($('save-status')) $('save-status').textContent=''; }, 3000);
 }
 
@@ -3448,7 +3504,7 @@ function loadClient(id){
 }
 
 // ── Delete client ──
-function deleteClient(id, e){
+async function deleteClient(id, e){
   e.stopPropagation();
   if(!confirm('ลบข้อมูลลูกค้านี้?')) return;
   const clients = getAllClients();
@@ -3456,11 +3512,12 @@ function deleteClient(id, e){
   saveAllClients(clients);
   if(currentClientId===id){ newClient(); }
   renderClientList();
+  await deleteClientFromCloud(id);
 }
 
 // ── Render client list ──
-function renderClientList(){
-  const clients = getAllClients();
+function renderClientList(clientsOverride){
+  const clients = clientsOverride || getAllClients();
   const search = $('search-client')?.value?.toLowerCase()||'';
   const container = $('client-list-body');
   if(!container) return;
@@ -3492,9 +3549,10 @@ function renderClientList(){
 
 // ── Show/hide modal ──
 function showClientList(){
-  renderClientList();
+  renderClientList(); // instant render from local cache
   $('client-modal').style.display='block';
   document.body.style.overflow='hidden';
+  fetchClientsFromCloud().then(clients=>renderClientList(clients)); // then refresh from cloud
 }
 function closeClientList(){
   $('client-modal').style.display='none';
