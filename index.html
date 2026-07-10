@@ -1174,6 +1174,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
           <th>บริษัท / ชื่อกรมธรรม์</th>
           <th style="min-width:110px">ทุนประกัน/วงเงิน (฿)</th>
           <th style="min-width:100px">เบี้ยประกัน/ปี (฿)</th>
+          <th style="min-width:110px">เงินบำนาญคืน/ปี (฿)</th>
           <th>หมายเหตุ</th>
           <th style="width:30px"></th>
         </tr>
@@ -1183,7 +1184,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
     <button class="btn-add" onclick="addCoverageRow()">＋ เพิ่มกรมธรรม์</button>
 
     <div class="sec-div" style="margin-top:20px">📊 สรุปความคุ้มครองตามประเภท</div>
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px" id="cov-summary-grid">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px" id="cov-summary-grid">
       <div style="background:var(--blue-lt);border-radius:8px;padding:12px;text-align:center">
         <div style="font-size:9px;color:var(--blue);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">❤️ ชีวิต</div>
         <div id="cov-sum-life" style="font-size:15px;font-weight:800;color:var(--blue)">0</div>
@@ -1204,6 +1205,11 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
         <div id="cov-sum-ci" style="font-size:15px;font-weight:800;color:#9a6e1a">0</div>
         <div style="font-size:9px;color:var(--muted)">฿</div>
       </div>
+      <div style="background:#E6D9F5;border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:9px;color:#6a3f9e;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">🎂 บำนาญ (คืน/ปี)</div>
+        <div id="cov-sum-pension" style="font-size:15px;font-weight:800;color:#6a3f9e">0</div>
+        <div style="font-size:9px;color:var(--muted)">฿/ปี</div>
+      </div>
       <div style="background:var(--sand);border-radius:8px;padding:12px;text-align:center;border:1.5px solid var(--border)">
         <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">🌍 อื่นๆ / Non-life</div>
         <div id="cov-sum-other" style="font-size:15px;font-weight:800;color:var(--ink)">0</div>
@@ -1216,38 +1222,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
     </div>
 
     <div style="margin-top:12px;padding:12px 16px;background:var(--sand);border-radius:8px;font-size:11.5px;color:var(--muted)">
-      💡 ตัวเลขในหมวด "ชีวิต / สุขภาพ / อุบัติเหตุ / โรคร้ายแรง" จะถูกดึงไปเติมให้อัตโนมัติในหน้า Protection (ถ้าช่องนั้นยังว่างอยู่)
+      💡 ตัวเลขในหมวด "ชีวิต / สุขภาพ / อุบัติเหตุ / โรคร้ายแรง" จะถูกดึงไปเติมให้อัตโนมัติในหน้า Protection · เงินบำนาญคืน/ปีจะถูกดึงไปใช้ในหน้า Retirement (ถ้าช่องนั้นยังว่างอยู่)
     </div>
-  </div>
-
-  <!-- ══ ประกันสุขภาพ / non-life ══ -->
-  <div class="card">
-    <div class="card-label">ชั้นที่ 1 · ความคุ้มครองเพิ่มเติม</div>
-    <div class="card-title">🏥 ความคุ้มครองสุขภาพ & ทรัพย์สิน</div>
-    <div class="protect-grid">
-      <div class="form-group"><label>💳 เบี้ยประกันชีวิตรวม/ปี (฿)</label><input type="number" id="life-prem" placeholder="0"></div>
-      <div class="form-group"><label>🏥 ค่าห้อง/รักษา (฿/ปี)</label><input type="number" id="life-hosp" placeholder="0" oninput="calcHLV()"></div>
-      <div class="form-group"><label>🚗 อุบัติเหตุ (฿)</label><input type="number" id="life-acc" placeholder="0" oninput="calcHLV()"></div>
-      <div class="form-group"><label>💵 ค่าชดเชยรายได้ (฿/วัน)</label><input type="number" id="life-income" placeholder="0"></div>
-      <div class="form-group"><label>🎗️ โรคร้ายแรง CI (฿)</label><input type="number" id="life-ci" placeholder="0" oninput="calcHLV()"></div>
-    </div>
-    <div id="life-extra-fields"></div>
-    <button class="btn-add" onclick="addProtExtra()">＋ เพิ่มความคุ้มครองอื่นๆ</button>
-
-    <div class="sec-div">🚘 Non-life</div>
-    <div class="protect-grid">
-      <div class="form-group"><label>🚗 ประกันรถยนต์</label>
-        <select id="nl-car"><option value="">— ไม่มี —</option><option>ชั้น 1</option><option>ชั้น 2+</option><option>ชั้น 3</option></select>
-      </div>
-      <div class="form-group"><label>🏠 ประกันบ้าน</label>
-        <select id="nl-home"><option value="">— ไม่มี —</option><option>มี</option></select>
-      </div>
-    </div>
-    <div id="nonlife-extra"></div>
-    <button class="btn-add" onclick="addExtraRow('nonlife-extra','nl-x','null')">＋ เพิ่มประกันอื่นๆ</button>
-
-    <div class="sec-div">📝 บันทึก</div>
-    <textarea id="prot-note" rows="2" placeholder="ช่องว่างความคุ้มครองที่ต้องเพิ่มเติม..."></textarea>
   </div>
 
   <div class="btn-row">
@@ -1544,6 +1520,12 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
             <td><input type="number" id="retire-current-saving" placeholder="0" oninput="calcRetirePlan()"></td>
             <td><input type="number" id="retire-current-saving-r" placeholder="5" step="0.5" oninput="calcRetirePlan()" style="width:70px"></td>
             <td style="font-weight:700;color:var(--green)" id="retire-current-saving-fv">—</td>
+          </tr>
+          <tr style="background:#F5F0FB">
+            <td>🎂 เงินบำนาญคืนปีละ (จากกรมธรรม์ที่มี)</td>
+            <td><input type="number" id="ret-pension-annual" placeholder="0" oninput="calcRetirePlan()"></td>
+            <td style="font-size:10px;color:var(--muted)">PV ของ Annuity*</td>
+            <td style="font-weight:700;color:var(--green)" id="ret-pension-fv">—</td>
           </tr>
         </tbody>
       </table>
@@ -2574,13 +2556,27 @@ function calcRetirePlan(){
     totalFV += pv * Math.pow(1+ret, yearsLeft);
   });
 
+  // ── Pension income stream (annual payout) — discounted as an annuity over post-retirement years ──
+  const pensionAnnual = cleanNum($('ret-pension-annual')?.value)||0;
+  let pensionPV = 0;
+  if(pensionAnnual>0 && postYears>0){
+    if(Math.abs(realRate) < 0.0001){
+      pensionPV = pensionAnnual * postYears;
+    } else {
+      pensionPV = pensionAnnual * (1 - Math.pow(1+realRate, -postYears)) / realRate;
+    }
+  }
+  if($('ret-pension-fv')) $('ret-pension-fv').textContent = pensionAnnual ? fmt(Math.round(pensionPV)) : '—';
+  if(pensionPV>0){ sourceLabels.push('บำนาญ/ปี'); sourceFVs.push(Math.round(pensionPV)); }
+  totalFV += pensionPV;
+
   if($('ret-prepared-total')) $('ret-prepared-total').textContent = fmt(Math.round(totalFV));
 
   // Source chart
   if(sourceFVs.length>0){
     makeChart('chart-source-funds',{
       type:'bar',
-      data:{labels:sourceLabels, datasets:[{data:sourceFVs, backgroundColor:['#7B9E87','#4A7B9D','#C9A84C','#9B59B6','#E67E22','#16A085'], borderRadius:6}]},
+      data:{labels:sourceLabels, datasets:[{data:sourceFVs, backgroundColor:['#7B9E87','#4A7B9D','#C9A84C','#9B59B6','#E67E22','#16A085','#6a3f9e'], borderRadius:6}]},
       options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v}}}}
     });
   }
@@ -3072,45 +3068,52 @@ function addCoverageRow(prefill){
         <option value="health">🏥 สุขภาพ</option>
         <option value="acc">🚗 อุบัติเหตุ</option>
         <option value="ci">🎗️ โรคร้ายแรง</option>
+        <option value="pension">🎂 บำนาญ</option>
         <option value="other">🌍 อื่นๆ / Non-life</option>
       </select>
     </td>
     <td><input type="text" id="cov-company-${n}" placeholder="เช่น AIA / กรุงไทยแอกซ่า"></td>
     <td><input type="number" id="cov-amt-${n}" placeholder="0" oninput="calcCoverage()"></td>
     <td><input type="number" id="cov-prem-${n}" placeholder="0" oninput="calcCoverage()"></td>
+    <td><input type="number" id="cov-pension-${n}" placeholder="0" oninput="calcCoverage()"></td>
     <td><input type="text" id="cov-note-${n}" placeholder="หมายเหตุ"></td>
     <td><button class="btn-remove" onclick="this.closest('tr').remove();calcCoverage()">✕</button></td>`;
   tbody.appendChild(tr);
   try{
-    ['cov-amt-'+n,'cov-prem-'+n].forEach(id=>{ const inp=$(id); if(inp) attachMoneyFormatting(inp); });
+    ['cov-amt-'+n,'cov-prem-'+n,'cov-pension-'+n].forEach(id=>{ const inp=$(id); if(inp) attachMoneyFormatting(inp); });
   }catch(e){}
   if(prefill){
     if($('cov-type-'+n)) $('cov-type-'+n).value = prefill.type||'life';
     if($('cov-company-'+n)) $('cov-company-'+n).value = prefill.company||'';
     if($('cov-amt-'+n)) $('cov-amt-'+n).value = prefill.amount||'';
     if($('cov-prem-'+n)) $('cov-prem-'+n).value = prefill.premium||'';
+    if($('cov-pension-'+n)) $('cov-pension-'+n).value = prefill.pension||'';
     if($('cov-note-'+n)) $('cov-note-'+n).value = prefill.note||'';
   }
 }
 
 function calcCoverage(){
-  const sums = { life:0, health:0, acc:0, ci:0, other:0 };
+  const sums = { life:0, health:0, acc:0, ci:0, pension:0, other:0 };
   let totalPremium = 0;
   document.querySelectorAll('#cov-table-body tr.cov-row').forEach(tr=>{
     const sel = tr.querySelector('select[id^="cov-type-"]');
     const amtEl = tr.querySelector('input[id^="cov-amt-"]');
     const premEl = tr.querySelector('input[id^="cov-prem-"]');
+    const pensionEl = tr.querySelector('input[id^="cov-pension-"]');
     const type = sel?.value || 'other';
     const amt = cleanNum(amtEl?.value);
     const prem = cleanNum(premEl?.value);
+    const pension = cleanNum(pensionEl?.value);
     if(sums[type]!==undefined) sums[type] += amt;
+    sums.pension += pension;
     totalPremium += prem;
   });
-  if($('cov-sum-life'))   $('cov-sum-life').textContent   = fmt(Math.round(sums.life));
-  if($('cov-sum-health')) $('cov-sum-health').textContent = fmt(Math.round(sums.health));
-  if($('cov-sum-acc'))    $('cov-sum-acc').textContent    = fmt(Math.round(sums.acc));
-  if($('cov-sum-ci'))     $('cov-sum-ci').textContent     = fmt(Math.round(sums.ci));
-  if($('cov-sum-other'))  $('cov-sum-other').textContent  = fmt(Math.round(sums.other));
+  if($('cov-sum-life'))    $('cov-sum-life').textContent    = fmt(Math.round(sums.life));
+  if($('cov-sum-health'))  $('cov-sum-health').textContent  = fmt(Math.round(sums.health));
+  if($('cov-sum-acc'))     $('cov-sum-acc').textContent     = fmt(Math.round(sums.acc));
+  if($('cov-sum-ci'))      $('cov-sum-ci').textContent      = fmt(Math.round(sums.ci));
+  if($('cov-sum-pension')) $('cov-sum-pension').textContent = fmt(Math.round(sums.pension));
+  if($('cov-sum-other'))   $('cov-sum-other').textContent   = fmt(Math.round(sums.other));
   if($('cov-total-premium')) $('cov-total-premium').textContent = fmt(Math.round(totalPremium));
 
   // Auto-fill Protection page fields — only if the advisor hasn't already typed a value there
@@ -3118,7 +3121,12 @@ function calcCoverage(){
   if($('life-hosp') && !$('life-hosp').value && sums.health>0) $('life-hosp').value = Math.round(sums.health);
   if($('life-acc')  && !$('life-acc').value  && sums.acc>0)    $('life-acc').value  = Math.round(sums.acc);
   if($('life-ci')   && !$('life-ci').value   && sums.ci>0)     $('life-ci').value   = Math.round(sums.ci);
+  // Auto-fill Retirement page pension income field — only if empty
+  if($('ret-pension-annual') && !$('ret-pension-annual').value && sums.pension>0){
+    $('ret-pension-annual').value = Math.round(sums.pension);
+  }
   try{ calcHLV(); }catch(e){}
+  try{ calcRetirePlan(); }catch(e){}
 }
 
 function collectCoverage(){
@@ -3128,12 +3136,14 @@ function collectCoverage(){
     const company = tr.querySelector('input[id^="cov-company-"]');
     const amt = tr.querySelector('input[id^="cov-amt-"]');
     const prem = tr.querySelector('input[id^="cov-prem-"]');
+    const pension = tr.querySelector('input[id^="cov-pension-"]');
     const note = tr.querySelector('input[id^="cov-note-"]');
     rows.push({
       type: sel?.value||'life',
       company: company?.value||'',
       amount: amt?.value||'',
       premium: prem?.value||'',
+      pension: pension?.value||'',
       note: note?.value||''
     });
   });
@@ -3526,7 +3536,7 @@ const FIELDS = [
   'prot-note',
   // retirement
   'retire-at','retire-life','retire-inf','retire-need','retire-ret','retire-current-saving',
-  'ret-pvd','ret-gpf','ret-annuity','ret-rmf','ret-prop',
+  'ret-pvd','ret-gpf','ret-annuity','ret-rmf','ret-prop','ret-pension-annual',
   'tax-income','tax-deduct',
   // education
   'child-1-name','child-1-age','child-1-start',
