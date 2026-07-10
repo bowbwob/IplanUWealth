@@ -1220,6 +1220,36 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
     </div>
   </div>
 
+  <!-- ══ ประกันสุขภาพ / non-life ══ -->
+  <div class="card">
+    <div class="card-label">ชั้นที่ 1 · ความคุ้มครองเพิ่มเติม</div>
+    <div class="card-title">🏥 ความคุ้มครองสุขภาพ & ทรัพย์สิน</div>
+    <div class="protect-grid">
+      <div class="form-group"><label>💳 เบี้ยประกันชีวิตรวม/ปี (฿)</label><input type="number" id="life-prem" placeholder="0"></div>
+      <div class="form-group"><label>🏥 ค่าห้อง/รักษา (฿/ปี)</label><input type="number" id="life-hosp" placeholder="0" oninput="calcHLV()"></div>
+      <div class="form-group"><label>🚗 อุบัติเหตุ (฿)</label><input type="number" id="life-acc" placeholder="0" oninput="calcHLV()"></div>
+      <div class="form-group"><label>💵 ค่าชดเชยรายได้ (฿/วัน)</label><input type="number" id="life-income" placeholder="0"></div>
+      <div class="form-group"><label>🎗️ โรคร้ายแรง CI (฿)</label><input type="number" id="life-ci" placeholder="0" oninput="calcHLV()"></div>
+    </div>
+    <div id="life-extra-fields"></div>
+    <button class="btn-add" onclick="addProtExtra()">＋ เพิ่มความคุ้มครองอื่นๆ</button>
+
+    <div class="sec-div">🚘 Non-life</div>
+    <div class="protect-grid">
+      <div class="form-group"><label>🚗 ประกันรถยนต์</label>
+        <select id="nl-car"><option value="">— ไม่มี —</option><option>ชั้น 1</option><option>ชั้น 2+</option><option>ชั้น 3</option></select>
+      </div>
+      <div class="form-group"><label>🏠 ประกันบ้าน</label>
+        <select id="nl-home"><option value="">— ไม่มี —</option><option>มี</option></select>
+      </div>
+    </div>
+    <div id="nonlife-extra"></div>
+    <button class="btn-add" onclick="addExtraRow('nonlife-extra','nl-x','null')">＋ เพิ่มประกันอื่นๆ</button>
+
+    <div class="sec-div">📝 บันทึก</div>
+    <textarea id="prot-note" rows="2" placeholder="ช่องว่างความคุ้มครองที่ต้องเพิ่มเติม..."></textarea>
+  </div>
+
   <div class="btn-row">
     <button class="btn btn-ghost" onclick="goStep(3)">← ย้อนกลับ</button>
     <button class="btn btn-primary" onclick="goStep(5)">ถัดไป → Protection 🛡️</button>
@@ -1354,35 +1384,6 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
   </div>
   <!-- ══ /comparison card ══ -->
 
-  <!-- ══ ประกันสุขภาพ / non-life ══ -->
-  <div class="card">
-    <div class="card-label">ชั้นที่ 1 · ความคุ้มครองเพิ่มเติม</div>
-    <div class="card-title">🏥 ความคุ้มครองสุขภาพ & ทรัพย์สิน</div>
-    <div class="protect-grid">
-      <div class="form-group"><label>💳 เบี้ยประกันชีวิตรวม/ปี (฿)</label><input type="number" id="life-prem" placeholder="0"></div>
-      <div class="form-group"><label>🏥 ค่าห้อง/รักษา (฿/ปี)</label><input type="number" id="life-hosp" placeholder="0" oninput="calcHLV()"></div>
-      <div class="form-group"><label>🚗 อุบัติเหตุ (฿)</label><input type="number" id="life-acc" placeholder="0" oninput="calcHLV()"></div>
-      <div class="form-group"><label>💵 ค่าชดเชยรายได้ (฿/วัน)</label><input type="number" id="life-income" placeholder="0"></div>
-      <div class="form-group"><label>🎗️ โรคร้ายแรง CI (฿)</label><input type="number" id="life-ci" placeholder="0" oninput="calcHLV()"></div>
-    </div>
-    <div id="life-extra-fields"></div>
-    <button class="btn-add" onclick="addProtExtra()">＋ เพิ่มความคุ้มครองอื่นๆ</button>
-
-    <div class="sec-div">🚘 Non-life</div>
-    <div class="protect-grid">
-      <div class="form-group"><label>🚗 ประกันรถยนต์</label>
-        <select id="nl-car"><option value="">— ไม่มี —</option><option>ชั้น 1</option><option>ชั้น 2+</option><option>ชั้น 3</option></select>
-      </div>
-      <div class="form-group"><label>🏠 ประกันบ้าน</label>
-        <select id="nl-home"><option value="">— ไม่มี —</option><option>มี</option></select>
-      </div>
-    </div>
-    <div id="nonlife-extra"></div>
-    <button class="btn-add" onclick="addExtraRow('nonlife-extra','nl-x','null')">＋ เพิ่มประกันอื่นๆ</button>
-
-    <div class="sec-div">📝 บันทึก</div>
-    <textarea id="prot-note" rows="2" placeholder="ช่องว่างความคุ้มครองที่ต้องเพิ่มเติม..."></textarea>
-  </div>
 
   <div class="btn-row">
     <button class="btn btn-ghost" onclick="goStep(4)">← ย้อนกลับ</button>
