@@ -264,7 +264,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
   <div class="step-pill" data-step="-1" id="pill-clients" onclick="showClientList()" style="background:var(--gold-lt);border-color:var(--gold);color:var(--black)">🗂️ ลูกค้าทั้งหมด</div>
   <div class="step-pill active" data-step="0">👤 ข้อมูลพื้นฐาน</div>
   <div class="step-pill" data-step="1">🎯 เป้าหมาย</div>
-  <div class="step-pill" data-step="2">📊 งบดุล</div>
+  <div class="step-pill" data-step="2">📊 งบการเงิน</div>
   <div class="step-pill" data-step="3">🔺 ปิรามิด</div>
   <div class="step-pill" data-step="4">🛡️ Protection</div>
   <div class="step-pill" data-step="5">🌅 Retirement</div>
@@ -622,7 +622,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
 
   <!-- CASHFLOW STATEMENT -->
   <div class="card">
-    <div class="card-label">หน้าที่ 3 · งบดุล</div>
+    <div class="card-label">หน้าที่ 3 · งบการเงิน</div>
     <div class="card-title">📊 งบกระแสเงินสด (Cash Flow Statement)</div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
@@ -637,6 +637,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
           <select id="cf-salary-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
             <option value="1">฿/เดือน</option>
             <option value="3">฿/ไตรมาส</option>
+            <option value="6">฿/6 เดือน</option>
             <option value="12">฿/ปี</option>
           </select>
         </div>
@@ -646,6 +647,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
           <select id="cf-wage-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
             <option value="1">฿/เดือน</option>
             <option value="3">฿/ไตรมาส</option>
+            <option value="6">฿/6 เดือน</option>
             <option value="12">฿/ปี</option>
           </select>
         </div>
@@ -655,6 +657,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
           <select id="cf-rent-in-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
             <option value="1">฿/เดือน</option>
             <option value="3">฿/ไตรมาส</option>
+            <option value="6">฿/6 เดือน</option>
             <option value="12">฿/ปี</option>
           </select>
         </div>
@@ -668,6 +671,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
           <select id="cf-bonus-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
             <option value="1">฿/เดือน</option>
             <option value="3">฿/ไตรมาส</option>
+            <option value="6">฿/6 เดือน</option>
             <option value="12">฿/ปี</option>
           </select>
         </div>
@@ -677,6 +681,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
           <select id="cf-div-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
             <option value="1">฿/เดือน</option>
             <option value="3">฿/ไตรมาส</option>
+            <option value="6">฿/6 เดือน</option>
             <option value="12">฿/ปี</option>
           </select>
         </div>
@@ -697,6 +702,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
           <select id="cf-house-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
             <option value="1">฿/เดือน</option>
             <option value="3">฿/ไตรมาส</option>
+            <option value="6">฿/6 เดือน</option>
             <option value="12">฿/ปี</option>
           </select>
         </div>
@@ -706,6 +712,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
           <select id="cf-car-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
             <option value="1">฿/เดือน</option>
             <option value="3">฿/ไตรมาส</option>
+            <option value="6">฿/6 เดือน</option>
             <option value="12">฿/ปี</option>
           </select>
         </div>
@@ -715,6 +722,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
           <select id="cf-util-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
             <option value="1">฿/เดือน</option>
             <option value="3">฿/ไตรมาส</option>
+            <option value="6">฿/6 เดือน</option>
             <option value="12">฿/ปี</option>
           </select>
         </div>
@@ -724,6 +732,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
           <select id="cf-ins-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
             <option value="1">฿/เดือน</option>
             <option value="3">฿/ไตรมาส</option>
+            <option value="6">฿/6 เดือน</option>
             <option value="12">฿/ปี</option>
           </select>
         </div>
@@ -733,6 +742,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
           <select id="cf-parents-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
             <option value="1">฿/เดือน</option>
             <option value="3">฿/ไตรมาส</option>
+            <option value="6">฿/6 เดือน</option>
             <option value="12">฿/ปี</option>
           </select>
         </div>
@@ -742,6 +752,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
           <select id="cf-kids-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
             <option value="1">฿/เดือน</option>
             <option value="3">฿/ไตรมาส</option>
+            <option value="6">฿/6 เดือน</option>
             <option value="12">฿/ปี</option>
           </select>
         </div>
@@ -751,6 +762,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
           <select id="cf-cartax-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
             <option value="1">฿/เดือน</option>
             <option value="3">฿/ไตรมาส</option>
+            <option value="6">฿/6 เดือน</option>
             <option value="12">฿/ปี</option>
           </select>
         </div>
@@ -764,6 +776,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
           <select id="cf-food-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
             <option value="1">฿/เดือน</option>
             <option value="3">฿/ไตรมาส</option>
+            <option value="6">฿/6 เดือน</option>
             <option value="12">฿/ปี</option>
           </select>
         </div>
@@ -773,6 +786,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
           <select id="cf-trans-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
             <option value="1">฿/เดือน</option>
             <option value="3">฿/ไตรมาส</option>
+            <option value="6">฿/6 เดือน</option>
             <option value="12">฿/ปี</option>
           </select>
         </div>
@@ -782,6 +796,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
           <select id="cf-shop-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
             <option value="1">฿/เดือน</option>
             <option value="3">฿/ไตรมาส</option>
+            <option value="6">฿/6 เดือน</option>
             <option value="12">฿/ปี</option>
           </select>
         </div>
@@ -791,6 +806,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
           <select id="cf-self-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
             <option value="1">฿/เดือน</option>
             <option value="3">฿/ไตรมาส</option>
+            <option value="6">฿/6 เดือน</option>
             <option value="12">฿/ปี</option>
           </select>
         </div>
@@ -800,6 +816,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
           <select id="cf-travel-period" onchange="calcCF()" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
             <option value="1">฿/เดือน</option>
             <option value="3">฿/ไตรมาส</option>
+            <option value="6">฿/6 เดือน</option>
             <option value="12">฿/ปี</option>
           </select>
         </div>
@@ -1808,6 +1825,14 @@ const sumExtra = prefix => {
   document.querySelectorAll(`[data-extra="${prefix}"]`).forEach(i=>{ t+=cleanNum(i.value); });
   return t;
 };
+const sumExtraPeriod = prefix => {
+  let t=0;
+  document.querySelectorAll(`[data-extra="${prefix}"]`).forEach(i=>{
+    const period = parseFloat($(i.id+'-period')?.value)||1;
+    t += cleanNum(i.value)/period;
+  });
+  return t;
+};
 
 // ─── charts registry ─────────────
 const charts = {};
@@ -1864,9 +1889,9 @@ function updateHeader(){
 
 // ─── cashflow ────────────────────
 function calcCF(){
-  const income = periodVal('cf-salary')+periodVal('cf-wage')+periodVal('cf-rent-in')+periodVal('cf-bonus')+periodVal('cf-div')+sumExtra('cf-inc-x')+sumExtra('cf-var-x');
-  const fixed = periodVal('cf-house')+periodVal('cf-car')+periodVal('cf-util')+periodVal('cf-ins')+periodVal('cf-parents')+periodVal('cf-kids')+periodVal('cf-cartax')+sumExtra('cf-fix-x');
-  const variable = periodVal('cf-food')+periodVal('cf-trans')+periodVal('cf-shop')+periodVal('cf-self')+periodVal('cf-travel')+sumExtra('cf-var2-x');
+  const income = periodVal('cf-salary')+periodVal('cf-wage')+periodVal('cf-rent-in')+periodVal('cf-bonus')+periodVal('cf-div')+sumExtraPeriod('cf-inc-x')+sumExtraPeriod('cf-var-x');
+  const fixed = periodVal('cf-house')+periodVal('cf-car')+periodVal('cf-util')+periodVal('cf-ins')+periodVal('cf-parents')+periodVal('cf-kids')+periodVal('cf-cartax')+sumExtraPeriod('cf-fix-x');
+  const variable = periodVal('cf-food')+periodVal('cf-trans')+periodVal('cf-shop')+periodVal('cf-self')+periodVal('cf-travel')+sumExtraPeriod('cf-var2-x');
   const expense = fixed + variable;
   const net = income - expense;
   $('cf-total-in').textContent = fmt(income);
@@ -1984,7 +2009,17 @@ function addExtraRow(containerId, prefix, callbackName){
   const id=`${prefix}-${extraCount}`;
   const div=document.createElement('div');
   div.className='custom-row';
-  div.innerHTML=`<input type="text" placeholder="ระบุรายการ" style="flex:1.4"><input type="number" placeholder="0" id="${id}" data-extra="${prefix}" oninput="${callbackName!=='null'?callbackName+'()':''}" style="flex:1"><span style="font-size:11px;color:var(--muted);white-space:nowrap">฿/เดือน</span><button class="btn-remove" onclick="this.parentElement.remove();${callbackName!=='null'?callbackName+'()':''}">✕</button>`;
+  const isPeriodic = callbackName==='calcCF';
+  const cb = callbackName!=='null'?callbackName+'()':'';
+  const tail = isPeriodic
+    ? `<select id="${id}-period" onchange="${cb}" style="width:80px;flex-shrink:0;padding:8px 6px;font-size:12px">
+         <option value="1">฿/เดือน</option>
+         <option value="3">฿/ไตรมาส</option>
+         <option value="6">฿/6 เดือน</option>
+         <option value="12">฿/ปี</option>
+       </select>`
+    : `<span style="font-size:11px;color:var(--muted);white-space:nowrap">฿</span>`;
+  div.innerHTML=`<input type="text" placeholder="ระบุรายการ" style="flex:1.4"><input type="number" placeholder="0" id="${id}" data-extra="${prefix}" oninput="${cb}" style="flex:1">${tail}<button class="btn-remove" onclick="this.parentElement.remove();${cb}">✕</button>`;
   $(containerId).appendChild(div);
   try{ const inp=$(id); if(inp && isMoneyInput(inp)){ attachMoneyFormatting(inp); } }catch(e){}
 }
@@ -2014,8 +2049,8 @@ function addProtExtra(){
 
 // ─── summary ─────────────────────
 function buildSummary(){
-  const income=periodVal('cf-salary')+periodVal('cf-wage')+periodVal('cf-rent-in')+periodVal('cf-bonus')+periodVal('cf-div')+sumExtra('cf-inc-x')+sumExtra('cf-var-x');
-  const expense=periodVal('cf-house')+periodVal('cf-car')+periodVal('cf-util')+periodVal('cf-ins')+periodVal('cf-parents')+periodVal('cf-kids')+periodVal('cf-cartax')+periodVal('cf-food')+periodVal('cf-trans')+periodVal('cf-shop')+periodVal('cf-self')+periodVal('cf-travel')+sumExtra('cf-fix-x')+sumExtra('cf-var2-x');
+  const income=periodVal('cf-salary')+periodVal('cf-wage')+periodVal('cf-rent-in')+periodVal('cf-bonus')+periodVal('cf-div')+sumExtraPeriod('cf-inc-x')+sumExtraPeriod('cf-var-x');
+  const expense=periodVal('cf-house')+periodVal('cf-car')+periodVal('cf-util')+periodVal('cf-ins')+periodVal('cf-parents')+periodVal('cf-kids')+periodVal('cf-cartax')+periodVal('cf-food')+periodVal('cf-trans')+periodVal('cf-shop')+periodVal('cf-self')+periodVal('cf-travel')+sumExtraPeriod('cf-fix-x')+sumExtraPeriod('cf-var2-x');
   const net=income-expense;
   const assets=val('a-cash')+val('a-mmf')+val('a-fund')+val('a-stock')+val('a-gold')+val('a-insval')+val('a-home')+val('a-car');
   const liab=val('l-cc')+val('l-personal')+val('l-home')+val('l-car')+val('l-biz');
