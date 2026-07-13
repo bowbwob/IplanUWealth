@@ -122,6 +122,22 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
 .protect-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 @media(max-width:520px){.protect-grid{grid-template-columns:1fr}}
 
+/* COVERAGE: PER-POLICY ENTRY */
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+@media(max-width:640px){.grid3{grid-template-columns:1fr}}
+.rider-row{display:flex;gap:8px;align-items:flex-end;background:var(--sand);border-radius:8px;padding:10px;margin-bottom:8px;flex-wrap:wrap}
+.rider-row .form-group{flex:1;min-width:110px}
+.policy-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:10px}
+.policy-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.policy-title{font-weight:800;font-size:15px;margin-top:6px}
+.policy-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.rider-chip{display:inline-block;font-size:11px;background:var(--sand);border:1px solid var(--border);border-radius:20px;padding:3px 10px;margin:3px 4px 0 0}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+@media(max-width:640px){.stat-grid{grid-template-columns:1fr 1fr}}
+.stat{background:var(--sand);border-radius:8px;padding:10px;text-align:center}
+.stat .n{font-weight:800;font-size:15px}
+.stat .l{font-size:10px;color:var(--muted)}
+
 /* SUMMARY */
 .sum-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
 .sum-block{flex:1;min-width:150px;background:var(--sand);border-radius:var(--radius);padding:14px 16px}
@@ -1165,115 +1181,62 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
   <div class="card">
     <div class="card-label">ก่อนวางแผนเพิ่ม</div>
     <div class="card-title">📋 สรุปความคุ้มครองที่ลูกค้ามีอยู่แล้ว</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:0">บันทึกกรมธรรม์ / ความคุ้มครองที่ลูกค้ามีอยู่แล้วทั้งหมด แยกตามประเภท ก่อนไปคำนวณช่องว่าง (GAP) ในหน้า Protection</p>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:0">บันทึกกรมธรรม์ทีละเล่ม แยกสัญญาหลักและสัญญาเพิ่มเติม ก่อนไปคำนวณช่องว่าง (GAP) ในหน้า Protection</p>
   </div>
 
-  <!-- ══ SECTION 1 · LIFE INSURANCE ══ -->
+  <!-- ══ FORM: ADD ONE POLICY ══ -->
   <div class="card">
-    <div class="card-label">Section 1</div>
-    <div class="card-title">❤️ Life Insurance</div>
-    <table class="tbl" id="cov-table-life-el">
-      <thead><tr>
-        <th style="min-width:130px">Plan Name</th><th>บริษัท</th>
-        <th style="min-width:110px">ทุนประกัน (฿)</th><th style="min-width:100px">เบี้ยประกัน/ปี (฿)</th>
-        <th style="min-width:100px">ครบกำหนดชำระเบี้ย (ปี)</th><th>หมายเหตุ</th><th style="width:30px"></th>
-      </tr></thead>
-      <tbody id="cov-tbody-life"></tbody>
-    </table>
-    <button class="btn-add" onclick="addCoverageRow('life','cov-tbody-life')">＋ เพิ่มกรมธรรม์</button>
-    <div style="margin-top:12px" class="calc-box"><span class="lbl">รวมทุนประกันชีวิต</span><span id="cov-sum-life" style="color:var(--blue)">0</span> บาท</div>
-  </div>
+    <div class="card-label">กรอกกรมธรรม์ใหม่</div>
+    <div class="card-title">📄 ข้อมูลกรมธรรม์</div>
 
-  <!-- ══ SECTION 2 · ENDOWMENT ══ -->
-  <div class="card">
-    <div class="card-label">Section 2</div>
-    <div class="card-title">💰 Endowment</div>
-    <table class="tbl" id="cov-table-endowment-el">
-      <thead><tr>
-        <th style="min-width:130px">Plan Name</th><th>บริษัท</th>
-        <th style="min-width:110px">ทุนประกัน (฿)</th><th style="min-width:100px">เบี้ยประกัน/ปี (฿)</th>
-        <th style="min-width:100px">ครบกำหนดชำระเบี้ย (ปี)</th><th>หมายเหตุ</th><th style="width:30px"></th>
-      </tr></thead>
-      <tbody id="cov-tbody-endowment"></tbody>
-    </table>
-    <button class="btn-add" onclick="addCoverageRow('endowment','cov-tbody-endowment')">＋ เพิ่มกรมธรรม์</button>
-    <div style="margin-top:12px" class="calc-box"><span class="lbl">รวมทุน Endowment</span><span id="cov-sum-endowment" style="color:#2a6a7a">0</span> บาท</div>
-  </div>
+    <div class="protect-grid">
+      <div class="form-group"><label>บริษัทประกัน</label><input type="text" id="pol-company" placeholder="เช่น AIA"></div>
+      <div class="form-group"><label>เลขที่กรมธรรม์ (ถ้ามี)</label><input type="text" id="pol-policyno" placeholder="เช่น 1234567890"></div>
+    </div>
 
-  <!-- ══ SECTION 3 · HEALTH AND CI ══ -->
-  <div class="card">
-    <div class="card-label">Section 3</div>
-    <div class="card-title">🏥 Health and CI</div>
-    <table class="tbl" id="cov-table-healthci-el">
-      <thead><tr>
-        <th style="min-width:90px">ประเภทย่อย</th><th style="min-width:130px">Plan Name</th><th>บริษัท</th>
-        <th style="min-width:110px">วงเงิน (฿)</th><th style="min-width:100px">เบี้ยประกัน/ปี (฿)</th>
-        <th style="min-width:100px">ครบกำหนดชำระเบี้ย (ปี)</th><th>หมายเหตุ</th><th style="width:30px"></th>
-      </tr></thead>
-      <tbody id="cov-tbody-healthci"></tbody>
-    </table>
-    <button class="btn-add" onclick="addCoverageRow('healthci','cov-tbody-healthci')">＋ เพิ่มกรมธรรม์</button>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
-      <div class="calc-box"><span class="lbl">รวม Health</span><span id="cov-sum-health" style="color:var(--green)">0</span> บาท</div>
-      <div class="calc-box"><span class="lbl">รวม CI</span><span id="cov-sum-ci" style="color:#9a6e1a">0</span> บาท</div>
+    <div class="protect-grid">
+      <div class="form-group">
+        <label>สัญญาหลัก (Main Contract)</label>
+        <select id="pol-main-type" onchange="renderMainFields()">
+          <option value="life">❤️ Life Insurance</option>
+          <option value="endowment">💰 Endowment</option>
+          <option value="unitlinked">📈 Unitlinked</option>
+          <option value="ci">🎗️ CI (สัญญาหลัก)</option>
+          <option value="annuity">🎂 Annuity</option>
+          <option value="pa">🚗 PA (อุบัติเหตุส่วนบุคคล)</option>
+        </select>
+      </div>
+      <div class="form-group"><label>ชื่อแบบประกัน / แผน</label><input type="text" id="pol-plan-name" placeholder="เช่น Endowment 15/7"></div>
+    </div>
+
+    <!-- Conditional fields per main-contract type -->
+    <div id="pol-main-fields"></div>
+
+    <!-- ══ RIDERS ══ -->
+    <div class="sec-div">➕ สัญญาเพิ่มเติม (Riders)</div>
+    <div id="pol-rider-list"></div>
+    <button class="btn-add" onclick="addRiderRow()">＋ เพิ่มสัญญาเพิ่มเติม</button>
+
+    <div class="sec-div">📝 หมายเหตุ</div>
+    <textarea id="pol-note" rows="2" placeholder="หมายเหตุเพิ่มเติม..."></textarea>
+
+    <div class="btn-row" style="margin-top:18px">
+      <button class="btn btn-ghost" onclick="resetPolicyForm()">ล้างฟอร์ม</button>
+      <button class="btn btn-primary" onclick="savePolicy()">💾 บันทึกกรมธรรม์นี้</button>
     </div>
   </div>
 
-  <!-- ══ SECTION 4 · ACCIDENT ══ -->
-  <div class="card">
-    <div class="card-label">Section 4</div>
-    <div class="card-title">🚗 Accident</div>
-    <table class="tbl" id="cov-table-acc-el">
-      <thead><tr>
-        <th style="min-width:130px">Plan Name</th><th>บริษัท</th>
-        <th style="min-width:110px">วงเงิน (฿)</th><th style="min-width:100px">เบี้ยประกัน/ปี (฿)</th>
-        <th style="min-width:100px">ครบกำหนดชำระเบี้ย (ปี)</th><th>หมายเหตุ</th><th style="width:30px"></th>
-      </tr></thead>
-      <tbody id="cov-tbody-acc"></tbody>
-    </table>
-    <button class="btn-add" onclick="addCoverageRow('acc','cov-tbody-acc')">＋ เพิ่มกรมธรรม์</button>
-    <div style="margin-top:12px" class="calc-box"><span class="lbl">รวมวงเงินอุบัติเหตุ</span><span id="cov-sum-acc" style="color:var(--red)">0</span> บาท</div>
+  <!-- ══ GRAND SUMMARY ══ -->
+  <div class="card" id="grand-summary-card" style="display:none">
+    <div class="card-title" style="font-size:15px">📊 สรุปรวมทุกกรมธรรม์</div>
+    <div class="stat-grid" id="grand-summary-grid"></div>
   </div>
 
-  <!-- ══ SECTION 5 · ANNUITY ══ -->
+  <!-- ══ SAVED POLICIES LIST ══ -->
   <div class="card">
-    <div class="card-label">Section 5</div>
-    <div class="card-title">🎂 Annuity</div>
-    <table class="tbl" id="cov-table-annuity-el">
-      <thead><tr>
-        <th style="min-width:130px">Plan Name</th><th>บริษัท</th>
-        <th style="min-width:100px">เบี้ยประกัน/ปี (฿)</th><th style="min-width:100px">ครบกำหนดชำระเบี้ย (ปี)</th>
-        <th style="min-width:110px">เงินบำนาญคืน/ปี (฿)</th><th>หมายเหตุ</th><th style="width:30px"></th>
-      </tr></thead>
-      <tbody id="cov-tbody-annuity"></tbody>
-    </table>
-    <button class="btn-add" onclick="addCoverageRow('annuity','cov-tbody-annuity')">＋ เพิ่มกรมธรรม์</button>
-    <div style="margin-top:12px" class="calc-box"><span class="lbl">รวมเงินบำนาญคืน/ปี</span><span id="cov-sum-pension" style="color:#6a3f9e">0</span> บาท/ปี</div>
-    <div style="margin-top:8px;padding:10px 14px;background:var(--sand);border-radius:8px;font-size:11px;color:var(--muted)">💡 ยอดนี้จะถูกดึงไปใช้คำนวณ PV ในหน้า Retirement อัตโนมัติ (ถ้าช่องนั้นยังว่างอยู่)</div>
-  </div>
-
-  <!-- ══ SECTION 6 · OTHER ══ -->
-  <div class="card">
-    <div class="card-label">Section 6</div>
-    <div class="card-title">🌍 Other</div>
-    <table class="tbl" id="cov-table-other-el">
-      <thead><tr>
-        <th style="min-width:130px">Plan Name</th><th>บริษัท</th>
-        <th style="min-width:110px">ทุนประกัน/วงเงิน (฿)</th><th style="min-width:100px">เบี้ยประกัน/ปี (฿)</th>
-        <th style="min-width:100px">ครบกำหนดชำระเบี้ย (ปี)</th><th>หมายเหตุ</th><th style="width:30px"></th>
-      </tr></thead>
-      <tbody id="cov-tbody-other"></tbody>
-    </table>
-    <button class="btn-add" onclick="addCoverageRow('other','cov-tbody-other')">＋ เพิ่มกรมธรรม์</button>
-    <div style="margin-top:12px" class="calc-box"><span class="lbl">รวมอื่นๆ</span><span id="cov-sum-other" style="color:var(--ink)">0</span> บาท</div>
-  </div>
-
-  <div class="card">
-    <div class="card-title" style="font-size:15px">📊 สรุปเบี้ยประกันรวม</div>
-    <div class="calc-box"><span class="lbl">💳 รวมเบี้ยประกันทั้งหมด/ปี</span><span id="cov-total-premium" style="color:var(--red)">0</span> บาท</div>
-    <div style="margin-top:10px;padding:12px 16px;background:var(--sand);border-radius:8px;font-size:11.5px;color:var(--muted)">
-      💡 ยอด Life / Health / Accident / CI จะถูกดึงไปเติมให้อัตโนมัติในหน้า Protection (ถ้าช่องนั้นยังว่างอยู่)
-    </div>
+    <div class="card-title" style="font-size:15px">📚 กรมธรรม์ที่บันทึกแล้ว</div>
+    <div id="policy-list"></div>
+    <div id="policy-empty-hint" style="text-align:center;color:var(--muted);font-size:13px;padding:20px 0">ยังไม่มีกรมธรรม์ที่บันทึกไว้ — กรอกฟอร์มด้านบนแล้วกด "บันทึกกรมธรรม์นี้"</div>
   </div>
 
   <div class="btn-row">
@@ -1571,11 +1534,11 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
             <td><input type="number" id="retire-current-saving-r" placeholder="5" step="0.5" oninput="calcRetirePlan()" style="width:70px"></td>
             <td style="font-weight:700;color:var(--green)" id="retire-current-saving-fv">—</td>
           </tr>
-          <tr style="background:#F5F0FB">
-            <td>🎂 เงินบำนาญคืนปีละ (จากกรมธรรม์ที่มี)</td>
-            <td><input type="number" id="ret-pension-annual" placeholder="0" oninput="calcRetirePlan()"></td>
-            <td style="font-size:10px;color:var(--muted)">PV ของ Annuity*</td>
-            <td style="font-weight:700;color:var(--green)" id="ret-pension-fv">—</td>
+          <tr style="background:#EAF5EE">
+            <td>🎯 เงินคืน Endowment ที่ครบกำหนดหลังเกษียณ (จาก Coverage)</td>
+            <td style="font-size:10px;color:var(--muted)">อัตโนมัติจากหน้า Coverage</td>
+            <td style="font-size:10px;color:var(--muted)">ไม่ปรับด้วยอัตราเติบโต*</td>
+            <td style="font-weight:700;color:var(--green)" id="ret-endowment-fv">—</td>
           </tr>
         </tbody>
       </table>
@@ -1593,6 +1556,18 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
         <span id="ret-prepared-total" style="font-size:16px;font-weight:800;color:var(--green)">0</span>
         <span class="lbl" style="margin-left:8px">฿ ณ วันเกษียณ</span>
       </div>
+    </div>
+
+    <!-- ══ ANNUITY INCOME — shown separately, NOT deducted from the fund gap ══ -->
+    <div class="card" style="background:#E6D9F5;border-color:#c9b3e8">
+      <div class="card-label" style="color:#6a3f9e">จากหน้า Coverage</div>
+      <div class="card-title" style="font-size:15px">🎂 รายได้ประจำหลังเกษียณ (จากกรมธรรม์บำนาญที่มี)</div>
+      <div id="ret-annuity-detail"></div>
+      <div class="calc-box" style="margin-top:10px;background:#fff">
+        <span class="lbl">รวมรายได้บำนาญ/ปี จากทุกกรมธรรม์</span>
+        <span id="ret-annuity-total" style="color:#6a3f9e;font-size:18px">0 บาท/ปี</span>
+      </div>
+      <div style="font-size:11px;color:#6a3f9e;margin-top:10px">💡 ตัวเลขนี้เป็น<b>รายได้เสริม</b>ที่ลูกค้าจะได้รับทุกปีหลังเกษียณ แยกต่างหากจากเงินก้อนด้านบน — <b>ไม่ได้ถูกหักออกจากช่องว่าง (Gap)</b> ใช้ประกอบการอธิบายลูกค้าว่ามีรายรับประจำอยู่แล้วส่วนหนึ่ง</div>
     </div>
 
     <!-- ══ STEP 3: GAP ANALYSIS ══ -->
@@ -2397,7 +2372,7 @@ function goStep(n){
   });
   if(n===8) buildSummary();
   if(n===5 || n===6) syncFields();
-  if(n===4) calcCoverage();
+  if(n===4) renderPolicyList();
   window.scrollTo({top:0,behavior:'smooth'});
   // Charts built while this panel was hidden (display:none) get the wrong canvas size,
   // which makes bars/labels look misaligned — resize them now that the panel is visible.
@@ -2606,19 +2581,12 @@ function calcRetirePlan(){
     totalFV += pv * Math.pow(1+ret, yearsLeft);
   });
 
-  // ── Pension income stream (annual payout) — discounted as an annuity over post-retirement years ──
-  const pensionAnnual = cleanNum($('ret-pension-annual')?.value)||0;
-  let pensionPV = 0;
-  if(pensionAnnual>0 && postYears>0){
-    if(Math.abs(realRate) < 0.0001){
-      pensionPV = pensionAnnual * postYears;
-    } else {
-      pensionPV = pensionAnnual * (1 - Math.pow(1+realRate, -postYears)) / realRate;
-    }
-  }
-  if($('ret-pension-fv')) $('ret-pension-fv').textContent = pensionAnnual ? fmt(Math.round(pensionPV)) : '—';
-  if(pensionPV>0){ sourceLabels.push('บำนาญ/ปี'); sourceFVs.push(Math.round(pensionPV)); }
-  totalFV += pensionPV;
+  // ── Endowment maturity money (from Coverage page) landing at/after retirement ──
+  // Added directly at face value — it's a guaranteed nominal amount, not grown/discounted further.
+  const endowmentFund = window._retirementFundFromCoverage || 0;
+  if($('ret-endowment-fv')) $('ret-endowment-fv').textContent = endowmentFund ? fmt(Math.round(endowmentFund)) : '—';
+  if(endowmentFund>0){ sourceLabels.push('เงินคืน Endowment'); sourceFVs.push(Math.round(endowmentFund)); }
+  totalFV += endowmentFund;
 
   if($('ret-prepared-total')) $('ret-prepared-total').textContent = fmt(Math.round(totalFV));
 
@@ -2744,6 +2712,29 @@ function calcRetirePlan(){
 
   // Prepared fund summary
   if($('ret-prepared-total')) $('ret-prepared-total').textContent = fmt(Math.round(totalFV));
+}
+
+// ── Annuity income — shown as separate info, NOT deducted from the fund gap ──
+function renderAnnuityIncomePreview(){
+  const detailEl = $('ret-annuity-detail');
+  const totalEl = $('ret-annuity-total');
+  if(!detailEl || !totalEl) return;
+  const annuityPolicies = window._annuityPolicies || [];
+  const total = window._annuityIncomeTotal || 0;
+  if(annuityPolicies.length){
+    detailEl.innerHTML = annuityPolicies.map(p=>{
+      const ageRange = (p.annuityStartAge||p.annuityEndAge)
+        ? `อายุ ${p.annuityStartAge||'?'} – ${p.annuityEndAge||'?'}`
+        : '';
+      return `<div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid #d9c7ee">
+        <span>${p.company||''} ${p.planName||'(ไม่ระบุแบบ)'} ${ageRange?'<span style="color:#8a7099;font-size:11px">('+ageRange+')</span>':''}</span>
+        <b>${fmt(p.annuityPayout)} ฿/ปี</b>
+      </div>`;
+    }).join('');
+  } else {
+    detailEl.innerHTML = `<div style="font-size:12px;color:#8a7099">ยังไม่มีกรมธรรม์ Annuity ในหน้า Coverage</div>`;
+  }
+  totalEl.textContent = fmt(total) + ' บาท/ปี';
 }
 
 function addSourceRow(){
@@ -3103,138 +3094,321 @@ function addChildCard(){
 
 
 // ─── EXISTING COVERAGE SUMMARY (new page, before Protection) ──
-let coverageRowCount = 0;
-const COV_TBODIES = {
-  life: 'cov-tbody-life',
-  endowment: 'cov-tbody-endowment',
-  healthci: 'cov-tbody-healthci',
-  acc: 'cov-tbody-acc',
-  annuity: 'cov-tbody-annuity',
-  other: 'cov-tbody-other'
+// ─── COVERAGE: PER-POLICY DATA MODEL (main contract + riders) ───
+const MAIN_TYPES = {
+  life:       { label:'Life Insurance', badge:'#D0E4F0;color:#4A7B9D', icon:'❤️' },
+  endowment:  { label:'Endowment',      badge:'#D8EAF0;color:#2a6a7a', icon:'💰' },
+  unitlinked: { label:'Unitlinked',     badge:'#E0F0E8;color:#2a7a4a', icon:'📈' },
+  ci:         { label:'CI',             badge:'#E8D5A0;color:#9a6e1a', icon:'🎗️' },
+  annuity:    { label:'Annuity',        badge:'#E6D9F5;color:#6a3f9e', icon:'🎂' },
+  pa:         { label:'PA',             badge:'#FADBD8;color:#C0392B', icon:'🚗' },
+};
+const RIDER_TYPES = {
+  health:   { label:'Health',   unit:'วงเงิน (฿)' },
+  ci:       { label:'CI',       unit:'ทุนประกัน (฿)' },
+  accident: { label:'Accident', unit:'ทุนประกัน (฿)' },
+  hb:       { label:'HB (ชดเชยรายวัน)', unit:'ค่าชดเชย (฿/วัน)' },
 };
 
-function addCoverageRow(section, tbodyId, prefill){
-  coverageRowCount++;
-  const n = coverageRowCount;
-  const tbody = $(tbodyId || COV_TBODIES[section]);
-  if(!tbody) return;
-  const tr = document.createElement('tr');
-  tr.className = 'cov-row';
-  tr.dataset.section = section;
+let riderCount = 0;
+let policies = [];
+let policyIdSeq = 0;
 
-  const subCell = section==='healthci'
-    ? `<td><select id="cov-sub-${n}" onchange="calcCoverage()" style="width:100%"><option value="health">🏥 Health</option><option value="ci">🎗️ CI</option></select></td>`
-    : '';
-  const amtCell = section==='annuity' ? '' :
-    `<td><input type="number" id="cov-amt-${n}" placeholder="0" oninput="calcCoverage()"></td>`;
-  const payoutCell = section==='annuity' ?
-    `<td><input type="number" id="cov-pension-${n}" placeholder="0" oninput="calcCoverage()"></td>` : '';
+// ── Conditional fields for the chosen main contract type ──
+function renderMainFields(){
+  const type = $('pol-main-type')?.value || 'life';
+  const el = $('pol-main-fields');
+  if(!el) return;
+  let html = '';
 
-  tr.innerHTML = `
-    ${subCell}
-    <td><input type="text" id="cov-plan-${n}" placeholder="เช่น Endowment 15/7"></td>
-    <td><input type="text" id="cov-company-${n}" placeholder="เช่น AIA"></td>
-    ${amtCell}
-    <td><input type="number" id="cov-prem-${n}" placeholder="0" oninput="calcCoverage()"></td>
-    <td><input type="number" id="cov-due-${n}" placeholder="เช่น 2040"></td>
-    ${payoutCell}
-    <td><input type="text" id="cov-note-${n}" placeholder="หมายเหตุ"></td>
-    <td><button class="btn-remove" onclick="this.closest('tr').remove();calcCoverage()">✕</button></td>`;
-  tbody.appendChild(tr);
-  try{
-    ['cov-amt-'+n,'cov-prem-'+n,'cov-pension-'+n].forEach(id=>{ const inp=$(id); if(inp) attachMoneyFormatting(inp); });
-  }catch(e){}
-  if(prefill){
-    if($('cov-sub-'+n)) $('cov-sub-'+n).value = prefill.sub||'health';
-    if($('cov-plan-'+n)) $('cov-plan-'+n).value = prefill.plan||'';
-    if($('cov-company-'+n)) $('cov-company-'+n).value = prefill.company||'';
-    if($('cov-amt-'+n)) $('cov-amt-'+n).value = prefill.amount||'';
-    if($('cov-prem-'+n)) $('cov-prem-'+n).value = prefill.premium||'';
-    if($('cov-due-'+n)) $('cov-due-'+n).value = prefill.dueYear||'';
-    if($('cov-pension-'+n)) $('cov-pension-'+n).value = prefill.pension||'';
-    if($('cov-note-'+n)) $('cov-note-'+n).value = prefill.note||'';
+  const sumInsuredBlock = `
+    <div class="grid3">
+      <div class="form-group"><label>ทุนประกัน (฿)</label><input type="number" id="pol-sum" placeholder="0"></div>
+      <div class="form-group"><label>เบี้ยประกันหลัก/ปี (฿)</label><input type="number" id="pol-prem" placeholder="0"></div>
+      <div class="form-group"><label>ปีที่เริ่มทำ (พ.ศ.)</label><input type="number" id="pol-start" placeholder="เช่น 2563" oninput="autoCalcDueYear()"></div>
+    </div>
+    <div class="grid3">
+      <div class="form-group"><label>ระยะเวลาชำระเบี้ย (ปี)</label><input type="number" id="pol-pay-term" placeholder="เช่น 15" oninput="autoCalcDueYear()"></div>
+      <div class="form-group"><label>ครบกำหนดชำระเบี้ย (พ.ศ.)</label><input type="number" id="pol-due-year" placeholder="เช่น 2583"></div>
+      <div class="form-group"><label>ระยะเวลาคุ้มครอง</label><input type="text" id="pol-cover-term" placeholder="เช่น ตลอดชีพ / ถึงอายุ 99 / 20 ปี"></div>
+    </div>`;
+
+  if(type==='life'){
+    html = sumInsuredBlock;
+  } else if(type==='endowment'){
+    html = sumInsuredBlock + `
+    <div class="grid3">
+      <div class="form-group"><label>ปีที่ครบกำหนดสัญญา (ได้เงินคืน) พ.ศ.</label><input type="number" id="pol-maturity-year" placeholder="เช่น 2588"></div>
+      <div class="form-group"><label>มูลค่าครบกำหนด / เงินคืน (฿)</label><input type="number" id="pol-maturity" placeholder="0"></div>
+      <div class="form-group"><label>มูลค่าเวนคืนปัจจุบัน (฿, ถ้าทราบ)</label><input type="number" id="pol-surrender" placeholder="0"></div>
+    </div>`;
+  } else if(type==='unitlinked'){
+    html = `
+    <div class="grid3">
+      <div class="form-group"><label>ทุนประกันชีวิตขั้นต่ำ (฿)</label><input type="number" id="pol-sum" placeholder="0"></div>
+      <div class="form-group"><label>เบี้ยรวม/ปี (฿)</label><input type="number" id="pol-prem" placeholder="0"></div>
+      <div class="form-group"><label>ปีที่เริ่มทำ (พ.ศ.)</label><input type="number" id="pol-start" placeholder="เช่น 2563"></div>
+    </div>
+    <div class="grid3">
+      <div class="form-group"><label>เบี้ยส่วนคุ้มครอง/ปี (฿, ถ้าแยกได้)</label><input type="number" id="pol-prem-protect" placeholder="0"></div>
+      <div class="form-group"><label>เบี้ยส่วนลงทุน/ปี (฿, ถ้าแยกได้)</label><input type="number" id="pol-prem-invest" placeholder="0"></div>
+      <div class="form-group"><label>มูลค่ากองทุนปัจจุบัน (฿)</label><input type="number" id="pol-fund-value" placeholder="0"></div>
+    </div>`;
+  } else if(type==='ci'){
+    html = sumInsuredBlock;
+  } else if(type==='annuity'){
+    html = `
+    <div class="grid3">
+      <div class="form-group"><label>เบี้ยประกันหลัก/ปี (฿)</label><input type="number" id="pol-prem" placeholder="0"></div>
+      <div class="form-group"><label>ปีที่เริ่มทำ (พ.ศ.)</label><input type="number" id="pol-start" placeholder="เช่น 2563"></div>
+      <div class="form-group"><label>ระยะเวลาชำระเบี้ย (ปี)</label><input type="number" id="pol-pay-term" placeholder="เช่น 15"></div>
+    </div>
+    <div class="grid3">
+      <div class="form-group"><label>เงินบำนาญคืน/ปี (฿)</label><input type="number" id="pol-annuity-payout" placeholder="0"></div>
+      <div class="form-group"><label>เริ่มรับที่อายุ</label><input type="number" id="pol-annuity-start-age" placeholder="เช่น 60"></div>
+      <div class="form-group"><label>รับถึงอายุ</label><input type="text" id="pol-annuity-end-age" placeholder="เช่น 85 / ตลอดชีพ"></div>
+    </div>`;
+  } else if(type==='pa'){
+    html = `
+    <div class="grid3">
+      <div class="form-group"><label>ทุนประกันอุบัติเหตุ (฿)</label><input type="number" id="pol-sum" placeholder="0"></div>
+      <div class="form-group"><label>เบี้ยประกัน/ปี (฿)</label><input type="number" id="pol-prem" placeholder="0"></div>
+      <div class="form-group"><label>ปีต่ออายุถัดไป (พ.ศ.)</label><input type="number" id="pol-due-year" placeholder="เช่น 2570"></div>
+    </div>`;
   }
+  el.innerHTML = html;
+  try{
+    ['pol-sum','pol-prem','pol-maturity','pol-surrender','pol-prem-protect','pol-prem-invest','pol-fund-value','pol-annuity-payout']
+      .forEach(id=>{ const inp=$(id); if(inp) attachMoneyFormatting(inp); });
+  }catch(e){}
 }
 
-function calcCoverage(){
-  const sums = { life:0, health:0, acc:0, ci:0, pension:0, endowment:0, other:0 };
-  let totalPremium = 0;
-  document.querySelectorAll('.cov-row').forEach(tr=>{
-    const section = tr.dataset.section;
-    const amtEl = tr.querySelector('input[id^="cov-amt-"]');
-    const premEl = tr.querySelector('input[id^="cov-prem-"]');
-    const pensionEl = tr.querySelector('input[id^="cov-pension-"]');
-    const subEl = tr.querySelector('select[id^="cov-sub-"]');
-    const amt = cleanNum(amtEl?.value);
-    const prem = cleanNum(premEl?.value);
-    const pension = cleanNum(pensionEl?.value);
-    totalPremium += prem;
-    if(section==='healthci'){
-      const sub = subEl?.value || 'health';
-      sums[sub] += amt;
-    } else if(section==='annuity'){
-      sums.pension += pension;
-    } else if(sums[section]!==undefined){
-      sums[section] += amt;
-    }
+// ── Auto-calc: ครบกำหนดชำระเบี้ย = ปีที่เริ่มทำ + ระยะเวลาชำระเบี้ย ──
+function autoCalcDueYear(){
+  const start = cleanNum($('pol-start')?.value);
+  const term = cleanNum($('pol-pay-term')?.value);
+  const dueEl = $('pol-due-year');
+  if(!dueEl) return;
+  if(start>0 && term>0) dueEl.value = start + term;
+}
+
+// ── Riders ──
+function addRiderRow(prefill){
+  riderCount++;
+  const n = riderCount;
+  const div = document.createElement('div');
+  div.className = 'rider-row';
+  div.dataset.riderId = n;
+  div.innerHTML = `
+    <div class="form-group" style="max-width:130px">
+      <label>ประเภท</label>
+      <select id="rid-type-${n}" onchange="updateRiderUnit(${n})">
+        <option value="health">Health</option>
+        <option value="ci">CI</option>
+        <option value="accident">Accident</option>
+        <option value="hb">HB (ชดเชยรายวัน)</option>
+      </select>
+    </div>
+    <div class="form-group"><label>ชื่อแบบ</label><input type="text" id="rid-plan-${n}" placeholder="ชื่อแบบสัญญาเพิ่มเติม"></div>
+    <div class="form-group" style="max-width:130px"><label id="rid-unit-label-${n}">วงเงิน (฿)</label><input type="number" id="rid-amt-${n}" placeholder="0"></div>
+    <div class="form-group" style="max-width:110px"><label>เบี้ย/ปี (฿)</label><input type="number" id="rid-prem-${n}" placeholder="0"></div>
+    <button class="btn-remove" onclick="this.parentElement.remove()">✕</button>`;
+  $('pol-rider-list').appendChild(div);
+  try{ ['rid-amt-'+n,'rid-prem-'+n].forEach(id=>{ const inp=$(id); if(inp) attachMoneyFormatting(inp); }); }catch(e){}
+  if(prefill){
+    $('rid-type-'+n).value = prefill.type||'health';
+    $('rid-plan-'+n).value = prefill.plan||'';
+    $('rid-amt-'+n).value = prefill.amount||'';
+    $('rid-prem-'+n).value = prefill.premium||'';
+    updateRiderUnit(n);
+  }
+}
+function updateRiderUnit(n){
+  const type = $('rid-type-'+n)?.value;
+  const lbl = $('rid-unit-label-'+n);
+  if(lbl && RIDER_TYPES[type]) lbl.textContent = RIDER_TYPES[type].unit;
+}
+
+// ── Save policy from form ──
+function savePolicy(){
+  const type = $('pol-main-type').value;
+  const policy = {
+    id: ++policyIdSeq,
+    company: $('pol-company').value,
+    policyNo: $('pol-policyno').value,
+    mainType: type,
+    planName: $('pol-plan-name').value,
+    sum: cleanNum($('pol-sum')?.value),
+    prem: cleanNum($('pol-prem')?.value),
+    start: $('pol-start')?.value||'',
+    payTerm: $('pol-pay-term')?.value||'',
+    dueYear: $('pol-due-year')?.value||'',
+    coverTerm: $('pol-cover-term')?.value||'',
+    maturity: cleanNum($('pol-maturity')?.value),
+    maturityYear: $('pol-maturity-year')?.value||'',
+    surrender: cleanNum($('pol-surrender')?.value),
+    premProtect: cleanNum($('pol-prem-protect')?.value),
+    premInvest: cleanNum($('pol-prem-invest')?.value),
+    fundValue: cleanNum($('pol-fund-value')?.value),
+    annuityPayout: cleanNum($('pol-annuity-payout')?.value),
+    annuityStartAge: $('pol-annuity-start-age')?.value||'',
+    annuityEndAge: $('pol-annuity-end-age')?.value||'',
+    note: $('pol-note').value,
+    riders: []
+  };
+  document.querySelectorAll('#pol-rider-list .rider-row').forEach(row=>{
+    const n = row.dataset.riderId;
+    policy.riders.push({
+      type: $('rid-type-'+n).value,
+      plan: $('rid-plan-'+n).value,
+      amount: cleanNum($('rid-amt-'+n)?.value),
+      premium: cleanNum($('rid-prem-'+n)?.value)
+    });
   });
-  if($('cov-sum-life'))      $('cov-sum-life').textContent      = fmt(Math.round(sums.life));
-  if($('cov-sum-health'))    $('cov-sum-health').textContent    = fmt(Math.round(sums.health));
-  if($('cov-sum-acc'))       $('cov-sum-acc').textContent       = fmt(Math.round(sums.acc));
-  if($('cov-sum-ci'))        $('cov-sum-ci').textContent        = fmt(Math.round(sums.ci));
-  if($('cov-sum-pension'))   $('cov-sum-pension').textContent   = fmt(Math.round(sums.pension));
-  if($('cov-sum-endowment')) $('cov-sum-endowment').textContent = fmt(Math.round(sums.endowment));
-  if($('cov-sum-other'))     $('cov-sum-other').textContent     = fmt(Math.round(sums.other));
-  if($('cov-total-premium')) $('cov-total-premium').textContent = fmt(Math.round(totalPremium));
+  policies.push(policy);
+  renderPolicyList();
+  resetPolicyForm();
+}
+
+function resetPolicyForm(){
+  ['pol-company','pol-policyno','pol-plan-name','pol-note'].forEach(id=>{ if($(id)) $(id).value=''; });
+  if($('pol-main-type')) $('pol-main-type').value = 'life';
+  if($('pol-rider-list')) $('pol-rider-list').innerHTML = '';
+  renderMainFields();
+}
+
+function deletePolicy(id){
+  policies = policies.filter(p=>p.id!==id);
+  renderPolicyList();
+}
+
+// ── Get client's expected retirement year in Buddhist Era ──
+function getRetirementYearBE(){
+  const ageNow = parseFloat($('client-age')?.value)||0;
+  const retireAge = parseFloat($('retire-at')?.value)||parseFloat($('hlv-retire-age')?.value)||60;
+  if(!ageNow) return 0;
+  const currentYearBE = new Date().getFullYear() + 543;
+  return currentYearBE + (retireAge - ageNow);
+}
+
+// ── Render saved policy list + grand summary; sync into Protection & Retirement ──
+function renderPolicyList(){
+  const listEl = $('policy-list');
+  const emptyHint = $('policy-empty-hint');
+  if(!listEl) return;
+  listEl.innerHTML = '';
+  if(emptyHint) emptyHint.style.display = policies.length ? 'none' : 'block';
+
+  let totalPremium = 0;
+  const protSums = { life:0, ci:0, accident:0, health:0, hb:0 };
+  let annuityIncomeTotal = 0;
+  let retirementFundTotal = 0;
+  const retireYear = getRetirementYearBE();
+  window._annuityPolicies = [];
+
+  policies.forEach(p=>{
+    const mt = MAIN_TYPES[p.mainType];
+    let riderPremSum = 0;
+    const riderChips = p.riders.map(r=>{
+      riderPremSum += r.premium;
+      if(protSums[r.type]!==undefined) protSums[r.type] += r.amount;
+      return `<span class="rider-chip">${RIDER_TYPES[r.type].label}${r.plan?' · '+r.plan:''} — ${fmt(r.amount)} ฿ / เบี้ย ${fmt(r.premium)} ฿</span>`;
+    }).join('');
+
+    const mainPrem = p.mainType==='unitlinked' ? (p.premProtect+p.premInvest || p.prem) : p.prem;
+    const policyTotalPrem = mainPrem + riderPremSum;
+    totalPremium += policyTotalPrem;
+
+    if(p.mainType==='life' || p.mainType==='endowment' || p.mainType==='unitlinked'){
+      protSums.life += (p.sum||p.maturity||0);
+    } else if(p.mainType==='ci'){
+      protSums.ci += p.sum||0;
+    } else if(p.mainType==='pa'){
+      protSums.accident += p.sum||0;
+    } else if(p.mainType==='annuity'){
+      annuityIncomeTotal += p.annuityPayout||0;
+      if(p.annuityPayout>0) window._annuityPolicies.push(p);
+    }
+
+    // Endowment maturity landing at/after retirement → counts toward Retirement Fund directly (no growth — guaranteed nominal amount)
+    let goesToRetirement = false;
+    if(p.mainType==='endowment' && p.maturityYear && p.maturity>0 && retireYear>0){
+      if(parseFloat(p.maturityYear) >= retireYear){
+        retirementFundTotal += p.maturity;
+        goesToRetirement = true;
+      }
+    }
+
+    const div = document.createElement('div');
+    div.className = 'policy-card';
+    div.innerHTML = `
+      <div class="policy-head">
+        <div>
+          <span class="badge" style="background:${mt.badge}">${mt.icon} ${mt.label}</span>
+          ${goesToRetirement ? '<span class="badge" style="background:var(--green-lt);color:#2a6a3a">🎯 นับเป็นเงิน Retirement</span>' : ''}
+          <div class="policy-title">${p.company||'(ไม่ระบุบริษัท)'} — ${p.planName||'(ไม่ระบุแบบ)'}</div>
+          <div class="policy-sub">
+            ${p.policyNo?'เลขที่ '+p.policyNo+' · ':''}
+            ${p.sum?'ทุนประกัน '+fmt(p.sum)+' ฿ · ':''}
+            เบี้ยหลัก ${fmt(mainPrem)} ฿/ปี
+            ${p.dueYear?' · ครบกำหนดชำระเบี้ยปี '+p.dueYear:''}
+            ${p.maturityYear?' · ครบกำหนดสัญญาปี '+p.maturityYear+' ('+fmt(p.maturity)+' ฿)':''}
+            ${p.annuityPayout?' · บำนาญคืน '+fmt(p.annuityPayout)+' ฿/ปี':''}
+          </div>
+          ${riderChips ? '<div style="margin-top:8px">'+riderChips+'</div>' : ''}
+        </div>
+        <button class="btn-remove" onclick="deletePolicy(${p.id})">✕</button>
+      </div>
+      <div class="stat-grid">
+        <div class="stat"><div class="n">${fmt(policyTotalPrem)}</div><div class="l">เบี้ยรวม/ปี (ทั้งเล่ม)</div></div>
+        <div class="stat"><div class="n">${p.riders.length}</div><div class="l">จำนวนสัญญาเพิ่มเติม</div></div>
+        <div class="stat"><div class="n">${fmt(riderPremSum)}</div><div class="l">เบี้ย Rider รวม/ปี</div></div>
+      </div>`;
+    listEl.appendChild(div);
+  });
+
+  // Grand summary
+  const gEl = $('grand-summary-grid');
+  const gCard = $('grand-summary-card');
+  if(policies.length){
+    gCard.style.display = 'block';
+    gEl.innerHTML = `
+      <div class="stat"><div class="n">${fmt(totalPremium)}</div><div class="l">เบี้ยประกันรวมทั้งหมด/ปี</div></div>
+      <div class="stat"><div class="n">${policies.length}</div><div class="l">จำนวนกรมธรรม์</div></div>
+      <div class="stat"><div class="n">${fmt(protSums.life)}</div><div class="l">❤️ ความคุ้มครองชีวิต</div></div>
+      <div class="stat"><div class="n">${fmt(protSums.ci)}</div><div class="l">🎗️ ความคุ้มครองโรคร้ายแรง</div></div>
+      <div class="stat"><div class="n">${fmt(protSums.accident)}</div><div class="l">🚗 อุบัติเหตุ</div></div>
+      <div class="stat"><div class="n">${fmt(protSums.health)}</div><div class="l">🏥 ค่ารักษาพยาบาล</div></div>
+      <div class="stat"><div class="n">${fmt(protSums.hb)} ฿/วัน</div><div class="l">💵 ค่าชดเชยรายวัน</div></div>
+      <div class="stat" style="background:var(--green-lt)"><div class="n" style="color:#2a6a3a">${fmt(retirementFundTotal)}</div><div class="l">🎯 เงินคืนที่นับเป็น Retirement Fund</div></div>`;
+  } else {
+    gCard.style.display = 'none';
+  }
 
   // Auto-fill Protection page fields — only if the advisor hasn't already typed a value there
-  if($('life-sum')  && !$('life-sum').value  && sums.life>0)   $('life-sum').value  = Math.round(sums.life);
-  if($('life-hosp') && !$('life-hosp').value && sums.health>0) $('life-hosp').value = Math.round(sums.health);
-  if($('life-acc')  && !$('life-acc').value  && sums.acc>0)    $('life-acc').value  = Math.round(sums.acc);
-  if($('life-ci')   && !$('life-ci').value   && sums.ci>0)     $('life-ci').value   = Math.round(sums.ci);
-  // Auto-fill Retirement page pension income field — only if empty
-  if($('ret-pension-annual') && !$('ret-pension-annual').value && sums.pension>0){
-    $('ret-pension-annual').value = Math.round(sums.pension);
-  }
+  if($('life-sum')  && !$('life-sum').value  && protSums.life>0)     $('life-sum').value  = Math.round(protSums.life);
+  if($('life-hosp') && !$('life-hosp').value && protSums.health>0)   $('life-hosp').value = Math.round(protSums.health);
+  if($('life-acc')  && !$('life-acc').value  && protSums.accident>0) $('life-acc').value  = Math.round(protSums.accident);
+  if($('life-ci')   && !$('life-ci').value   && protSums.ci>0)       $('life-ci').value   = Math.round(protSums.ci);
+
+  window._retirementFundFromCoverage = retirementFundTotal;
+  window._annuityIncomeTotal = annuityIncomeTotal;
+
   try{ calcHLV(); }catch(e){}
+  try{ renderAnnuityIncomePreview(); }catch(e){}
   try{ calcRetirePlan(); }catch(e){}
 }
 
+// ── Persistence: save/restore the policies array with the client record ──
 function collectCoverage(){
-  const rows = [];
-  document.querySelectorAll('.cov-row').forEach(tr=>{
-    const section = tr.dataset.section;
-    const sub = tr.querySelector('select[id^="cov-sub-"]');
-    const plan = tr.querySelector('input[id^="cov-plan-"]');
-    const company = tr.querySelector('input[id^="cov-company-"]');
-    const amt = tr.querySelector('input[id^="cov-amt-"]');
-    const prem = tr.querySelector('input[id^="cov-prem-"]');
-    const due = tr.querySelector('input[id^="cov-due-"]');
-    const pension = tr.querySelector('input[id^="cov-pension-"]');
-    const note = tr.querySelector('input[id^="cov-note-"]');
-    rows.push({
-      section: section,
-      sub: sub?.value||'',
-      plan: plan?.value||'',
-      company: company?.value||'',
-      amount: amt?.value||'',
-      premium: prem?.value||'',
-      dueYear: due?.value||'',
-      pension: pension?.value||'',
-      note: note?.value||''
-    });
-  });
-  return rows;
+  return JSON.parse(JSON.stringify(policies));
 }
-
 function applyCoverage(rows){
-  Object.values(COV_TBODIES).forEach(id=>{ const tb=$(id); if(tb) tb.innerHTML=''; });
-  coverageRowCount = 0;
-  (rows||[]).forEach(r=>addCoverageRow(r.section||'life', COV_TBODIES[r.section||'life'], r));
-  calcCoverage();
+  policies = (rows||[]).map(r=>({...r}));
+  policyIdSeq = policies.reduce((max,p)=>Math.max(max, p.id||0), 0);
+  renderPolicyList();
 }
 
-// ─── HLV & NEEDS-BASED PROTECTION ───
 function calcHLV(){
   const ageNow   = parseFloat($('client-age')?.value)||0;
   const retireAt = parseFloat($('hlv-retire-age')?.value)||60;
@@ -3427,6 +3601,7 @@ document.addEventListener('input', e => {
 });
 
 try{ calcAge(); }catch(e){}
+try{ renderMainFields(); }catch(e){}
 try{ addCommaListeners(); }catch(e){}
 try{ calcRetirePlan(); }catch(e){}
 
@@ -3612,7 +3787,7 @@ const FIELDS = [
   'prot-note',
   // retirement
   'retire-at','retire-life','retire-inf','retire-need','retire-ret','retire-current-saving',
-  'ret-pvd','ret-gpf','ret-annuity','ret-rmf','ret-prop','ret-pension-annual',
+  'ret-pvd','ret-gpf','ret-annuity','ret-rmf','ret-prop',
   'tax-income','tax-deduct',
   // education
   'child-1-name','child-1-age','child-1-start',
@@ -3799,7 +3974,7 @@ function newClient(){
   const goalItems = $('goal-items');
   if(goalItems) while(goalItems.children.length > 3) goalItems.removeChild(goalItems.lastChild);
   goalCount = 3;
-  applyCoverage([{}]);
+  applyCoverage([]);
   $('save-client-name').textContent = '— ลูกค้าใหม่ —';
   $('save-status').textContent = '';
   const today = new Date().toISOString().split('T')[0];
