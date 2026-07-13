@@ -266,7 +266,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
   <div class="step-pill" data-step="1">🎯 เป้าหมาย</div>
   <div class="step-pill" data-step="2">📊 งบการเงิน</div>
   <div class="step-pill" data-step="3">🔺 ปิรามิด</div>
-  <div class="step-pill" data-step="4">📋 ความคุ้มครองที่มี</div>
+  <div class="step-pill" data-step="4">📋 Coverage</div>
   <div class="step-pill" data-step="5">🛡️ Protection</div>
   <div class="step-pill" data-step="6">🌅 Retirement</div>
   <div class="step-pill" data-step="7">🎓 Education Plan</div>
@@ -1153,7 +1153,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
 
   <div class="btn-row">
     <button class="btn btn-ghost" onclick="goStep(2)">← ย้อนกลับ</button>
-    <button class="btn btn-primary" onclick="goStep(4)">ถัดไป → ความคุ้มครองที่มี 📋</button>
+    <button class="btn btn-primary" onclick="goStep(4)">ถัดไป → Coverage 📋</button>
   </div>
 </div>
 
@@ -1170,10 +1170,12 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
     <table class="tbl" id="cov-table">
       <thead>
         <tr>
-          <th style="min-width:120px">ประเภท</th>
-          <th>บริษัท / ชื่อกรมธรรม์</th>
+          <th style="min-width:120px">Type</th>
+          <th style="min-width:130px">Plan Name</th>
+          <th>บริษัท</th>
           <th style="min-width:110px">ทุนประกัน/วงเงิน (฿)</th>
           <th style="min-width:100px">เบี้ยประกัน/ปี (฿)</th>
+          <th style="min-width:100px">ครบกำหนดชำระเบี้ย (ปี)</th>
           <th style="min-width:110px">เงินบำนาญคืน/ปี (฿)</th>
           <th>หมายเหตุ</th>
           <th style="width:30px"></th>
@@ -1184,34 +1186,39 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
     <button class="btn-add" onclick="addCoverageRow()">＋ เพิ่มกรมธรรม์</button>
 
     <div class="sec-div" style="margin-top:20px">📊 สรุปความคุ้มครองตามประเภท</div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px" id="cov-summary-grid">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px" id="cov-summary-grid">
       <div style="background:var(--blue-lt);border-radius:8px;padding:12px;text-align:center">
-        <div style="font-size:9px;color:var(--blue);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">❤️ ชีวิต</div>
+        <div style="font-size:9px;color:var(--blue);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">❤️ Life</div>
         <div id="cov-sum-life" style="font-size:15px;font-weight:800;color:var(--blue)">0</div>
         <div style="font-size:9px;color:var(--muted)">฿</div>
       </div>
       <div style="background:var(--green-lt);border-radius:8px;padding:12px;text-align:center">
-        <div style="font-size:9px;color:#2a6a3a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">🏥 สุขภาพ</div>
+        <div style="font-size:9px;color:#2a6a3a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">🏥 Health</div>
         <div id="cov-sum-health" style="font-size:15px;font-weight:800;color:var(--green)">0</div>
         <div style="font-size:9px;color:var(--muted)">฿</div>
       </div>
       <div style="background:#FADBD8;border-radius:8px;padding:12px;text-align:center">
-        <div style="font-size:9px;color:var(--red);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">🚗 อุบัติเหตุ</div>
+        <div style="font-size:9px;color:var(--red);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">🚗 Accident</div>
         <div id="cov-sum-acc" style="font-size:15px;font-weight:800;color:var(--red)">0</div>
         <div style="font-size:9px;color:var(--muted)">฿</div>
       </div>
       <div style="background:var(--gold-lt);border-radius:8px;padding:12px;text-align:center">
-        <div style="font-size:9px;color:#9a6e1a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">🎗️ โรคร้ายแรง</div>
+        <div style="font-size:9px;color:#9a6e1a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">🎗️ CI</div>
         <div id="cov-sum-ci" style="font-size:15px;font-weight:800;color:#9a6e1a">0</div>
         <div style="font-size:9px;color:var(--muted)">฿</div>
       </div>
       <div style="background:#E6D9F5;border-radius:8px;padding:12px;text-align:center">
-        <div style="font-size:9px;color:#6a3f9e;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">🎂 บำนาญ (คืน/ปี)</div>
+        <div style="font-size:9px;color:#6a3f9e;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">🎂 Annuity (/yr)</div>
         <div id="cov-sum-pension" style="font-size:15px;font-weight:800;color:#6a3f9e">0</div>
         <div style="font-size:9px;color:var(--muted)">฿/ปี</div>
       </div>
+      <div style="background:#D8EAF0;border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:9px;color:#2a6a7a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">💰 Endowment</div>
+        <div id="cov-sum-endowment" style="font-size:15px;font-weight:800;color:#2a6a7a">0</div>
+        <div style="font-size:9px;color:var(--muted)">฿</div>
+      </div>
       <div style="background:var(--sand);border-radius:8px;padding:12px;text-align:center;border:1.5px solid var(--border)">
-        <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">🌍 อื่นๆ / Non-life</div>
+        <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">🌍 Other</div>
         <div id="cov-sum-other" style="font-size:15px;font-weight:800;color:var(--ink)">0</div>
         <div style="font-size:9px;color:var(--muted)">฿</div>
       </div>
@@ -3064,17 +3071,20 @@ function addCoverageRow(prefill){
   tr.innerHTML = `
     <td>
       <select id="cov-type-${n}" onchange="calcCoverage()" style="width:100%">
-        <option value="life">❤️ ชีวิต</option>
-        <option value="health">🏥 สุขภาพ</option>
-        <option value="acc">🚗 อุบัติเหตุ</option>
-        <option value="ci">🎗️ โรคร้ายแรง</option>
-        <option value="pension">🎂 บำนาญ</option>
-        <option value="other">🌍 อื่นๆ / Non-life</option>
+        <option value="life">❤️ Life</option>
+        <option value="health">🏥 Health</option>
+        <option value="acc">🚗 Accident</option>
+        <option value="ci">🎗️ CI</option>
+        <option value="pension">🎂 Annuity</option>
+        <option value="endowment">💰 Endowment</option>
+        <option value="other">🌍 Other</option>
       </select>
     </td>
-    <td><input type="text" id="cov-company-${n}" placeholder="เช่น AIA / กรุงไทยแอกซ่า"></td>
+    <td><input type="text" id="cov-plan-${n}" placeholder="เช่น Endowment 15/7"></td>
+    <td><input type="text" id="cov-company-${n}" placeholder="เช่น AIA"></td>
     <td><input type="number" id="cov-amt-${n}" placeholder="0" oninput="calcCoverage()"></td>
     <td><input type="number" id="cov-prem-${n}" placeholder="0" oninput="calcCoverage()"></td>
+    <td><input type="number" id="cov-due-${n}" placeholder="เช่น 2040"></td>
     <td><input type="number" id="cov-pension-${n}" placeholder="0" oninput="calcCoverage()"></td>
     <td><input type="text" id="cov-note-${n}" placeholder="หมายเหตุ"></td>
     <td><button class="btn-remove" onclick="this.closest('tr').remove();calcCoverage()">✕</button></td>`;
@@ -3084,16 +3094,18 @@ function addCoverageRow(prefill){
   }catch(e){}
   if(prefill){
     if($('cov-type-'+n)) $('cov-type-'+n).value = prefill.type||'life';
+    if($('cov-plan-'+n)) $('cov-plan-'+n).value = prefill.plan||'';
     if($('cov-company-'+n)) $('cov-company-'+n).value = prefill.company||'';
     if($('cov-amt-'+n)) $('cov-amt-'+n).value = prefill.amount||'';
     if($('cov-prem-'+n)) $('cov-prem-'+n).value = prefill.premium||'';
+    if($('cov-due-'+n)) $('cov-due-'+n).value = prefill.dueYear||'';
     if($('cov-pension-'+n)) $('cov-pension-'+n).value = prefill.pension||'';
     if($('cov-note-'+n)) $('cov-note-'+n).value = prefill.note||'';
   }
 }
 
 function calcCoverage(){
-  const sums = { life:0, health:0, acc:0, ci:0, pension:0, other:0 };
+  const sums = { life:0, health:0, acc:0, ci:0, pension:0, endowment:0, other:0 };
   let totalPremium = 0;
   document.querySelectorAll('#cov-table-body tr.cov-row').forEach(tr=>{
     const sel = tr.querySelector('select[id^="cov-type-"]');
@@ -3108,12 +3120,13 @@ function calcCoverage(){
     sums.pension += pension;
     totalPremium += prem;
   });
-  if($('cov-sum-life'))    $('cov-sum-life').textContent    = fmt(Math.round(sums.life));
-  if($('cov-sum-health'))  $('cov-sum-health').textContent  = fmt(Math.round(sums.health));
-  if($('cov-sum-acc'))     $('cov-sum-acc').textContent     = fmt(Math.round(sums.acc));
-  if($('cov-sum-ci'))      $('cov-sum-ci').textContent      = fmt(Math.round(sums.ci));
-  if($('cov-sum-pension')) $('cov-sum-pension').textContent = fmt(Math.round(sums.pension));
-  if($('cov-sum-other'))   $('cov-sum-other').textContent   = fmt(Math.round(sums.other));
+  if($('cov-sum-life'))      $('cov-sum-life').textContent      = fmt(Math.round(sums.life));
+  if($('cov-sum-health'))    $('cov-sum-health').textContent    = fmt(Math.round(sums.health));
+  if($('cov-sum-acc'))       $('cov-sum-acc').textContent       = fmt(Math.round(sums.acc));
+  if($('cov-sum-ci'))        $('cov-sum-ci').textContent        = fmt(Math.round(sums.ci));
+  if($('cov-sum-pension'))   $('cov-sum-pension').textContent   = fmt(Math.round(sums.pension));
+  if($('cov-sum-endowment')) $('cov-sum-endowment').textContent = fmt(Math.round(sums.endowment));
+  if($('cov-sum-other'))     $('cov-sum-other').textContent     = fmt(Math.round(sums.other));
   if($('cov-total-premium')) $('cov-total-premium').textContent = fmt(Math.round(totalPremium));
 
   // Auto-fill Protection page fields — only if the advisor hasn't already typed a value there
@@ -3133,16 +3146,20 @@ function collectCoverage(){
   const rows = [];
   document.querySelectorAll('#cov-table-body tr.cov-row').forEach(tr=>{
     const sel = tr.querySelector('select[id^="cov-type-"]');
+    const plan = tr.querySelector('input[id^="cov-plan-"]');
     const company = tr.querySelector('input[id^="cov-company-"]');
     const amt = tr.querySelector('input[id^="cov-amt-"]');
     const prem = tr.querySelector('input[id^="cov-prem-"]');
+    const due = tr.querySelector('input[id^="cov-due-"]');
     const pension = tr.querySelector('input[id^="cov-pension-"]');
     const note = tr.querySelector('input[id^="cov-note-"]');
     rows.push({
       type: sel?.value||'life',
+      plan: plan?.value||'',
       company: company?.value||'',
       amount: amt?.value||'',
       premium: prem?.value||'',
+      dueYear: due?.value||'',
       pension: pension?.value||'',
       note: note?.value||''
     });
