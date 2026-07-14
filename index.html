@@ -1559,16 +1559,16 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
       </div>
     </div>
 
-    <!-- ══ ANNUITY INCOME — shown separately, NOT deducted from the fund gap ══ -->
+    <!-- ══ ANNUITY INCOME — reduces the Retirement need directly, shown here for clarity ══ -->
     <div class="card" style="background:#E6D9F5;border-color:#c9b3e8">
       <div class="card-label" style="color:#6a3f9e">จากหน้า Coverage</div>
       <div class="card-title" style="font-size:15px">🎂 รายได้ประจำหลังเกษียณ (จากกรมธรรม์บำนาญที่มี)</div>
       <div id="ret-annuity-detail"></div>
-      <div class="calc-box" style="margin-top:10px;background:#fff">
-        <span class="lbl">รวมรายได้บำนาญ/ปี จากทุกกรมธรรม์</span>
-        <span id="ret-annuity-total" style="color:#6a3f9e;font-size:18px">0 บาท/ปี</span>
+      <div class="protect-grid" style="margin-top:10px">
+        <div class="calc-box" style="background:#fff"><span class="lbl">รวมรายได้บำนาญ/ปี</span><span id="ret-annuity-total" style="color:#6a3f9e;font-size:16px">0 บาท/ปี</span></div>
+        <div class="calc-box" style="background:#fff"><span class="lbl">🎂 เทียบเท่าเงินก้อน (PV)</span><span id="ret-annuity-lump" style="color:#6a3f9e;font-size:16px">0</span></div>
       </div>
-      <div style="font-size:11px;color:#6a3f9e;margin-top:10px">💡 ตัวเลขนี้เป็น<b>รายได้เสริม</b>ที่ลูกค้าจะได้รับทุกปีหลังเกษียณ แยกต่างหากจากเงินก้อนด้านบน — <b>ไม่ได้ถูกหักออกจากช่องว่าง (Gap)</b> ใช้ประกอบการอธิบายลูกค้าว่ามีรายรับประจำอยู่แล้วส่วนหนึ่ง</div>
+      <div style="font-size:11px;color:#6a3f9e;margin-top:10px">💡 ยอดนี้ถูก<b>หักออกจาก "Retirement Fund ที่ต้องมี" ก่อน</b>ให้อัตโนมัติแล้ว (ดูผลลัพธ์ในกล่อง Gap Analysis ด้านล่าง) — ไม่ได้บวกเข้ากับแหล่งเงินทุนอื่น</div>
     </div>
 
     <!-- ══ STEP 3: GAP ANALYSIS ══ -->
@@ -1582,6 +1582,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
             <div style="font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">🏦 Retirement Fund ที่ต้องมี</div>
             <div id="gap-need" style="font-size:17px;font-weight:800;color:#e8c870">—</div>
             <div style="font-size:9px;color:#666">฿</div>
+            <div id="gap-need-gross-note" style="font-size:8.5px;color:#888;margin-top:3px"></div>
           </div>
           <div style="font-size:28px;color:var(--muted)">−</div>
           <div style="flex:1;min-width:160px;text-align:center;padding:12px;background:var(--green-lt);border-radius:8px;border:1.5px solid var(--green)">
@@ -2601,8 +2602,26 @@ function calcRetirePlan(){
   }
 
   // ── STEP 3: Gap Analysis ──────────────
+  // Annuity income (from Coverage page) reduces the Retirement Fund needed directly,
+  // rather than being added to prepared funds — same math result, clearer to explain to clients.
+  const annuityAnnual = window._annuityIncomeTotal || 0;
+  let annuityPV = 0;
+  if(annuityAnnual>0 && postYears>0){
+    if(Math.abs(realRate) < 0.0001){
+      annuityPV = annuityAnnual * postYears;
+    } else {
+      annuityPV = annuityAnnual * (1 - Math.pow(1+realRate, -postYears)) / realRate;
+    }
+  }
+  if($('ret-annuity-lump')) $('ret-annuity-lump').textContent = annuityAnnual ? fmt(Math.round(annuityPV)) : '—';
+
+  const lumpSumGross = lumpSum;
+  const lumpSumNet = Math.max(lumpSumGross - annuityPV, 0);
+  lumpSum = lumpSumNet;
+
   const gap = lumpSum - totalFV;
   if($('gap-need')) $('gap-need').textContent = needNow ? fmt(Math.round(lumpSum)) : '—';
+  if($('gap-need-gross-note')) $('gap-need-gross-note').textContent = annuityPV>0 ? `(ก่อนหักบำนาญ ${fmt(Math.round(lumpSumGross))} ฿)` : '';
   if($('gap-have')) $('gap-have').textContent = fmt(Math.round(totalFV));
 
   const gapEl = $('ret-still-need');
