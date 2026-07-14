@@ -1245,7 +1245,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
     <div class="btn-row" style="margin-top:18px;align-items:center">
       <button class="btn btn-ghost" onclick="resetPolicyForm()">ล้างฟอร์ม</button>
       <span id="policy-save-status" style="font-size:12.5px;color:var(--green);font-weight:700"></span>
-      <button class="btn btn-primary" onclick="savePolicy()">💾 บันทึกกรมธรรม์นี้</button>
+      <button class="btn btn-primary" id="policy-save-btn" onclick="savePolicy()">💾 บันทึกกรมธรรม์นี้</button>
     </div>
   </div>
 
@@ -2579,25 +2579,24 @@ function buildSummary(){
 
   // ── COMPLETENESS SCORE (red = ยังไม่เตรียม, yellow = เตรียมไว้บ้างแต่ไม่ถึงเป้า, green = เพียงพอ) ──
   const checks = [
-    {label:'ชื่อลูกค้า',           status: $('client-name')?.value ? 'green' : 'red'},
-    {label:'วันเกิด / อายุ',        status: $('client-dob')?.value ? 'green' : 'red'},
-    {label:'รายได้',               status: (periodVal('cf-salary')+periodVal('cf-wage'))>0 ? 'green' : 'red'},
-    {label:'รายจ่ายประจำ',          status: (periodVal('cf-house')+periodVal('cf-food'))>0 ? 'green' : 'red'},
-    {label:'สินทรัพย์ (งบดุล)',     status: (val('a-cash')+val('a-fund')+val('a-stock'))>0 ? 'green' : 'red'},
-    {label:'หนี้สิน (งบดุล)',       status: (val('l-home')+val('l-car')+val('l-cc'))>0 ? 'green' : 'red'},
+    {label:'ข้อมูลพื้นฐาน (ชื่อ/วันเกิด)', status: ($('client-name')?.value && $('client-dob')?.value) ? 'green' : 'red'},
+    {label:'รายได้-รายจ่ายประจำ',   status: ((periodVal('cf-salary')+periodVal('cf-wage'))>0 && (periodVal('cf-house')+periodVal('cf-food'))>0) ? 'green' : 'red'},
+    {label:'สินทรัพย์-หนี้สิน (งบดุล)', status: ((val('a-cash')+val('a-fund')+val('a-stock'))>0 || (val('l-home')+val('l-car')+val('l-cc'))>0) ? 'green' : 'red'},
     {label:'ทุนประกันชีวิต',
       status: protTarget>0
         ? (lifeSumVal<=0 ? 'red' : lifeSumVal<protTarget ? 'yellow' : 'green')
         : (lifeSumVal>0 ? 'green' : 'red')},
     {label:'ความคุ้มครองสุขภาพ',   status: val('life-hosp')>0 ? 'green' : 'red'},
     {label:'โรคร้ายแรง CI',        status: val('life-ci')>0 ? 'green' : 'red'},
+    {label:'ความคุ้มครองอุบัติเหตุ', status: val('life-acc')>0 ? 'green' : 'red'},
+    {label:'เงินคืน Endowment เพื่อเกษียณ', status: (window._retirementFundFromCoverage||0)>0 ? 'green' : 'red'},
+    {label:'รายได้บำนาญหลังเกษียณ', status: (window._annuityIncomeTotal||0)>0 ? 'green' : 'red'},
     {label:'อายุเกษียณ',            status: $('retire-at')?.value ? 'green' : 'red'},
     {label:'เงินที่ต้องการ/เกษียณ', status: val('retire-need')>0 ? 'green' : 'red'},
     {label:'แผนเกษียณ (ออม/เดือน เทียบเงินคงเหลือ)',
       status: retireMonthly>0
         ? (net<=0 ? 'red' : net<retireMonthly ? 'yellow' : 'green')
         : (($('retire-lump')?.textContent||'')!=='—' ? 'green' : 'red')},
-    {label:'ข้อมูลบุตร',           status: ($('child-1-name')?.value||$('child-1-age')?.value) ? 'green' : 'red'},
     {label:'แผนการศึกษา (ออม/เดือน เทียบเงินคงเหลือ)',
       status: eduMonthly>0
         ? (net<=0 ? 'red' : net<eduMonthly ? 'yellow' : 'green')
@@ -3522,6 +3521,7 @@ const RIDER_TYPES = {
 let riderCount = 0;
 let policies = [];
 let policyIdSeq = 0;
+let editingPolicyId = null;
 
 // ── Conditional fields for the chosen main contract type ──
 function renderMainFields(){
@@ -3642,7 +3642,7 @@ function updateRiderUnit(n){
 function savePolicy(){
   const type = $('pol-main-type').value;
   const policy = {
-    id: ++policyIdSeq,
+    id: editingPolicyId || ++policyIdSeq,
     company: $('pol-company').value,
     policyNo: $('pol-policyno').value,
     mainType: type,
@@ -3674,14 +3674,67 @@ function savePolicy(){
       premium: cleanNum($('rid-prem-'+n)?.value)
     });
   });
-  policies.push(policy);
+
+  const wasEditing = !!editingPolicyId;
+  if(wasEditing){
+    const idx = policies.findIndex(p=>p.id===editingPolicyId);
+    if(idx>=0) policies[idx] = policy; else policies.push(policy);
+  } else {
+    policies.push(policy);
+  }
   renderPolicyList();
   resetPolicyForm();
   const statusEl = $('policy-save-status');
   if(statusEl){
-    statusEl.textContent = `✅ บันทึกแล้ว (${policies.length} เล่ม) — กรอกเล่มถัดไปได้เลย`;
+    statusEl.textContent = wasEditing ? '✅ แก้ไขกรมธรรม์เรียบร้อยแล้ว' : `✅ บันทึกแล้ว (${policies.length} เล่ม) — กรอกเล่มถัดไปได้เลย`;
     setTimeout(()=>{ if(statusEl) statusEl.textContent=''; }, 4000);
   }
+}
+
+// ── Load a saved policy back into the form for editing ──
+function editPolicy(id){
+  const p = policies.find(x=>x.id===id);
+  if(!p) return;
+  editingPolicyId = id;
+
+  if($('pol-company')) $('pol-company').value = p.company||'';
+  if($('pol-policyno')) $('pol-policyno').value = p.policyNo||'';
+  if($('pol-plan-name')) $('pol-plan-name').value = p.planName||'';
+  if($('pol-note')) $('pol-note').value = p.note||'';
+  if($('pol-main-type')) $('pol-main-type').value = p.mainType||'life';
+  renderMainFields();
+
+  // Fill in the conditional main-contract fields now that they exist in the DOM
+  const setVal = (id,val) => { const el=$(id); if(el && val!==undefined && val!=='' ) el.value = val; };
+  setVal('pol-sum', p.sum);
+  setVal('pol-prem', p.prem);
+  setVal('pol-start', p.start);
+  setVal('pol-pay-term', p.payTerm);
+  setVal('pol-due-year', p.dueYear);
+  setVal('pol-cover-term', p.coverTerm);
+  setVal('pol-maturity', p.maturity);
+  setVal('pol-maturity-year', p.maturityYear);
+  setVal('pol-surrender', p.surrender);
+  setVal('pol-prem-protect', p.premProtect);
+  setVal('pol-prem-invest', p.premInvest);
+  setVal('pol-fund-value', p.fundValue);
+  setVal('pol-annuity-payout', p.annuityPayout);
+  setVal('pol-annuity-start-age', p.annuityStartAge);
+  setVal('pol-annuity-end-age', p.annuityEndAge);
+
+  // Rebuild riders
+  if($('pol-rider-list')) $('pol-rider-list').innerHTML = '';
+  (p.riders||[]).forEach(r=>addRiderRow(r));
+
+  const statusEl = $('policy-save-status');
+  if(statusEl) statusEl.textContent = `✏️ กำลังแก้ไข: ${p.company||''} ${p.planName||''}`;
+
+  const saveBtn = $('policy-save-btn');
+  if(saveBtn) saveBtn.textContent = '💾 บันทึกการแก้ไข';
+
+  // scroll up to the form
+  const formCard = $('pol-main-fields')?.closest('.card');
+  if(formCard) formCard.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 function resetPolicyForm(){
@@ -3689,10 +3742,16 @@ function resetPolicyForm(){
   if($('pol-main-type')) $('pol-main-type').value = 'life';
   if($('pol-rider-list')) $('pol-rider-list').innerHTML = '';
   renderMainFields();
+  editingPolicyId = null;
+  const saveBtn = $('policy-save-btn');
+  if(saveBtn) saveBtn.textContent = '💾 บันทึกกรมธรรม์นี้';
+  const statusEl = $('policy-save-status');
+  if(statusEl && statusEl.textContent.startsWith('✏️')) statusEl.textContent = '';
 }
 
 function deletePolicy(id){
   policies = policies.filter(p=>p.id!==id);
+  if(editingPolicyId===id) resetPolicyForm();
   renderPolicyList();
 }
 
@@ -3773,7 +3832,10 @@ function renderPolicyList(){
           </div>
           ${riderChips ? '<div style="margin-top:8px">'+riderChips+'</div>' : ''}
         </div>
-        <button class="btn-remove" onclick="deletePolicy(${p.id})">✕</button>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button class="btn btn-ghost" style="padding:6px 12px;font-size:12px" onclick="editPolicy(${p.id})">✏️ แก้ไข</button>
+          <button class="btn-remove" onclick="deletePolicy(${p.id})">✕</button>
+        </div>
       </div>
       <div class="stat-grid">
         <div class="stat"><div class="n">${fmt(policyTotalPrem)}</div><div class="l">เบี้ยรวม/ปี (ทั้งเล่ม)</div></div>
