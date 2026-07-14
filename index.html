@@ -2660,11 +2660,27 @@ function buildSummary(){
       action:`ควรเพิ่มทุนประกันอีก ${fmt(Math.round(hlvNum-lifeS))} ฿`
     });
   }
-  if(!val('life-ci')){
-    gaps.push({icon:'🎗️',title:'โรคร้ายแรง (CI)',have:0,need:1,pct:0,color:'var(--blue)',action:'ยังไม่มีความคุ้มครอง CI — ควรพิจารณาเพิ่ม'});
+  const ciHave = val('life-ci');
+  const ciNeed = 3000000;
+  if(ciHave < ciNeed){
+    gaps.push({
+      icon:'🎗️', title:'โรคร้ายแรง (CI)',
+      have: ciHave, need: ciNeed,
+      pct: Math.min(ciHave/ciNeed*100, 100),
+      color:'var(--blue)',
+      action: ciHave>0 ? `ควรเพิ่มทุน CI อีก ${fmt(Math.round(ciNeed-ciHave))} ฿` : 'ยังไม่มีความคุ้มครอง CI — ควรพิจารณาเพิ่ม (เกณฑ์มาตรฐาน 3,000,000 ฿)'
+    });
   }
-  if(!val('life-hosp')){
-    gaps.push({icon:'🏥',title:'ค่ารักษาพยาบาล',have:0,need:1,pct:0,color:'var(--blue)',action:'ยังไม่มีประกันสุขภาพ — ควรเพิ่ม'});
+  const hospHave = val('life-hosp');
+  const hospNeed = 5000000;
+  if(hospHave < hospNeed){
+    gaps.push({
+      icon:'🏥', title:'ค่ารักษาพยาบาล',
+      have: hospHave, need: hospNeed,
+      pct: Math.min(hospHave/hospNeed*100, 100),
+      color:'var(--blue)',
+      action: hospHave>0 ? `ควรเพิ่มวงเงินรักษาพยาบาลอีก ${fmt(Math.round(hospNeed-hospHave))} ฿` : 'ยังไม่มีประกันสุขภาพ — ควรเพิ่ม (เกณฑ์มาตรฐาน 5,000,000 ฿)'
+    });
   }
   
   // Emergency fund gap
@@ -3864,10 +3880,10 @@ function renderPolicyList(){
   }
 
   // Auto-fill Protection page fields — only if the advisor hasn't already typed a value there
-  if($('life-sum')  && !$('life-sum').value  && protSums.life>0)     $('life-sum').value  = Math.round(protSums.life);
-  if($('life-hosp') && !$('life-hosp').value && protSums.health>0)   $('life-hosp').value = Math.round(protSums.health);
-  if($('life-acc')  && !$('life-acc').value  && protSums.accident>0) $('life-acc').value  = Math.round(protSums.accident);
-  if($('life-ci')   && !$('life-ci').value   && protSums.ci>0)       $('life-ci').value   = Math.round(protSums.ci);
+  if($('life-sum')  && !cleanNum($('life-sum')?.value)  && protSums.life>0)     $('life-sum').value  = Math.round(protSums.life);
+  if($('life-hosp') && !cleanNum($('life-hosp')?.value) && protSums.health>0)   $('life-hosp').value = Math.round(protSums.health);
+  if($('life-acc')  && !cleanNum($('life-acc')?.value)  && protSums.accident>0) $('life-acc').value  = Math.round(protSums.accident);
+  if($('life-ci')   && !cleanNum($('life-ci')?.value)   && protSums.ci>0)       $('life-ci').value   = Math.round(protSums.ci);
 
   window._retirementFundFromCoverage = retirementFundTotal;
   window._annuityIncomeTotal = annuityIncomeTotal;
