@@ -149,6 +149,27 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
 .pyramid-wrap{display:flex;justify-content:center;margin:12px 0 24px}
 .pyramid-svg{width:100%;max-width:460px}
 
+/* TAX PLANNING */
+.row-item{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px dashed var(--border)}
+.row-item:last-child{border-bottom:none}
+.row-item .rlabel{flex:1;font-size:12.5px}
+.row-item .rcap{font-size:10px;color:var(--muted);white-space:nowrap}
+.row-item input{width:120px;flex-shrink:0}
+.group-total{display:flex;justify-content:space-between;align-items:center;background:var(--gold-lt);border-radius:8px;padding:10px 14px;margin-top:10px;font-weight:800;color:#7a5f1a}
+.sub-cap-note{background:var(--sand);border-radius:8px;padding:8px 12px;font-size:11px;color:var(--muted);margin:8px 0}
+.tbl tr.current-bracket{background:var(--gold-lt);box-shadow:inset 3px 0 0 var(--gold)}
+.tbl tr.current-bracket td{font-weight:800;color:#7a5f1a}
+.net-income-box{background:var(--black);color:var(--gold);border-radius:8px;padding:14px 18px;text-align:center;margin-top:10px}
+.net-income-box .n{font-size:22px;font-weight:900}
+.net-income-box .l{font-size:11px;color:#aaa}
+.income-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:6px;align-items:center;padding:6px 0;font-size:12px}
+@media(max-width:700px){.income-row{grid-template-columns:1fr 1fr}}
+.income-row .lbl{font-size:11.5px}
+.income-row .cap-note{font-size:9.5px;color:var(--muted)}
+.savings-highlight{background:var(--green-lt);border:1.5px solid var(--green);border-radius:10px;padding:18px;text-align:center;margin-top:14px}
+.savings-highlight .n{font-size:28px;font-weight:900;color:#2a6a3a}
+.savings-highlight .l{font-size:11px;color:#2a6a3a;text-transform:uppercase;letter-spacing:.06em;margin-top:4px}
+
 /* BADGE */
 .badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.04em}
 .badge-ok{background:var(--green-lt);color:#2a6a3a}
@@ -286,7 +307,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
   <div class="step-pill" data-step="5">🛡️ Protection</div>
   <div class="step-pill" data-step="6">🌅 Retirement</div>
   <div class="step-pill" data-step="7">🎓 Education Plan</div>
-  <div class="step-pill" data-step="8">⭐ สรุปภาพรวม</div>
+  <div class="step-pill" data-step="8">🧾 Tax Planning</div>
+  <div class="step-pill" data-step="9">⭐ สรุปภาพรวม</div>
 </div>
 
 <!-- ══════════════════════════════════════════
@@ -1642,16 +1664,6 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
         </table>
       </div>
 
-      <!-- Tax planning -->
-      <div class="sec-div">🧾 การวางแผนภาษีเพื่อเกษียณ</div>
-      <div class="form-row">
-        <div class="form-group"><label>รายได้ต่อปี (฿)</label><input type="number" id="tax-income" placeholder="0" oninput="calcTax()"></div>
-        <div class="form-group"><label>ลดหย่อนปัจจุบัน (฿/ปี)</label><input type="number" id="tax-deduct" placeholder="0" oninput="calcTax()"></div>
-        <div class="form-group"><div class="calc-box"><span class="lbl">🎯 ช่องว่างลดหย่อน</span><span id="tax-room">—</span> ฿/ปี</div></div>
-      </div>
-      <div id="tax-extra"></div>
-      <button class="btn-add" onclick="addExtraRow('tax-extra','tax-x','null')">＋ เพิ่มรายการลดหย่อน</button>
-
       <div style="margin-top:12px;padding:14px 16px;background:var(--black);border-radius:8px">
         <div style="font-size:10px;color:#aaa;margin-bottom:6px;letter-spacing:.06em">💡 คำแนะนำแนวทางลงทุนเบื้องต้น</div>
         <div id="invest-advice" style="font-size:13px;color:#ddd;line-height:1.8">กรอกข้อมูลเพื่อดูคำแนะนำ</div>
@@ -1822,7 +1834,233 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
 
   <div class="btn-row">
     <button class="btn btn-ghost" onclick="goStep(6)">← ย้อนกลับ</button>
-    <button class="btn btn-gold" onclick="goStep(8)">ดูสรุปภาพรวม ⭐</button>
+    <button class="btn btn-primary" onclick="goStep(8)">ถัดไป → Tax Planning 🧾</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PANEL · TAX PLANNING
+══════════════════════════════════════════ -->
+<div class="step-panel" id="panel-tax">
+
+  <div class="card" style="background:var(--black);color:#fff;text-align:center">
+    <div style="font-size:13px;color:#aaa">สูตรหลัก</div>
+    <div style="font-size:16px;font-weight:800;margin-top:4px;color:var(--gold)">ภาษี = เงินได้สุทธิ × อัตราภาษี</div>
+    <div style="font-size:12px;margin-top:4px;color:#ccc">เงินได้สุทธิ = รายได้ − ค่าใช้จ่าย − ค่าลดหย่อน (ค่าใช้จ่าย = 50% ของรายได้ 40(1)/40(2) แต่ไม่เกิน 100,000)</div>
+  </div>
+
+  <!-- ══ ประเภทรายได้ ══ -->
+  <div class="card">
+    <div class="card-label">รายได้</div>
+    <div class="card-title">💵 ประเภทรายได้</div>
+    <div class="income-row" style="font-weight:700;color:var(--muted);font-size:10.5px;text-transform:uppercase">
+      <div>ประเภทเงินได้</div><div>ต่อเดือน (฿)</div><div>ต่อปี (฿)</div><div>อัตราค่าใช้จ่าย</div><div>ค่าใช้จ่าย (฿)</div>
+    </div>
+    <div class="income-row">
+      <div class="lbl">40(1) เงินเดือน ค่าจ้าง โบนัส<div class="cap-note">50% สูงสุด 100,000 (รวมกับ 40(2))</div></div>
+      <input type="number" id="tax-inc-40-1-m" placeholder="0" oninput="taxSyncMonthly('tax-inc-40-1')">
+      <input type="number" id="tax-inc-40-1" placeholder="0" oninput="calcTaxPlan()">
+      <div class="cap-note">50% / 100,000</div>
+      <div id="tax-exp-40-1" style="font-weight:700">0</div>
+    </div>
+    <div class="income-row">
+      <div class="lbl">40(2) ค่าธรรมเนียม ค่านายหน้า ค่าบำเหน็จ</div>
+      <input type="number" id="tax-inc-40-2-m" placeholder="0" oninput="taxSyncMonthly('tax-inc-40-2')">
+      <input type="number" id="tax-inc-40-2" placeholder="0" oninput="calcTaxPlan()">
+      <div class="cap-note">50% / 100,000 รวม</div>
+      <div id="tax-exp-40-2" style="font-weight:700">0</div>
+    </div>
+    <div class="income-row">
+      <div class="lbl">40(3) ค่าแห่งลิขสิทธิ์</div>
+      <input type="number" id="tax-inc-40-3-m" placeholder="0" oninput="taxSyncMonthly('tax-inc-40-3')">
+      <input type="number" id="tax-inc-40-3" placeholder="0" oninput="calcTaxPlan()">
+      <div class="cap-note">50% / 100,000</div>
+      <div id="tax-exp-40-3" style="font-weight:700">0</div>
+    </div>
+    <div class="income-row">
+      <div class="lbl">40(4) ดอกเบี้ย เงินปันผล</div>
+      <input type="number" id="tax-inc-40-4-m" placeholder="0" oninput="taxSyncMonthly('tax-inc-40-4')">
+      <input type="number" id="tax-inc-40-4" placeholder="0" oninput="calcTaxPlan()">
+      <div class="cap-note">ไม่มี</div>
+      <div id="tax-exp-40-4" style="font-weight:700">0</div>
+    </div>
+    <div class="income-row">
+      <div class="lbl">40(5) ค่าเช่า<div class="cap-note">เหมาสูงสุด 30%</div></div>
+      <input type="number" id="tax-inc-40-5-m" placeholder="0" oninput="taxSyncMonthly('tax-inc-40-5')">
+      <input type="number" id="tax-inc-40-5" placeholder="0" oninput="calcTaxPlan()">
+      <select id="tax-rate-40-5" onchange="calcTaxPlan()" style="font-size:11px">
+        <option value="0.30">บ้าน/อาคาร 30%</option>
+        <option value="0.30">ยานพาหนะ 30%</option>
+        <option value="0.20">ที่ดินเกษตร 20%</option>
+        <option value="0.15">ที่ดิน 15%</option>
+        <option value="0.10">อื่นๆ 10%</option>
+      </select>
+      <div id="tax-exp-40-5" style="font-weight:700">0</div>
+    </div>
+    <div class="income-row">
+      <div class="lbl">40(6) วิชาชีพอิสระ<div class="cap-note">หมอ 60% / อื่นๆ 30%</div></div>
+      <input type="number" id="tax-inc-40-6-m" placeholder="0" oninput="taxSyncMonthly('tax-inc-40-6')">
+      <input type="number" id="tax-inc-40-6" placeholder="0" oninput="calcTaxPlan()">
+      <select id="tax-rate-40-6" onchange="calcTaxPlan()" style="font-size:11px">
+        <option value="0.60">แพทย์ 60%</option>
+        <option value="0.30">ทนาย/สถาปนิก/บัญชี 30%</option>
+      </select>
+      <div id="tax-exp-40-6" style="font-weight:700">0</div>
+    </div>
+    <div class="income-row">
+      <div class="lbl">40(7) การจ้างเหมา</div>
+      <input type="number" id="tax-inc-40-7-m" placeholder="0" oninput="taxSyncMonthly('tax-inc-40-7')">
+      <input type="number" id="tax-inc-40-7" placeholder="0" oninput="calcTaxPlan()">
+      <div class="cap-note">เหมาสูงสุด 60%</div>
+      <div id="tax-exp-40-7" style="font-weight:700">0</div>
+    </div>
+    <div class="income-row">
+      <div class="lbl">40(8) รายได้อื่นๆ</div>
+      <input type="number" id="tax-inc-40-8-m" placeholder="0" oninput="taxSyncMonthly('tax-inc-40-8')">
+      <input type="number" id="tax-inc-40-8" placeholder="0" oninput="calcTaxPlan()">
+      <div class="cap-note">ตามจริง/เหมา</div>
+      <div id="tax-exp-40-8" style="font-weight:700">0</div>
+    </div>
+    <div class="group-total"><span>รวมรายได้ (1) / รวมค่าใช้จ่าย (2)</span><span id="tax-income-total-line">0 / 0</span></div>
+  </div>
+
+  <!-- ══ กลุ่มที่ 1 ══ -->
+  <div class="card">
+    <div class="card-label">ค่าลดหย่อนกลุ่มที่ 1</div>
+    <div class="card-title">👨‍👩‍👧 ส่วนตัว & ครอบครัว</div>
+    <div class="row-item"><div class="rlabel">ส่วนตัว</div><div class="rcap">60,000</div><input type="number" id="tax-g1-self" value="60000" oninput="calcTaxPlan()"></div>
+    <div class="row-item"><div class="rlabel">คู่สมรสไม่มีรายได้</div><div class="rcap">60,000</div>
+      <select id="tax-g1-spouse" onchange="calcTaxPlan()" style="width:120px"><option value="0">ไม่มี</option><option value="60000">มี</option></select>
+    </div>
+    <div class="row-item"><div class="rlabel">บุตรคนแรก (30,000/คน)</div><div class="rcap">30,000/คน</div><input type="number" id="tax-g1-kid1" placeholder="0" oninput="calcTaxPlan()"></div>
+    <div class="row-item"><div class="rlabel">บุตรคนที่ 2 เป็นต้นไป (เกิดปี 2561+)</div><div class="rcap">60,000/คน</div><input type="number" id="tax-g1-kid2" placeholder="0" oninput="calcTaxPlan()"></div>
+    <div class="row-item"><div class="rlabel">ค่าคลอดบุตร</div><div class="rcap">60,000</div><input type="number" id="tax-g1-birth" placeholder="0" oninput="calcTaxPlan()"></div>
+    <div class="row-item"><div class="rlabel">อุปการะบิดา (60+ / รายได้&lt;30,000)</div><div class="rcap">30,000</div>
+      <select id="tax-g1-father" onchange="calcTaxPlan()" style="width:120px"><option value="0">ไม่ใช้สิทธิ์</option><option value="30000">ใช้สิทธิ์</option></select>
+    </div>
+    <div class="row-item"><div class="rlabel">อุปการะมารดา (60+ / รายได้&lt;30,000)</div><div class="rcap">30,000</div>
+      <select id="tax-g1-mother" onchange="calcTaxPlan()" style="width:120px"><option value="0">ไม่ใช้สิทธิ์</option><option value="30000">ใช้สิทธิ์</option></select>
+    </div>
+    <div class="row-item"><div class="rlabel">อุปการะบิดาคู่สมรส</div><div class="rcap">30,000</div>
+      <select id="tax-g1-father-sp" onchange="calcTaxPlan()" style="width:120px"><option value="0">ไม่ใช้สิทธิ์</option><option value="30000">ใช้สิทธิ์</option></select>
+    </div>
+    <div class="row-item"><div class="rlabel">อุปการะมารดาคู่สมรส</div><div class="rcap">30,000</div>
+      <select id="tax-g1-mother-sp" onchange="calcTaxPlan()" style="width:120px"><option value="0">ไม่ใช้สิทธิ์</option><option value="30000">ใช้สิทธิ์</option></select>
+    </div>
+    <div class="row-item"><div class="rlabel">ทุพพลภาพ</div><div class="rcap">60,000</div>
+      <select id="tax-g1-disabled" onchange="calcTaxPlan()" style="width:120px"><option value="0">ไม่ใช้สิทธิ์</option><option value="60000">ใช้สิทธิ์</option></select>
+    </div>
+    <div class="group-total"><span>รวมหักได้ (กลุ่มที่ 1)</span><span id="tax-g1-total">0</span></div>
+  </div>
+
+  <!-- ══ กลุ่มที่ 2 ══ -->
+  <div class="card">
+    <div class="card-label">ค่าลดหย่อนกลุ่มที่ 2</div>
+    <div class="card-title">🛍️ ช้อป / บ้าน / การเมือง</div>
+    <div class="row-item"><div class="rlabel">ช้อปดีมีคืน</div><div class="rcap">สูงสุด 40,000</div><input type="number" id="tax-g2-shop" placeholder="0" oninput="calcTaxPlan()"></div>
+    <div class="row-item"><div class="rlabel">ดอกเบี้ยบ้าน</div><div class="rcap">สูงสุด 100,000</div><input type="number" id="tax-g2-mortgage" placeholder="0" oninput="calcTaxPlan()"></div>
+    <div class="row-item"><div class="rlabel">บริจาคพรรคการเมือง</div><div class="rcap">สูงสุด 10,000</div><input type="number" id="tax-g2-political" placeholder="0" oninput="calcTaxPlan()"></div>
+    <div class="group-total"><span>รวมหักได้ (กลุ่มที่ 2)</span><span id="tax-g2-total">0</span></div>
+  </div>
+
+  <!-- ══ กลุ่มที่ 3 ══ -->
+  <div class="card">
+    <div class="card-label">ค่าลดหย่อนกลุ่มที่ 3</div>
+    <div class="card-title">🛡️ ประกัน & ออมเพื่อเกษียณ</div>
+
+    <div class="sub-cap-note">ประกันชีวิต/สุขภาพ รวมแล้วไม่เกิน 100,000</div>
+    <div class="row-item"><div class="rlabel">ประกันชีวิตทั่วไป</div><input type="number" id="tax-g3-life" placeholder="0" oninput="calcTaxPlan()"></div>
+    <div class="row-item"><div class="rlabel">ประกันสุขภาพ</div><input type="number" id="tax-g3-health" placeholder="0" oninput="calcTaxPlan()"></div>
+    <div class="sub-cap-note" id="tax-g3-life-health-note">ใช้ไป: 0 / 100,000</div>
+
+    <div class="sub-cap-note">ประกันอื่นๆ</div>
+    <div class="row-item"><div class="rlabel">ประกันสุขภาพพ่อแม่</div><div class="rcap">สูงสุด 15,000</div><input type="number" id="tax-g3-health-parents" placeholder="0" oninput="calcTaxPlan()"></div>
+    <div class="row-item"><div class="rlabel">ประกันสังคม</div><div class="rcap">สูงสุด 9,000</div><input type="number" id="tax-g3-sso" placeholder="0" oninput="calcTaxPlan()"></div>
+
+    <div class="sub-cap-note">ออมเงินเพื่อเกษียณ รวมแล้วไม่เกิน 500,000</div>
+    <div class="row-item"><div class="rlabel">เบี้ยประกันชีวิตบำนาญ</div><div class="rcap">15% ของเงินได้ / 200,000</div><input type="number" id="tax-g3-annuity" placeholder="0" oninput="calcTaxPlan()"></div>
+    <div class="row-item"><div class="rlabel">กองทุนสำรองเลี้ยงชีพ (PVD)</div><div class="rcap">15% ของเงินได้ / 500,000</div><input type="number" id="tax-g3-pvd" placeholder="0" oninput="calcTaxPlan()"></div>
+    <div class="row-item"><div class="rlabel">RMF</div><div class="rcap">30% ของเงินได้ / 500,000</div><input type="number" id="tax-g3-rmf" placeholder="0" oninput="calcTaxPlan()"></div>
+    <div class="row-item"><div class="rlabel">SSF</div><div class="rcap">30% ของเงินได้ / 200,000</div><input type="number" id="tax-g3-ssf" placeholder="0" oninput="calcTaxPlan()"></div>
+    <div class="row-item"><div class="rlabel">กองทุนการออมแห่งชาติ (กอช.)</div><div class="rcap">สูงสุด 30,000</div><input type="number" id="tax-g3-nsf" placeholder="0" oninput="calcTaxPlan()"></div>
+    <div class="sub-cap-note" id="tax-g3-retire-note">ใช้ไป: 0 / 500,000</div>
+
+    <div class="group-total"><span>รวมหักได้ (กลุ่มที่ 3)</span><span id="tax-g3-total">0</span></div>
+  </div>
+
+  <!-- ══ กลุ่มที่ 4 ══ -->
+  <div class="card">
+    <div class="card-label">ค่าลดหย่อนกลุ่มที่ 4</div>
+    <div class="card-title">❤️ เงินบริจาค</div>
+    <div class="row-item"><div class="rlabel">บริจาคการศึกษา/กีฬา/พัฒนาสังคม/รพ.รัฐ (จ่ายจริง)</div><div class="rcap">หักได้ 2 เท่า / สูงสุด 10% ของเงินได้หลังหักอื่นๆ</div><input type="number" id="tax-g4-edu" placeholder="0" oninput="calcTaxPlan()"></div>
+    <div class="row-item"><div class="rlabel">บริจาคทั่วไป/องค์กรสาธารณกุศล</div><div class="rcap">สูงสุด 10% ของเงินได้หลังหักอื่นๆ</div><input type="number" id="tax-g4-general" placeholder="0" oninput="calcTaxPlan()"></div>
+    <div class="group-total"><span>รวมหักได้ (กลุ่มที่ 4)</span><span id="tax-g4-total">0</span></div>
+  </div>
+
+  <!-- ══ ผลลัพธ์ ══ -->
+  <div class="card">
+    <div class="card-title" style="font-size:16px">📊 สรุปเงินได้สุทธิ & ภาษี</div>
+    <table class="tbl">
+      <tr><td>รายได้ (1)</td><td id="tax-sum-income" style="text-align:right;font-weight:700">0</td></tr>
+      <tr><td>ค่าใช้จ่าย (2)</td><td id="tax-sum-expense" style="text-align:right;font-weight:700">0</td></tr>
+      <tr><td>หลังหักค่าลดหย่อนกลุ่มที่ 1</td><td id="tax-sum-g1" style="text-align:right;font-weight:700">0</td></tr>
+      <tr><td>หลังหักค่าลดหย่อนกลุ่มที่ 2</td><td id="tax-sum-g2" style="text-align:right;font-weight:700">0</td></tr>
+      <tr><td>หลังหักค่าลดหย่อนกลุ่มที่ 3</td><td id="tax-sum-g3" style="text-align:right;font-weight:700">0</td></tr>
+      <tr><td>หลังหักค่าลดหย่อนกลุ่มที่ 4</td><td id="tax-sum-g4" style="text-align:right;font-weight:700">0</td></tr>
+    </table>
+    <div class="net-income-box"><div class="n" id="tax-net-income">0</div><div class="l">เงินได้สุทธิ</div></div>
+
+    <div style="margin-top:16px;font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">ตารางอัตราภาษี</div>
+    <table class="tbl">
+      <thead><tr><th>เงินได้สุทธิ</th><th>อัตราภาษี</th><th>ภาษีแต่ละขั้น</th><th>ภาษีสะสมสูงสุด</th></tr></thead>
+      <tbody id="tax-bracket-body"></tbody>
+    </table>
+
+    <table class="tbl" style="margin-top:12px">
+      <tr><td>ส่วนต่างของขั้นบันได (เงินได้สุทธิ − ขั้นก่อนหน้า)</td><td id="tax-calc-diff" style="text-align:right;font-weight:700">0</td></tr>
+      <tr><td>คูณอัตราภาษีของขั้นที่เราอยู่</td><td id="tax-calc-mult" style="text-align:right;font-weight:700">0</td></tr>
+      <tr><td>+ ภาษีสะสมขั้นก่อนหน้า</td><td id="tax-calc-prev" style="text-align:right;font-weight:700">0</td></tr>
+    </table>
+
+    <div class="big-result">
+      <div class="n" id="tax-final-tax">0</div>
+      <div class="l">ภาษีที่ต้องเสีย (฿)</div>
+    </div>
+
+    <div class="stat-grid" style="margin-top:12px">
+      <div class="stat"><div class="n" id="tax-res-effective">0%</div><div class="l">Effective Rate</div></div>
+      <div class="stat"><div class="n" id="tax-res-marginal">0%</div><div class="l">Marginal Rate</div></div>
+      <div class="stat" style="background:var(--gold-lt)"><div class="n" id="tax-res-room-left">0</div><div class="l">🎯 สิทธิ์เกษียณคงเหลือ</div></div>
+    </div>
+  </div>
+
+  <!-- ══ PLANNING SIMULATOR ══ -->
+  <div class="card">
+    <div class="card-label">วางแผนเพิ่มเติม</div>
+    <div class="card-title">📈 จำลอง: ถ้าซื้อประกัน/RMF/SSF เพิ่ม จะประหยัดภาษีได้เท่าไหร่?</div>
+    <div class="form-group">
+      <label>จำนวนเงินที่จะซื้อเพิ่ม (RMF / SSF / ประกันบำนาญ ฯลฯ) (฿/ปี)</label>
+      <input type="number" id="tax-sim-extra-plan" placeholder="0" oninput="calcTaxPlan()">
+    </div>
+    <div class="sub-cap-note" id="tax-sim-room-note">สิทธิ์เกษียณที่ยังใช้ได้อีก: 0 บาท — ระบบจะเติมเต็มสิทธิ์อัตโนมัติถ้าใส่เกิน</div>
+
+    <div class="stat-grid">
+      <div class="stat"><div class="n" id="tax-sim-tax-before">0</div><div class="l">ภาษีเดิม</div></div>
+      <div class="stat"><div class="n" id="tax-sim-tax-after">0</div><div class="l">ภาษีใหม่ (หลังวางแผน)</div></div>
+      <div class="stat" style="background:var(--gold-lt)"><div class="n" id="tax-sim-new-marginal">0%</div><div class="l">Marginal Rate ใหม่</div></div>
+    </div>
+
+    <div class="savings-highlight">
+      <div class="n" id="tax-sim-savings-baht">0 บาท</div>
+      <div class="l">💰 ประหยัดภาษีได้ (บาท)</div>
+      <div class="n" id="tax-sim-savings-pct" style="font-size:20px;margin-top:8px">0%</div>
+      <div class="l">ลดภาษีลง (% จากภาษีเดิม)</div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="goStep(7)">← ย้อนกลับ</button>
+    <button class="btn btn-gold" onclick="goStep(9)">ดูสรุปภาพรวม ⭐</button>
   </div>
 </div>
 
@@ -1888,7 +2126,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
   </div>
 
   <div class="btn-row">
-    <button class="btn btn-ghost" onclick="goStep(7)">← แก้ไข</button>
+    <button class="btn btn-ghost" onclick="goStep(8)">← แก้ไข</button>
     <button class="btn btn-primary" onclick="window.print()">🖨️ พิมพ์</button>
   </div>
 </div>
@@ -2075,13 +2313,6 @@ function calcSaving(){
 }
 
 // ─── tax ─────────────────────────
-function calcTax(){
-  const inc=val('tax-income'); const ded=val('tax-deduct');
-  const room=Math.max(0,(100000+inc*0.30)-ded);
-  $('tax-room').textContent=fmt(Math.round(room));
-}
-
-
 // ─── dynamic rows ─────────────────
 let extraCount=0;
 function addExtraRow(containerId, prefix, callbackName){
@@ -2128,6 +2359,163 @@ function addProtExtra(){
 
 
 // ─── summary ─────────────────────
+// ─── TAX PLANNING ───
+const TAX_BRACKETS = [
+  {upto:150000,   rate:0},
+  {upto:300000,   rate:0.05},
+  {upto:500000,   rate:0.10},
+  {upto:750000,   rate:0.15},
+  {upto:1000000,  rate:0.20},
+  {upto:2000000,  rate:0.25},
+  {upto:5000000,  rate:0.30},
+  {upto:Infinity, rate:0.35},
+];
+
+function taxSyncMonthly(annualId){
+  const monthlyVal = cleanNum($(annualId+'-m')?.value);
+  if(monthlyVal>0){ $(annualId).value = monthlyVal*12; }
+  calcTaxPlan();
+}
+
+function taxBracketRows(netIncome){
+  let lower = 0, cumulative = 0;
+  const rows = [];
+  for(const b of TAX_BRACKETS){
+    const bracketTax = (Math.min(b.upto,1e15) - lower) * b.rate;
+    cumulative += (b.upto===Infinity ? 0 : bracketTax);
+    rows.push({lower, upper:b.upto, rate:b.rate, bracketTax: b.upto===Infinity?null:bracketTax, cumulative: b.upto===Infinity?null:cumulative});
+    lower = b.upto;
+  }
+  return rows;
+}
+
+function taxComputeTax(netIncome){
+  let lowerBound = 0, rate = 0, cumulativePrev = 0, bracketIndex = 0;
+  for(let i=0;i<TAX_BRACKETS.length;i++){
+    const b = TAX_BRACKETS[i];
+    if(netIncome <= b.upto){ lowerBound = i===0?0:TAX_BRACKETS[i-1].upto; rate = b.rate; bracketIndex = i; break; }
+    cumulativePrev += (b.upto - (i===0?0:TAX_BRACKETS[i-1].upto)) * b.rate;
+  }
+  const diff = Math.max(netIncome - lowerBound, 0);
+  const tax = cumulativePrev + diff*rate;
+  return {tax, rate, bracketIndex, diff, cumulativePrev};
+}
+
+function calcTaxPlan(){
+  const inc1 = cleanNum($('tax-inc-40-1')?.value), inc2 = cleanNum($('tax-inc-40-2')?.value);
+  const combinedExp = Math.min((inc1+inc2)*0.5, 100000);
+  if($('tax-exp-40-1')) $('tax-exp-40-1').textContent = fmt(combinedExp);
+  if($('tax-exp-40-2')) $('tax-exp-40-2').textContent = '(รวมด้านบน)';
+
+  const inc3 = cleanNum($('tax-inc-40-3')?.value);
+  const exp3 = Math.min(inc3*0.5, 100000);
+  if($('tax-exp-40-3')) $('tax-exp-40-3').textContent = fmt(exp3);
+
+  const inc4 = cleanNum($('tax-inc-40-4')?.value);
+  if($('tax-exp-40-4')) $('tax-exp-40-4').textContent = '0';
+
+  const inc5 = cleanNum($('tax-inc-40-5')?.value); const rate5 = parseFloat($('tax-rate-40-5')?.value)||0.30;
+  const exp5 = inc5*rate5;
+  if($('tax-exp-40-5')) $('tax-exp-40-5').textContent = fmt(exp5);
+
+  const inc6 = cleanNum($('tax-inc-40-6')?.value); const rate6 = parseFloat($('tax-rate-40-6')?.value)||0.30;
+  const exp6 = inc6*rate6;
+  if($('tax-exp-40-6')) $('tax-exp-40-6').textContent = fmt(exp6);
+
+  const inc7 = cleanNum($('tax-inc-40-7')?.value);
+  const exp7 = inc7*0.60;
+  if($('tax-exp-40-7')) $('tax-exp-40-7').textContent = fmt(exp7);
+
+  const inc8 = cleanNum($('tax-inc-40-8')?.value);
+  if($('tax-exp-40-8')) $('tax-exp-40-8').textContent = '0';
+
+  const totalIncome = inc1+inc2+inc3+inc4+inc5+inc6+inc7+inc8;
+  const totalExpense = combinedExp + exp3 + exp5 + exp6 + exp7;
+  if($('tax-income-total-line')) $('tax-income-total-line').textContent = fmt(totalIncome) + ' / ' + fmt(totalExpense);
+
+  const g1 = cleanNum($('tax-g1-self')?.value) + cleanNum($('tax-g1-spouse')?.value)
+    + cleanNum($('tax-g1-kid1')?.value)*30000 + cleanNum($('tax-g1-kid2')?.value)*60000
+    + cleanNum($('tax-g1-birth')?.value) + cleanNum($('tax-g1-father')?.value) + cleanNum($('tax-g1-mother')?.value)
+    + cleanNum($('tax-g1-father-sp')?.value) + cleanNum($('tax-g1-mother-sp')?.value) + cleanNum($('tax-g1-disabled')?.value);
+  if($('tax-g1-total')) $('tax-g1-total').textContent = fmt(g1);
+
+  const g2 = Math.min(cleanNum($('tax-g2-shop')?.value),40000) + Math.min(cleanNum($('tax-g2-mortgage')?.value),100000) + Math.min(cleanNum($('tax-g2-political')?.value),10000);
+  if($('tax-g2-total')) $('tax-g2-total').textContent = fmt(g2);
+
+  const lifeRaw = cleanNum($('tax-g3-life')?.value), healthRaw = cleanNum($('tax-g3-health')?.value);
+  const lifeHealthCapped = Math.min(lifeRaw+healthRaw, 100000);
+  if($('tax-g3-life-health-note')) $('tax-g3-life-health-note').textContent = `ใช้ไป: ${fmt(lifeHealthCapped)} / 100,000`;
+  const healthParents = Math.min(cleanNum($('tax-g3-health-parents')?.value), 15000);
+  const sso = Math.min(cleanNum($('tax-g3-sso')?.value), 9000);
+
+  const annuityCapped = Math.min(cleanNum($('tax-g3-annuity')?.value), totalIncome*0.15, 200000);
+  const pvdCapped = Math.min(cleanNum($('tax-g3-pvd')?.value), totalIncome*0.15, 500000);
+  const rmfCapped = Math.min(cleanNum($('tax-g3-rmf')?.value), totalIncome*0.30, 500000);
+  const ssfCapped = Math.min(cleanNum($('tax-g3-ssf')?.value), totalIncome*0.30, 200000);
+  const nsfCapped = Math.min(cleanNum($('tax-g3-nsf')?.value), 30000);
+  const retireGroupRaw = annuityCapped+pvdCapped+rmfCapped+ssfCapped+nsfCapped;
+  const retireGroupCapped = Math.min(retireGroupRaw, 500000);
+  if($('tax-g3-retire-note')) $('tax-g3-retire-note').textContent = `ใช้ไป: ${fmt(retireGroupCapped)} / 500,000`;
+  const roomLeft = Math.max(500000-retireGroupCapped,0);
+  if($('tax-res-room-left')) $('tax-res-room-left').textContent = fmt(roomLeft);
+
+  const g3 = lifeHealthCapped + healthParents + sso + retireGroupCapped;
+  if($('tax-g3-total')) $('tax-g3-total').textContent = fmt(g3);
+
+  const incomeAfter123 = Math.max(totalIncome - totalExpense - g1 - g2 - g3, 0);
+
+  const eduDonateRaw = cleanNum($('tax-g4-edu')?.value)*2;
+  const eduDonateCapped = Math.min(eduDonateRaw, incomeAfter123*0.10);
+  const incomeAfterEdu = Math.max(incomeAfter123 - eduDonateCapped, 0);
+  const generalDonateCapped = Math.min(cleanNum($('tax-g4-general')?.value), incomeAfterEdu*0.10);
+  const g4 = eduDonateCapped + generalDonateCapped;
+  if($('tax-g4-total')) $('tax-g4-total').textContent = fmt(g4);
+
+  const netIncome = Math.max(totalIncome - totalExpense - g1 - g2 - g3 - g4, 0);
+  if($('tax-sum-income'))  $('tax-sum-income').textContent  = fmt(totalIncome);
+  if($('tax-sum-expense')) $('tax-sum-expense').textContent = fmt(totalExpense);
+  if($('tax-sum-g1')) $('tax-sum-g1').textContent = fmt(g1);
+  if($('tax-sum-g2')) $('tax-sum-g2').textContent = fmt(g2);
+  if($('tax-sum-g3')) $('tax-sum-g3').textContent = fmt(g3);
+  if($('tax-sum-g4')) $('tax-sum-g4').textContent = fmt(g4);
+  if($('tax-net-income')) $('tax-net-income').textContent = fmt(netIncome);
+
+  const rows = taxBracketRows(netIncome);
+  const currentResult = taxComputeTax(netIncome);
+  if($('tax-bracket-body')) $('tax-bracket-body').innerHTML = rows.map((r,i)=>`
+    <tr class="${i===currentResult.bracketIndex?'current-bracket':''}">
+      <td>${fmt(r.lower)} ${r.upper===Infinity?'บาทขึ้นไป':'- '+fmt(r.upper)}</td>
+      <td>${(r.rate*100).toFixed(0)}%</td>
+      <td>${r.bracketTax===null?'ไม่จำกัด':fmt(r.bracketTax)}</td>
+      <td>${r.cumulative===null?'ไม่จำกัด':fmt(r.cumulative)}</td>
+    </tr>`).join('');
+
+  const finalTax = currentResult.tax;
+  if($('tax-calc-diff')) $('tax-calc-diff').textContent = fmt(currentResult.diff);
+  if($('tax-calc-mult')) $('tax-calc-mult').textContent = fmt(currentResult.diff*currentResult.rate) + ` (×${(currentResult.rate*100).toFixed(0)}%)`;
+  if($('tax-calc-prev')) $('tax-calc-prev').textContent = fmt(currentResult.cumulativePrev);
+  if($('tax-final-tax')) $('tax-final-tax').textContent = fmt(finalTax);
+  if($('tax-res-effective')) $('tax-res-effective').textContent = totalIncome>0 ? (finalTax/totalIncome*100).toFixed(1)+'%' : '0%';
+  if($('tax-res-marginal')) $('tax-res-marginal').textContent = (currentResult.rate*100).toFixed(0)+'%';
+
+  // Planning simulator
+  if($('tax-sim-room-note')) $('tax-sim-room-note').textContent = `สิทธิ์เกษียณที่ยังใช้ได้อีก: ${fmt(roomLeft)} บาท — ระบบจะเติมเต็มสิทธิ์อัตโนมัติถ้าใส่เกิน`;
+  const simExtraRaw = cleanNum($('tax-sim-extra-plan')?.value);
+  const simExtraCapped = Math.min(simExtraRaw, roomLeft);
+  const retireGroupAfter = retireGroupCapped + simExtraCapped;
+  const g3After = lifeHealthCapped + healthParents + sso + retireGroupAfter;
+  const netIncomeAfter = Math.max(totalIncome - totalExpense - g1 - g2 - g3After - g4, 0);
+  const afterResult = taxComputeTax(netIncomeAfter);
+
+  if($('tax-sim-tax-before')) $('tax-sim-tax-before').textContent = fmt(finalTax);
+  if($('tax-sim-tax-after')) $('tax-sim-tax-after').textContent = fmt(afterResult.tax);
+  if($('tax-sim-new-marginal')) $('tax-sim-new-marginal').textContent = (afterResult.rate*100).toFixed(0)+'%';
+  const savingsBaht = Math.max(finalTax - afterResult.tax, 0);
+  const savingsPct = finalTax>0 ? (savingsBaht/finalTax*100) : 0;
+  if($('tax-sim-savings-baht')) $('tax-sim-savings-baht').textContent = fmt(savingsBaht) + ' บาท';
+  if($('tax-sim-savings-pct')) $('tax-sim-savings-pct').textContent = savingsPct.toFixed(1) + '%';
+}
+
 function buildSummary(){
   const income=periodVal('cf-salary')+periodVal('cf-wage')+periodVal('cf-rent-in')+periodVal('cf-bonus')+periodVal('cf-div')+sumExtraPeriod('cf-inc-x')+sumExtraPeriod('cf-var-x');
   const expense=periodVal('cf-house')+periodVal('cf-car')+periodVal('cf-util')+periodVal('cf-ins')+periodVal('cf-parents')+periodVal('cf-kids')+periodVal('cf-cartax')+periodVal('cf-food')+periodVal('cf-trans')+periodVal('cf-shop')+periodVal('cf-self')+periodVal('cf-travel')+sumExtraPeriod('cf-fix-x')+sumExtraPeriod('cf-var2-x');
@@ -2372,9 +2760,10 @@ function goStep(n){
     if(s===n) p.classList.add('active');
     else if(s<n) p.classList.add('done');
   });
-  if(n===8) buildSummary();
+  if(n===9) buildSummary();
   if(n===5 || n===6) syncFields();
   if(n===4) renderPolicyList();
+  if(n===8) calcTaxPlan();
   window.scrollTo({top:0,behavior:'smooth'});
   // Charts built while this panel was hidden (display:none) get the wrong canvas size,
   // which makes bars/labels look misaligned — resize them now that the panel is visible.
@@ -3629,6 +4018,7 @@ document.addEventListener('input', e => {
 
 try{ calcAge(); }catch(e){}
 try{ renderMainFields(); }catch(e){}
+try{ calcTaxPlan(); }catch(e){}
 try{ addCommaListeners(); }catch(e){}
 try{ calcRetirePlan(); }catch(e){}
 
@@ -3815,7 +4205,6 @@ const FIELDS = [
   // retirement
   'retire-at','retire-life','retire-inf','retire-need','retire-ret','retire-current-saving',
   'ret-pvd','ret-gpf','ret-annuity','ret-rmf','ret-prop',
-  'tax-income','tax-deduct',
   // education
   'child-1-name','child-1-age','child-1-start',
   'c1-kindergarten','c1-kindergarten-y','c1-primary','c1-primary-y',
@@ -3823,6 +4212,15 @@ const FIELDS = [
   'c1-master','c1-master-y','c1-inf','c1-country',
   // importance sliders
   'imp-prot','imp-health','imp-save','imp-retire','imp-inv','imp-tax',
+  // tax planning
+  'tax-inc-40-1','tax-inc-40-2','tax-inc-40-3','tax-inc-40-4','tax-inc-40-5','tax-inc-40-6','tax-inc-40-7','tax-inc-40-8',
+  'tax-rate-40-5','tax-rate-40-6',
+  'tax-g1-self','tax-g1-spouse','tax-g1-kid1','tax-g1-kid2','tax-g1-birth',
+  'tax-g1-father','tax-g1-mother','tax-g1-father-sp','tax-g1-mother-sp','tax-g1-disabled',
+  'tax-g2-shop','tax-g2-mortgage','tax-g2-political',
+  'tax-g3-life','tax-g3-health','tax-g3-health-parents','tax-g3-sso',
+  'tax-g3-annuity','tax-g3-pvd','tax-g3-rmf','tax-g3-ssf','tax-g3-nsf',
+  'tax-g4-edu','tax-g4-general','tax-sim-extra-plan',
 ];
 
 function getRadioValues(){
@@ -3895,7 +4293,7 @@ function applyData(data){
   });
   // Schedule core recalcs now, before any of the riskier restoration steps below —
   // this guarantees age/cashflow/etc. always update even if something further down throws.
-  setTimeout(()=>{ calcAge(); calcCF(); calcBS(); updateProtAdvice(); calcRetirePlan(); updateRadar($('imp-prot'),'lbl-prot'); }, 100);
+  setTimeout(()=>{ calcAge(); calcCF(); calcBS(); updateProtAdvice(); calcRetirePlan(); updateRadar($('imp-prot'),'lbl-prot'); try{ calcTaxPlan(); }catch(e){} }, 100);
 
   for(let i=4;i<=(data._goalCount||0);i++){
     const el = $('goal-'+i);
