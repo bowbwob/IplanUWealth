@@ -1359,6 +1359,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
         <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">➖ สินทรัพย์ที่มีอยู่แล้ว</div>
         <div class="form-group" style="margin-bottom:8px"><label>💰 เงินออม/เงินลงทุน (฿)</label><input type="number" id="nb-assets" placeholder="0" oninput="calcHLV()"></div>
         <div class="form-group" style="margin-bottom:8px"><label>🛡️ ทุนประกันชีวิตที่มีอยู่ (฿)</label><input type="number" id="life-sum" placeholder="0" oninput="calcHLV()"></div>
+        <div class="form-group" style="margin-bottom:8px"><label>🏥 ค่ารักษาพยาบาลที่มีอยู่ (฿)</label><input type="number" id="life-hosp" placeholder="0" oninput="calcHLV()"></div>
+        <div class="form-group" style="margin-bottom:8px"><label>🎗️ ทุน CI ที่มีอยู่ (฿)</label><input type="number" id="life-ci" placeholder="0" oninput="calcHLV()"></div>
+        <div class="form-group" style="margin-bottom:8px"><label>🚗 ทุนอุบัติเหตุที่มีอยู่ (฿)</label><input type="number" id="life-acc" placeholder="0" oninput="calcHLV()"></div>
         <div class="form-group"><label>🏛️ สวัสดิการรัฐ/บำเหน็จ (฿)</label><input type="number" id="nb-pension" placeholder="0" oninput="calcHLV()"></div>
       </div>
     </div>
@@ -4280,9 +4283,13 @@ const FIELDS = [
   'life-sum','life-prem','life-hosp','life-acc','life-income','life-ci',
   'nl-car','nl-home',
   'prot-note',
+  // HLV
+  'hlv-retire-age','hlv-income-yr','hlv-expense-yr','hlv-salary-growth','hlv-disc',
+  // needs-based
+  'nb-debt','nb-family-exp','nb-years','nb-disc','nb-growth','nb-edu','nb-assets','nb-pension',
   // retirement
-  'retire-at','retire-life','retire-inf','retire-need','retire-ret','retire-current-saving',
-  'ret-pvd','ret-gpf','ret-annuity','ret-rmf','ret-prop',
+  'retire-at','retire-life','retire-inf','retire-need','retire-ret','retire-current-saving','retire-current-saving-r',
+  'ret-pvd','ret-pvd-r','ret-gpf','ret-gpf-r','ret-annuity','ret-annuity-r','ret-rmf','ret-rmf-r','ret-prop','ret-prop-r',
   // education
   'child-1-name','child-1-age','child-1-start',
   'c1-kindergarten','c1-kindergarten-y','c1-primary','c1-primary-y',
@@ -4346,6 +4353,15 @@ function collectData(){
     if(el) data['goal-'+i] = el.value;
   }
   data._coverage = collectCoverage();
+  // extra retirement source-of-funds rows added via "+ เพิ่มแหล่งเงินทุน"
+  const retExtras = [];
+  document.querySelectorAll('#source-of-funds-table [data-extra="ret-x"]').forEach(inp=>{
+    const tr = inp.closest('tr');
+    const nameInp = tr?.querySelector('td:first-child input');
+    const rateInp = tr?.querySelector('input[id^="ret-x-r-"]');
+    retExtras.push({ name: nameInp?.value||'', amount: inp.value||'', rate: rateInp?.value||'' });
+  });
+  data._retExtras = retExtras;
   return data;
 }
 
@@ -4387,6 +4403,26 @@ function applyData(data){
     });
   }
   try{ applyCoverage(data._coverage||[]); }catch(e){ console.error('applyCoverage failed', e); }
+
+  // restore extra retirement source-of-funds rows
+  try{
+    const tbody = $('source-of-funds-table')?.querySelector('tbody');
+    if(tbody){
+      // remove any existing dynamic rows first
+      tbody.querySelectorAll('tr').forEach(tr=>{ if(tr.querySelector('[data-extra="ret-x"]')) tr.remove(); });
+    }
+    (data._retExtras||[]).forEach(r=>{
+      addSourceRow();
+      const rows = document.querySelectorAll('#source-of-funds-table [data-extra="ret-x"]');
+      const lastInp = rows[rows.length-1];
+      const tr = lastInp?.closest('tr');
+      const nameInp = tr?.querySelector('td:first-child input');
+      const rateInp = tr?.querySelector('input[id^="ret-x-r-"]');
+      if(nameInp) nameInp.value = r.name||'';
+      if(lastInp) lastInp.value = r.amount||'';
+      if(rateInp) rateInp.value = r.rate||'';
+    });
+  }catch(e){ console.error('restoring ret extras failed', e); }
 }
 
 
@@ -4480,6 +4516,8 @@ function newClient(){
   if(goalItems) while(goalItems.children.length > 3) goalItems.removeChild(goalItems.lastChild);
   goalCount = 3;
   applyCoverage([]);
+  const sofTbody = $('source-of-funds-table')?.querySelector('tbody');
+  if(sofTbody) sofTbody.querySelectorAll('tr').forEach(tr=>{ if(tr.querySelector('[data-extra="ret-x"]')) tr.remove(); });
   $('save-client-name').textContent = '— ลูกค้าใหม่ —';
   $('save-status').textContent = '';
   const today = new Date().toISOString().split('T')[0];
