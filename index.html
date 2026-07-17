@@ -2647,75 +2647,71 @@ function buildSummary(){
       </div>
     </div>`;
 
-  // ── VISUAL GAPS ───────────────────────
+  // ── VISUAL GAPS ─────────────────────── (always show all 6 core categories)
   const gaps = [];
-  
-  // Protection gap
-  const hlvEl  = $('hlv-result')?.textContent?.replace(/,/g,'')||'0';
-  const hlvNum = parseFloat(hlvEl)||0;
-  const lifeS  = val('life-sum');
-  if(hlvNum>0 && lifeS<hlvNum){
-    gaps.push({
-      icon:'🛡️', title:'ช่องว่างทุนประกันชีวิต',
-      have:lifeS, need:hlvNum,
-      pct:Math.min(lifeS/hlvNum*100,100),
-      color:'var(--blue)',
-      action:`ควรเพิ่มทุนประกันอีก ${fmt(Math.round(hlvNum-lifeS))} ฿`
-    });
-  }
-  const ciHave = val('life-ci');
-  const ciNeed = 3000000;
-  if(ciHave < ciNeed){
-    gaps.push({
-      icon:'🎗️', title:'โรคร้ายแรง (CI)',
-      have: ciHave, need: ciNeed,
-      pct: Math.min(ciHave/ciNeed*100, 100),
-      color:'var(--blue)',
-      action: ciHave>0 ? `ควรเพิ่มทุน CI อีก ${fmt(Math.round(ciNeed-ciHave))} ฿` : 'ยังไม่มีความคุ้มครอง CI — ควรพิจารณาเพิ่ม (เกณฑ์มาตรฐาน 3,000,000 ฿)'
-    });
-  }
-  const hospHave = val('life-hosp');
-  const hospNeed = 5000000;
-  if(hospHave < hospNeed){
-    gaps.push({
-      icon:'🏥', title:'ค่ารักษาพยาบาล',
-      have: hospHave, need: hospNeed,
-      pct: Math.min(hospHave/hospNeed*100, 100),
-      color:'var(--blue)',
-      action: hospHave>0 ? `ควรเพิ่มวงเงินรักษาพยาบาลอีก ${fmt(Math.round(hospNeed-hospHave))} ฿` : 'ยังไม่มีประกันสุขภาพ — ควรเพิ่ม (เกณฑ์มาตรฐาน 5,000,000 ฿)'
-    });
-  }
-  
-  // Emergency fund gap
+  const safePct = (have,need) => need>0 ? Math.min(have/need*100,100) : 0;
+
+  // 1) Emergency fund gap
   const expenseEmerg = periodVal('cf-house')+periodVal('cf-car')+periodVal('cf-util')+periodVal('cf-parents')+periodVal('cf-kids')+periodVal('cf-food');
   const emgNeed = expenseEmerg*6;
   const liquid  = val('a-cash')+val('a-mmf');
-  if(emgNeed>0 && liquid<emgNeed){
-    gaps.push({
-      icon:'🏦', title:'กองทุนฉุกเฉิน (6 เท่า)',
-      have:liquid, need:emgNeed,
-      pct:Math.min(liquid/emgNeed*100,100),
-      color:'var(--green)',
-      action:`มีอยู่ ${fmt(Math.round(liquid))} ฿ ควรมี ${fmt(Math.round(emgNeed))} ฿`
-    });
-  }
-  
-  // Retirement gap
+  gaps.push({
+    icon:'🏦', title:'กองทุนฉุกเฉิน (6 เท่า)',
+    have:liquid, need:emgNeed, pct:safePct(liquid,emgNeed), color:'var(--green)',
+    action: emgNeed>0 ? `มีอยู่ ${fmt(Math.round(liquid))} ฿ ควรมี ${fmt(Math.round(emgNeed))} ฿` : 'ยังไม่ได้กรอกรายจ่ายประจำในหน้างบการเงิน'
+  });
+
+  // 2) Protection (Life)
+  const hlvEl  = $('hlv-result')?.textContent?.replace(/,/g,'')||'0';
+  const hlvNum = parseFloat(hlvEl)||0;
+  const lifeS  = val('life-sum');
+  gaps.push({
+    icon:'🛡️', title:'ช่องว่างทุนประกันชีวิต',
+    have:lifeS, need:hlvNum, pct:safePct(lifeS,hlvNum), color:'var(--blue)',
+    action: hlvNum>0 ? `ควรเพิ่มทุนประกันอีก ${fmt(Math.round(Math.max(hlvNum-lifeS,0)))} ฿` : 'ยังไม่ได้กรอกข้อมูลรายได้ในหน้า Protection เพื่อคำนวณทุนที่ควรมี'
+  });
+
+  // 3) Health / ค่ารักษาพยาบาล
+  const hospHave = val('life-hosp');
+  const hospNeed = 5000000;
+  gaps.push({
+    icon:'🏥', title:'ค่ารักษาพยาบาล',
+    have: hospHave, need: hospNeed, pct: safePct(hospHave,hospNeed), color:'var(--blue)',
+    action: hospHave>0 ? `ควรเพิ่มวงเงินรักษาพยาบาลอีก ${fmt(Math.round(hospNeed-hospHave))} ฿` : 'ยังไม่มีประกันสุขภาพ — ควรพิจารณาเพิ่ม (เกณฑ์มาตรฐาน 5,000,000 ฿)'
+  });
+
+  // 4) CI / โรคร้ายแรง
+  const ciHave = val('life-ci');
+  const ciNeed = 3000000;
+  gaps.push({
+    icon:'🎗️', title:'โรคร้ายแรง (CI)',
+    have: ciHave, need: ciNeed, pct: safePct(ciHave,ciNeed), color:'var(--blue)',
+    action: ciHave>0 ? `ควรเพิ่มทุน CI อีก ${fmt(Math.round(ciNeed-ciHave))} ฿` : 'ยังไม่มีความคุ้มครอง CI — ควรพิจารณาเพิ่ม (เกณฑ์มาตรฐาน 3,000,000 ฿)'
+  });
+
+  // 5) Accident / อุบัติเหตุ
+  const accHave = val('life-acc');
+  const accNeed = 3000000;
+  gaps.push({
+    icon:'🚗', title:'อุบัติเหตุ (PA)',
+    have: accHave, need: accNeed, pct: safePct(accHave,accNeed), color:'var(--blue)',
+    action: accHave>0 ? `ควรเพิ่มทุนอุบัติเหตุอีก ${fmt(Math.round(accNeed-accHave))} ฿` : 'ยังไม่มีความคุ้มครองอุบัติเหตุ — ควรพิจารณาเพิ่ม (เกณฑ์มาตรฐาน 3,000,000 ฿)'
+  });
+
+  // 6) Retirement
   const retGapEl = $('ret-still-need');
   const retGap = parseFloat(retGapEl?.textContent?.replace(/,/g,'')||'0')||0;
   const retLump = parseFloat($('retire-lump')?.textContent?.replace(/,/g,'')||'0')||0;
-  if(retLump>0){
-    const retHave = retLump - retGap;
-    gaps.push({
-      icon:'🌅', title:'กองทุนเกษียณ',
-      have:Math.max(retHave,0), need:retLump,
-      pct:Math.min(Math.max(retHave,0)/retLump*100,100),
-      color:'#7B9E87',
-      action: retGap>0 ? `ยังขาดอีก ${fmt(Math.round(retGap))} ฿ ต้องออม ${fmt(Math.round(retireMonthly))} ฿/เดือน` : '✅ แหล่งเงินทุนเพียงพอแล้ว'
-    });
-  }
-  
-  // Education gap
+  const retHave = Math.max(retLump - retGap, 0);
+  gaps.push({
+    icon:'🌅', title:'กองทุนเกษียณ',
+    have: retHave, need: retLump, pct: safePct(retHave,retLump), color:'#7B9E87',
+    action: retLump>0
+      ? (retGap>0 ? `ยังขาดอีก ${fmt(Math.round(retGap))} ฿ ต้องออม ${fmt(Math.round(retireMonthly))} ฿/เดือน` : '✅ แหล่งเงินทุนเพียงพอแล้ว')
+      : 'ยังไม่ได้กรอกข้อมูลในหน้า Retirement เพื่อคำนวณเงินก้อนที่ต้องมี'
+  });
+
+  // 7) Education (bonus — only shown once there's a target)
   if(eduTotal>0){
     gaps.push({
       icon:'🎓', title:'ทุนการศึกษา',
