@@ -2119,9 +2119,16 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
         <div class="chart-wrap"><canvas id="sum-chart-cf"></canvas></div>
       </div>
       <div>
-        <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px">🌅 แผนเกษียณ vs 🎓 การศึกษา</div>
-        <div class="chart-wrap"><canvas id="sum-chart-save"></canvas></div>
+        <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px">🌅 แผนเกษียณ</div>
+        <div class="chart-wrap"><canvas id="sum-chart-retire"></canvas></div>
       </div>
+    </div>
+    <div class="chart-row">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px">🎓 แผนการศึกษา</div>
+        <div class="chart-wrap"><canvas id="sum-chart-edu"></canvas></div>
+      </div>
+      <div></div>
     </div>
 
     <div class="sec-div">📋 รายละเอียดแต่ละชั้น</div>
@@ -2570,10 +2577,19 @@ function buildSummary(){
       datasets:[{data:[income,expense,Math.max(net,0)],backgroundColor:['#7B9E87','#C0392B',net>=0?'#C9A84C':'#C0392B'],borderRadius:6}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>fmt(v)}}}}
   });
-  makeChart('sum-chart-save',{
+  const chartRetLump = parseFloat($('retire-lump')?.textContent?.replace(/,/g,'')||'0')||0;
+  const chartRetStillNeed = parseFloat($('ret-still-need')?.textContent?.replace(/,/g,'')||'0')||0;
+  const chartRetHave = Math.max(chartRetLump - chartRetStillNeed, 0);
+  makeChart('sum-chart-retire',{
     type:'bar',
-    data:{labels:[['ออม/เดือน','(เกษียณ)'],['ออม/เดือน','(การศึกษา)']],
-      datasets:[{data:[Math.round(retireMonthly)||0,Math.round(eduMonthly)||0],backgroundColor:['#7B9E87','#C9A84C'],borderRadius:6}]},
+    data:{labels:['เงินก้อนที่ต้องมี','เตรียมไว้แล้ว'],
+      datasets:[{data:[Math.round(chartRetLump)||0,Math.round(chartRetHave)||0],backgroundColor:['#4A7B9D','#7B9E87'],borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>fmt(v)}}}}
+  });
+  makeChart('sum-chart-edu',{
+    type:'bar',
+    data:{labels:['ทุนการศึกษารวม (FV)'],
+      datasets:[{data:[Math.round(eduTotal)||0],backgroundColor:['#C9A84C'],borderRadius:6}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>fmt(v)}}}}
   });
 
