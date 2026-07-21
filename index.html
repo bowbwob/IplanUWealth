@@ -2988,7 +2988,7 @@ function calcRetirePlan(){
   let totalFV = 0;
   const sourceLabels = [], sourceFVs = [];
   sources.forEach(s=>{
-    const pv = parseFloat($(s.pv)?.value)||0;
+    const pv = cleanNum($(s.pv)?.value);
     const r  = (parseFloat($(s.r)?.value)||5)/100;
     const fv = pv * Math.pow(1+r, yearsLeft);
     if($(s.fvEl)) $(s.fvEl).textContent = pv ? fmt(Math.round(fv)) : '—';
@@ -2998,7 +2998,7 @@ function calcRetirePlan(){
 
   // Extra source rows
   document.querySelectorAll('[data-extra="ret-x"]').forEach(el=>{
-    const pv = parseFloat(el.value)||0;
+    const pv = cleanNum(el.value);
     totalFV += pv * Math.pow(1+ret, yearsLeft);
   });
 
@@ -3397,7 +3397,7 @@ function calcEdu(n){
   const chartLabels=[], chartFVs=[], chartPVs=[], timelineStages=[];
 
   stages.forEach(s=>{
-    const feeNow = parseFloat(document.getElementById(`c${n}-${s.id}`)?.value)||0;
+    const feeNow = cleanNum(document.getElementById(`c${n}-${s.id}`)?.value);
     const yrs    = parseFloat(document.getElementById(`c${n}-${s.id}-y`)?.value)||s.defaultYrs;
     const ageEl  = document.getElementById(`c${n}-${s.id}-age`);
     const ageStart = childAge + s.yearsUntil;
